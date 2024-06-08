@@ -7,6 +7,8 @@
 #include "App.h"
 
 #include "MainFrm.h"
+#include "MainView.h"
+#include "LogView.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -17,8 +19,6 @@
 IMPLEMENT_DYNAMIC(CMainFrame, CFrameWnd)
 
 BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
-	ON_WM_CREATE()
-	ON_WM_SETFOCUS()
 END_MESSAGE_MAP()
 
 // CMainFrame construction/destruction
@@ -32,21 +32,6 @@ CMainFrame::~CMainFrame()
 {
 }
 
-int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
-{
-	if (CFrameWnd::OnCreate(lpCreateStruct) == -1)
-		return -1;
-
-	// create a view to occupy the client area of the frame
-	if (!m_wndView.Create(nullptr, nullptr, AFX_WS_DEFAULT_VIEW,
-		CRect(0, 0, 0, 0), this, AFX_IDW_PANE_FIRST, nullptr))
-	{
-		TRACE0("Failed to create view window\n");
-		return -1;
-	}
-	return 0;
-}
-
 BOOL CMainFrame::PreCreateWindow(CREATESTRUCT& cs)
 {
 	if( !CFrameWnd::PreCreateWindow(cs) )
@@ -54,6 +39,8 @@ BOOL CMainFrame::PreCreateWindow(CREATESTRUCT& cs)
 	// TODO: Modify the Window class or styles here by modifying
 	//  the CREATESTRUCT cs
 
+	cs.cx = 1200;
+	cs.cy = 800;
 	cs.dwExStyle &= ~WS_EX_CLIENTEDGE;
 	cs.lpszClass = AfxRegisterWndClass(0);
 	return TRUE;
@@ -76,19 +63,27 @@ void CMainFrame::Dump(CDumpContext& dc) const
 
 // CMainFrame message handlers
 
-void CMainFrame::OnSetFocus(CWnd* /*pOldWnd*/)
+BOOL CMainFrame::OnCreateClient(LPCREATESTRUCT lpcs, CCreateContext *pContext)
 {
-	// forward focus to the view window
-	m_wndView.SetFocus();
+	// TODO: Add your specialized code here and/or call the base class
+	if (!(windowSplitter.CreateStatic(this, 1, 2)))
+	{
+		TRACE("Cannot split the window.");
+		return FALSE;
+	}
+
+	if (!(windowSplitter.CreateView(0, 0, RUNTIME_CLASS(CLogView), CSize{ 300, 0 }, pContext)))
+	{
+		TRACE("Cannot create the log view.");
+		return FALSE;
+
+	}
+
+	if (!(windowSplitter.CreateView(0, 1, RUNTIME_CLASS(CMainView), CSize{ 0, 0 }, pContext)))
+	{
+		TRACE("Cannot create the main view.");
+		return FALSE;
+	}
+
+	return CFrameWnd::OnCreateClient(lpcs, pContext);
 }
-
-BOOL CMainFrame::OnCmdMsg(UINT nID, int nCode, void* pExtra, AFX_CMDHANDLERINFO* pHandlerInfo)
-{
-	// let the view have first crack at the command
-	if (m_wndView.OnCmdMsg(nID, nCode, pExtra, pHandlerInfo))
-		return TRUE;
-
-	// otherwise, do default handling
-	return CFrameWnd::OnCmdMsg(nID, nCode, pExtra, pHandlerInfo);
-}
-

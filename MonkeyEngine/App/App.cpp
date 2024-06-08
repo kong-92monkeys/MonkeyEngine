@@ -29,7 +29,7 @@ CAppApp::CAppApp() noexcept
 
 	// TODO: replace application ID string below with unique ID string; recommended
 	// format for string is CompanyName.ProductName.SubProduct.VersionInformation
-	SetAppID(_T("App.AppID.NoVersion"));
+	SetAppID(_T("NTmonkeys.MonkeyEngine"));
 
 	// TODO: add construction code here,
 	// Place all significant initialization in InitInstance
@@ -59,8 +59,7 @@ BOOL CAppApp::InitInstance()
 	// Change the registry key under which our settings are stored
 	// TODO: You should modify this string to be something appropriate
 	// such as the name of your company or organization
-	SetRegistryKey(_T("Local AppWizard-Generated Applications"));
-
+	SetRegistryKey(_T("MonkeyEngine"));
 
 	// To create the main window, this code creates a new frame window
 	// object and then sets it as the application's main window object
@@ -72,10 +71,6 @@ BOOL CAppApp::InitInstance()
 	pFrame->LoadFrame(IDR_MAINFRAME,
 		WS_OVERLAPPEDWINDOW | FWS_ADDTOTITLE, nullptr,
 		nullptr);
-
-
-
-
 
 	// The one and only window has been initialized, so show and update it
 	pFrame->ShowWindow(SW_SHOW);

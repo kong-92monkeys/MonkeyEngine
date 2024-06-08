@@ -5,7 +5,7 @@
 #include "pch.h"
 #include "framework.h"
 #include "App.h"
-#include "ChildView.h"
+#include "MainView.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -14,24 +14,25 @@
 
 // CChildView
 
-CChildView::CChildView()
+CMainView::CMainView()
 {
 }
 
-CChildView::~CChildView()
+CMainView::~CMainView()
 {
 }
 
 
-BEGIN_MESSAGE_MAP(CChildView, CWnd)
+BEGIN_MESSAGE_MAP(CMainView, CWnd)
 	ON_WM_PAINT()
+	ON_WM_CREATE()
 END_MESSAGE_MAP()
 
 
 
 // CChildView message handlers
 
-BOOL CChildView::PreCreateWindow(CREATESTRUCT& cs) 
+BOOL CMainView::PreCreateWindow(CREATESTRUCT& cs) 
 {
 	if (!CWnd::PreCreateWindow(cs))
 		return FALSE;
@@ -44,12 +45,23 @@ BOOL CChildView::PreCreateWindow(CREATESTRUCT& cs)
 	return TRUE;
 }
 
-void CChildView::OnPaint() 
+void CMainView::OnPaint() 
 {
 	CPaintDC dc(this); // device context for painting
-	
+
 	// TODO: Add your message handler code here
 	
 	// Do not call CWnd::OnPaint() for painting messages
 }
 
+
+
+int CMainView::OnCreate(LPCREATESTRUCT lpCreateStruct)
+{
+	if (CWnd::OnCreate(lpCreateStruct) == -1)
+		return -1;
+
+	// TODO:  Add your specialized creation code here
+
+	return 0;
+}

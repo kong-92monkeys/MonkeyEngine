@@ -8,11 +8,11 @@
 
 // CChildView window
 
-class CChildView : public CWnd
+class CMainView : public CWnd
 {
 // Construction
 public:
-	CChildView();
+	CMainView();
 
 // Attributes
 public:
@@ -26,11 +26,13 @@ public:
 
 // Implementation
 public:
-	virtual ~CChildView();
+	virtual ~CMainView();
 
 	// Generated message map functions
 protected:
 	afx_msg void OnPaint();
 	DECLARE_MESSAGE_MAP()
+public:
+	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
 };
 
