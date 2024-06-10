@@ -5,5 +5,6 @@
     <ClCompile Include="Logger.ixx" />
     <ClCompile Include="TimelineIdAllocator.ixx" />
     <ClCompile Include="Unique.ixx" />
+    <ClCompile Include="Version.ixx" />
   </ItemGroup>
 </Project>

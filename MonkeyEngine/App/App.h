@@ -8,7 +8,9 @@
 #endif
 
 #include "resource.h"       // main symbols
+import <memory>;
 import ntmonkeys.com.Lib.Event;
+import ntmonkeys.com.Graphics.Core;
 
 // CApp:
 // See App.cpp for the implementation of this class
@@ -36,9 +38,11 @@ public:
 	constexpr Lib::EventView<> &getIdleEvent() const noexcept;
 
 private:
+	std::unique_ptr<Graphics::Core> __pGraphicsCore;
+
 	mutable Lib::Event<> __idleEvent;
 
-	void __checkVulkanSupport() noexcept;
+	void __createVulkanCore() noexcept;
 
 public:
 	virtual BOOL OnIdle(LONG lCount);

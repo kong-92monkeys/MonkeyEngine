@@ -136,8 +136,10 @@
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <EnableModules>true</EnableModules>
-      <BuildStlModules>true</BuildStlModules>
+      <EnableModules>
+      </EnableModules>
+      <BuildStlModules>
+      </BuildStlModules>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -159,8 +161,10 @@
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <EnableModules>true</EnableModules>
-      <BuildStlModules>true</BuildStlModules>
+      <EnableModules>
+      </EnableModules>
+      <BuildStlModules>
+      </BuildStlModules>
     </ClCompile>
     <Link>
       <SubSystem>

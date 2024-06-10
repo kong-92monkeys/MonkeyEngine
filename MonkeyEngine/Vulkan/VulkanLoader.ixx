@@ -18,7 +18,10 @@ namespace VK
 		constexpr bool isVulkanSupported() const noexcept;
 
 		[[nodiscard]]
-		static VulkanLoader &__getInstance() noexcept;
+		constexpr const GlobalProc &getGlobalProc() const noexcept;
+
+		[[nodiscard]]
+		static VulkanLoader &getInstance() noexcept;
 
 	private:
 		HMODULE __hLib{ };
@@ -51,7 +54,12 @@ namespace VK
 		return __hLib;
 	}
 
-	VulkanLoader &VulkanLoader::__getInstance() noexcept
+	constexpr const GlobalProc &VulkanLoader::getGlobalProc() const noexcept
+	{
+		return __globalProc;
+	}
+
+	VulkanLoader &VulkanLoader::getInstance() noexcept
 	{
 		static VulkanLoader instance;
 		return instance;
@@ -78,5 +86,9 @@ namespace VK
 		__globalProc.vkEnumerateInstanceLayerProperties =
 			reinterpret_cast<PFN_vkEnumerateInstanceLayerProperties>(
 				vkGetInstanceProcAddr(nullptr, "vkEnumerateInstanceLayerProperties"));
+
+		__globalProc.vkCreateInstance =
+			reinterpret_cast<PFN_vkCreateInstance>(
+				vkGetInstanceProcAddr(nullptr, "vkCreateInstance"));
 	}
 }

@@ -76,7 +76,7 @@ BOOL CApp::InitInstance()
 	pFrame->ShowWindow(SW_SHOW);
 	pFrame->UpdateWindow();
 
-	__checkVulkanSupport();
+	__createVulkanCore();
 
 	return TRUE;
 }
@@ -87,14 +87,33 @@ int CApp::ExitInstance()
 	return CWinApp::ExitInstance();
 }
 
-void CApp::__checkVulkanSupport() noexcept
+void CApp::__createVulkanCore() noexcept
 {
-	auto &vulkanLoader{ VK::VulkanLoader::__getInstance() };
-	
-	if (vulkanLoader.isVulkanSupported())
-		Lib::Logger::log(Lib::Logger::Severity::INFO, "Vulkan is supported.");
-	else
-		Lib::Logger::log(Lib::Logger::Severity::INFO, "Vulkan is not supported on current device.");
+	try
+	{
+		const Graphics::Core::CreateInfo coreCreateInfo
+		{
+			.appName			{ "MonkeyEngineDemo" },
+			.appVersion			{ 0U, 0U, 1U, 0U },
+			
+			.engineName			{ "MonkeyEngine" },
+			.engineVersion		{ 0U, 0U, 1U, 0U },
+
+			.instanceVersion	{ 1U, 4U, 0U, 0U }
+		};
+
+		__pGraphicsCore = std::make_unique<Graphics::Core>(coreCreateInfo);
+	}
+	catch (const std::runtime_error &e)
+	{
+		Lib::Logger::log(
+			Lib::Logger::Severity::FATAL,
+			std::format("Error occurred while creating Vulkan core: {}", e.what()));
+
+		return;
+	}
+
+	Lib::Logger::log(Lib::Logger::Severity::INFO, "Vulkan core created.");
 }
 
 // CApp message handlers

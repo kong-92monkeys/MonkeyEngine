@@ -98,8 +98,10 @@
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <EnableModules>true</EnableModules>
-      <BuildStlModules>true</BuildStlModules>
+      <EnableModules>
+      </EnableModules>
+      <BuildStlModules>
+      </BuildStlModules>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -175,8 +177,10 @@
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <EnableModules>true</EnableModules>
-      <BuildStlModules>true</BuildStlModules>
+      <EnableModules>
+      </EnableModules>
+      <BuildStlModules>
+      </BuildStlModules>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -229,6 +233,9 @@
     <Image Include="res\App.ico" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Graphics\Graphics.vcxproj">
+      <Project>{e70909a6-9dd0-44bf-bf5e-fc842554e0f4}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\Library\Library.vcxproj">
       <Project>{b07a68cb-1c8b-490b-8900-411b4c3a9deb}</Project>
     </ProjectReference>
