@@ -1,5 +1,30 @@
+module;
+
 #include "pch.h"
-#include "ListBoxLoggerImpl.h"
+#include <afxwin.h>
+
+export module ntmonkeys.com.App.ListBoxLoggerImpl;
+
+import ntmonkeys.com.Lib.Logger;
+import <mutex>;
+import <vector>;
+import <string>;
+
+export class ListBoxLoggerImpl : public Lib::Logger::Impl
+{
+public:
+	ListBoxLoggerImpl(CListBox &listBox) noexcept;
+
+	virtual void log(std::string message) noexcept override;
+
+	void flush();
+
+private:
+	CListBox &__listBox;
+
+	std::mutex __mutex;
+	std::vector<std::string> __logBuffer;
+};
 
 ListBoxLoggerImpl::ListBoxLoggerImpl(CListBox &listBox) noexcept :
 	__listBox{ listBox }

@@ -1,26 +1,26 @@
-#pragma once
+export module ntmonkeys.com.Lib.Event;
 
-#include "Unique.h"
-#include <functional>
-#include <memory>
-#include <unordered_map>
-#include <stdexcept>
+import ntmonkeys.com.Lib.Unique;
+import <functional>;
+import <memory>;
+import <unordered_map>;
+import <stdexcept>;
 
 namespace Lib
 {
 	template <typename ...$Args>
 	class EventListener;
 
-	template <typename ...$Args>
+	export template <typename ...$Args>
 	using EventListenerPtr = std::shared_ptr<EventListener<$Args...>>;
 
 	template <typename ...$Args>
 	using EventListenerWPtr = std::weak_ptr<EventListener<$Args...>>;
 
-	template <typename ...$Args>
+	export template <typename ...$Args>
 	using EventCallback = std::function<void(const $Args &...)>;
 
-	template <typename ...$Args>
+	export template <typename ...$Args>
 	class EventListener : public UniqueId
 	{
 	public:
@@ -40,7 +40,7 @@ namespace Lib
 		const EventCallback<$Args...> __callbackFunc;
 	};
 
-	template <typename ...$Args>
+	export template <typename ...$Args>
 	class EventView : public Unique
 	{
 	public:
@@ -51,7 +51,7 @@ namespace Lib
 		EventView &operator-=(const EventListenerPtr<$Args...> &pListener);
 	};
 
-	template <typename ...$Args>
+	export template <typename ...$Args>
 	class Event : public EventView<$Args...>
 	{
 	public:

@@ -8,13 +8,10 @@
 #include "afxdialogex.h"
 #include "App.h"
 #include "MainFrm.h"
-#include "../Library/Logger.h"
-#include "../Vulkan/VulkanLoader.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
-
 
 // CApp
 
@@ -22,6 +19,8 @@ BEGIN_MESSAGE_MAP(CApp, CWinApp)
 	ON_COMMAND(ID_APP_ABOUT, &CApp::OnAppAbout)
 END_MESSAGE_MAP()
 
+import ntmonkeys.com.Lib.Logger;
+import ntmonkeys.com.VK.VulkanLoader;
 
 // CApp construction
 

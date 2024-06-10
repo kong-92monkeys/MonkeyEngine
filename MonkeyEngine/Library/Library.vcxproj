@@ -19,15 +19,16 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Event.h" />
-    <ClInclude Include="Logger.h" />
-    <ClInclude Include="TimelineIdAllocator.h" />
-    <ClInclude Include="Unique.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="Logger.cpp" />
-    <ClCompile Include="TimelineIdAllocator.cpp" />
-    <ClCompile Include="Unique.cpp" />
+    <ClCompile Include="Event.ixx" />
+    <ClCompile Include="Logger.ixx">
+      <FileType>Document</FileType>
+    </ClCompile>
+    <ClCompile Include="TimelineIdAllocator.ixx">
+      <FileType>Document</FileType>
+    </ClCompile>
+    <ClCompile Include="Unique.ixx">
+      <FileType>Document</FileType>
+    </ClCompile>
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
@@ -126,6 +127,9 @@
       </PrecompiledHeaderFile>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <EnableModules>true</EnableModules>
+      <BuildStlModules>true</BuildStlModules>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -146,6 +150,9 @@
       </PrecompiledHeaderFile>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <EnableModules>true</EnableModules>
+      <BuildStlModules>true</BuildStlModules>
     </ClCompile>
     <Link>
       <SubSystem>

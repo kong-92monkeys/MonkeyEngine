@@ -20,10 +20,12 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Vulkan.h" />
-    <ClInclude Include="VulkanLoader.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="VulkanLoader.cpp" />
+    <ClCompile Include="VulkanLoader.ixx">
+      <FileType>Document</FileType>
+    </ClCompile>
+    <ClCompile Include="VulkanProc.ixx">
+      <FileType>Document</FileType>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Library\Library.vcxproj">
@@ -133,6 +135,9 @@
       </PrecompiledHeaderFile>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <EnableModules>true</EnableModules>
+      <BuildStlModules>true</BuildStlModules>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -153,6 +158,9 @@
       </PrecompiledHeaderFile>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <EnableModules>true</EnableModules>
+      <BuildStlModules>true</BuildStlModules>
     </ClCompile>
     <Link>
       <SubSystem>

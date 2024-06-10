@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ListBoxLoggerImpl.h"
+import ntmonkeys.com.App.ListBoxLoggerImpl;
 
 // CLogView form view
 

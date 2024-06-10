@@ -4,21 +4,18 @@
     <Filter Include="Infra">
       <UniqueIdentifier>{cd3f5d86-e1d3-4e8d-87f9-5be1b25d5005}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Infra\VulkanLoader">
-      <UniqueIdentifier>{073abaaa-b7f6-40eb-845d-e677594ff546}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Vulkan.h">
       <Filter>Infra</Filter>
     </ClInclude>
-    <ClInclude Include="VulkanLoader.h">
-      <Filter>Infra\VulkanLoader</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="VulkanLoader.cpp">
-      <Filter>Infra\VulkanLoader</Filter>
+    <ClCompile Include="VulkanProc.ixx">
+      <Filter>Infra</Filter>
+    </ClCompile>
+    <ClCompile Include="VulkanLoader.ixx">
+      <Filter>Infra</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

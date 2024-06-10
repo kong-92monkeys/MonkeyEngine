@@ -1,10 +1,10 @@
-#pragma once
+export module ntmonkeys.com.Lib.Unique;
 
-#include "TimelineIdAllocator.h"
+import ntmonkeys.com.Lib.TimelineIdAllocator;
 
 namespace Lib
 {
-	class Unique
+	export class Unique
 	{
 	public:
 		Unique() = default;
@@ -17,7 +17,7 @@ namespace Lib
 		Unique &operator=(Unique &&) = delete;
 	};
 
-	class UniqueId
+	export class UniqueId
 	{
 	public:
 		UniqueId() noexcept;
@@ -36,6 +36,9 @@ namespace Lib
 		const uint64_t __uid;
 		static inline TimelineIdAllocator<true> __idAllocator;
 	};
+
+	UniqueId::UniqueId() noexcept : __uid{ __idAllocator.allocate() }
+	{}
 
 	constexpr uint64_t UniqueId::getUID() const noexcept
 	{

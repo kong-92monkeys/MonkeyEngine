@@ -8,7 +8,7 @@
 #endif
 
 #include "resource.h"       // main symbols
-#include "../Library/Event.h"
+import ntmonkeys.com.Lib.Event;
 
 // CApp:
 // See App.cpp for the implementation of this class

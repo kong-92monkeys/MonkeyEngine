@@ -53,9 +53,6 @@
     <ClInclude Include="LogView.h">
       <Filter>View\LogView</Filter>
     </ClInclude>
-    <ClInclude Include="ListBoxLoggerImpl.h">
-      <Filter>Logger</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="App.cpp">
@@ -73,7 +70,7 @@
     <ClCompile Include="LogView.cpp">
       <Filter>View\LogView</Filter>
     </ClCompile>
-    <ClCompile Include="ListBoxLoggerImpl.cpp">
+    <ClCompile Include="ListBoxLoggerImpl.ixx">
       <Filter>Logger</Filter>
     </ClCompile>
   </ItemGroup>
