@@ -10,6 +10,7 @@ import ntmonkeys.com.Lib.Logger;
 import ntmonkeys.com.VK.VulkanLoader;
 import ntmonkeys.com.Graphics.ConversionUtil;
 import <stdexcept>;
+import <unordered_map>;
 
 namespace Graphics
 {
@@ -35,9 +36,20 @@ namespace Graphics
 		VkDebugUtilsMessengerCreateInfoEXT __debugUtilsMessengerCreateInfo{ };
 		Lib::Version __instanceVer;
 
+		std::vector<VkLayerProperties> __instanceLayers;
+		std::vector<VkExtensionProperties> __instanceExtensions;
+
+		std::unordered_map<std::string_view, const VkLayerProperties *> __instanceLayerMap;
+		std::unordered_map<std::string_view, const VkExtensionProperties *> __instanceExtensionMap;
+
+		VkInstance __hVulkanInstance{ };
+
 		void __checkVulkanSupport();
 		constexpr void __populateDebugUtilsMessengerCreateInfo() noexcept;
 		void __resolveInstanceVersion();
+		void __resolveInstanceLayers() noexcept;
+		void __resolveInstanceExtensions() noexcept;
+		void __createVulkanInstance();
 
 		static VkBool32 __vkDebugUtilsMessengerCallbackEXT(
 			const VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
@@ -56,6 +68,9 @@ namespace Graphics
 #endif
 
 		__resolveInstanceVersion();
+		__resolveInstanceLayers();
+		__resolveInstanceExtensions();
+		__createVulkanInstance();
 	}
 
 	Core::~Core() noexcept
@@ -111,6 +126,39 @@ namespace Graphics
 
 		if (__instanceVer < ConversionUtil::fromVulkanVersion(VK_API_VERSION_1_3))
 			throw std::runtime_error{ "The supported vulkan instance version is too low." };
+	}
+
+	void Core::__resolveInstanceLayers() noexcept
+	{
+		const auto &globalProc{ VK::VulkanLoader::getInstance().getGlobalProc() };
+
+		uint32_t layerCount{ };
+		globalProc.vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
+
+		__instanceLayers.resize(layerCount);
+		globalProc.vkEnumerateInstanceLayerProperties(&layerCount, __instanceLayers.data());
+
+		for (const auto &layer : __instanceLayers)
+			__instanceLayerMap[layer.layerName] = &layer;
+	}
+
+	void Core::__resolveInstanceExtensions() noexcept
+	{
+		const auto &globalProc{ VK::VulkanLoader::getInstance().getGlobalProc() };
+
+		uint32_t extensionCount{ };
+		globalProc.vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
+
+		__instanceExtensions.resize(extensionCount);
+		globalProc.vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, __instanceExtensions.data());
+
+		for (const auto &extension : __instanceExtensions)
+			__instanceExtensionMap[extension.extensionName] = &extension;
+	}
+
+	void Core::__createVulkanInstance()
+	{
+		
 	}
 
 	VkBool32 Core::__vkDebugUtilsMessengerCallbackEXT(
