@@ -9,7 +9,7 @@
 #include "App.h"
 #include "MainFrm.h"
 #include "../Library/Logger.h"
-
+#include "../Vulkan/VulkanLoader.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -77,7 +77,7 @@ BOOL CApp::InitInstance()
 	pFrame->ShowWindow(SW_SHOW);
 	pFrame->UpdateWindow();
 
-	Lib::Logger::getInstance().log(Lib::Logger::Severity::INFO, "The app has been initialized.");
+	__checkVulkanSupport();
 
 	return TRUE;
 }
@@ -86,6 +86,16 @@ int CApp::ExitInstance()
 {
 	//TODO: handle additional resources you may have added
 	return CWinApp::ExitInstance();
+}
+
+void CApp::__checkVulkanSupport() noexcept
+{
+	auto &vulkanLoader{ VK::VulkanLoader::__getInstance() };
+	
+	if (vulkanLoader.isVulkanSupported())
+		Lib::Logger::log(Lib::Logger::Severity::INFO, "Vulkan is supported.");
+	else
+		Lib::Logger::log(Lib::Logger::Severity::INFO, "Vulkan is not supported on current device.");
 }
 
 // CApp message handlers
@@ -131,9 +141,6 @@ void CApp::OnAppAbout()
 }
 
 // CApp message handlers
-
-
-
 
 
 BOOL CApp::OnIdle(LONG lCount)

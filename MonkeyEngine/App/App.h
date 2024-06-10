@@ -37,6 +37,9 @@ public:
 
 private:
 	mutable Lib::Event<> __idleEvent;
+
+	void __checkVulkanSupport() noexcept;
+
 public:
 	virtual BOOL OnIdle(LONG lCount);
 };

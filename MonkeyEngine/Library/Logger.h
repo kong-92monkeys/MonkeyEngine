@@ -25,11 +25,8 @@ namespace Lib
 			virtual void log(std::string message) noexcept = 0;
 		};
 
-		void emplaceImpl(std::shared_ptr<Impl> pImpl) noexcept;
-		void log(const Severity severity, const std::string message) noexcept;
-
-		[[nodiscard]]
-		static Logger &getInstance() noexcept;
+		static void emplaceImpl(std::shared_ptr<Impl> pImpl) noexcept;
+		static void log(const Severity severity, const std::string message) noexcept;
 
 	private:
 		std::mutex __mutex;
@@ -38,6 +35,12 @@ namespace Lib
 		std::shared_ptr<Impl> __pImpl;
 
 		Logger() = default;
+
+		void __emplaceImpl(std::shared_ptr<Impl> &&pImpl) noexcept;
+		void __log(const Severity severity, const std::string &message) noexcept;
+
+		[[nodiscard]]
+		static Logger &__getInstance() noexcept;
 
 		[[nodiscard]]
 		static std::string __makeLogMessage(const Severity severity, const std::string &message) noexcept;

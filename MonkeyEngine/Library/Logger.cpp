@@ -6,6 +6,16 @@ namespace Lib
 {
 	void Logger::emplaceImpl(std::shared_ptr<Impl> pImpl) noexcept
 	{
+		__getInstance().__emplaceImpl(std::move(pImpl));
+	}
+
+	void Logger::log(const Severity severity, const std::string message) noexcept
+	{
+		__getInstance().__log(severity, message);
+	}
+
+	void Logger::__emplaceImpl(std::shared_ptr<Impl> &&pImpl) noexcept
+	{
 		std::lock_guard lock{ __mutex };
 
 		__pImpl = std::move(pImpl);
@@ -18,7 +28,7 @@ namespace Lib
 		__logBuffer.clear();
 	}
 
-	void Logger::log(const Severity severity, const std::string message) noexcept
+	void Logger::__log(const Severity severity, const std::string &message) noexcept
 	{
 		auto logMessage{ __makeLogMessage(severity, message) };
 
@@ -30,7 +40,7 @@ namespace Lib
 			__logBuffer.emplace_back(std::move(logMessage));
 	}
 
-	Logger &Logger::getInstance() noexcept
+	Logger &Logger::__getInstance() noexcept
 	{
 		static Logger instance;
 		return instance;

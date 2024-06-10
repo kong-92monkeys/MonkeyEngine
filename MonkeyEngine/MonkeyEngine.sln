@@ -11,6 +11,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "1. Library", "1. Library", 
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Library", "Library\Library.vcxproj", "{B07A68CB-1C8B-490B-8900-411B4C3A9DEB}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "2. Vulkan", "2. Vulkan", "{65A783DC-A578-45BB-B6A8-BD4D138C6A98}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Vulkan", "Vulkan\Vulkan.vcxproj", "{44D48842-8F63-46C0-8D5E-B5D74B7B5A28}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -35,6 +39,14 @@ Global
 		{B07A68CB-1C8B-490B-8900-411B4C3A9DEB}.Release|x64.Build.0 = Release|x64
 		{B07A68CB-1C8B-490B-8900-411B4C3A9DEB}.Release|x86.ActiveCfg = Release|Win32
 		{B07A68CB-1C8B-490B-8900-411B4C3A9DEB}.Release|x86.Build.0 = Release|Win32
+		{44D48842-8F63-46C0-8D5E-B5D74B7B5A28}.Debug|x64.ActiveCfg = Debug|x64
+		{44D48842-8F63-46C0-8D5E-B5D74B7B5A28}.Debug|x64.Build.0 = Debug|x64
+		{44D48842-8F63-46C0-8D5E-B5D74B7B5A28}.Debug|x86.ActiveCfg = Debug|Win32
+		{44D48842-8F63-46C0-8D5E-B5D74B7B5A28}.Debug|x86.Build.0 = Debug|Win32
+		{44D48842-8F63-46C0-8D5E-B5D74B7B5A28}.Release|x64.ActiveCfg = Release|x64
+		{44D48842-8F63-46C0-8D5E-B5D74B7B5A28}.Release|x64.Build.0 = Release|x64
+		{44D48842-8F63-46C0-8D5E-B5D74B7B5A28}.Release|x86.ActiveCfg = Release|Win32
+		{44D48842-8F63-46C0-8D5E-B5D74B7B5A28}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -42,6 +54,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{4705560F-7E88-453D-8A71-F2182BA9C279} = {B39470AC-7664-406D-AE90-B65C3F0116D1}
 		{B07A68CB-1C8B-490B-8900-411B4C3A9DEB} = {10ED5AC9-0A20-48BB-B02F-13BC9C76D390}
+		{44D48842-8F63-46C0-8D5E-B5D74B7B5A28} = {65A783DC-A578-45BB-B6A8-BD4D138C6A98}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {D4A6EAF5-85C5-4421-A05C-8D5144428FE6}

@@ -23,7 +23,7 @@ CLogView::~CLogView()
 
 void CLogView::emplaceLoggerImpl() noexcept
 {
-	Lib::Logger::getInstance().emplaceImpl(__pLoggerImpl);
+	Lib::Logger::emplaceImpl(__pLoggerImpl);
 }
 
 void CLogView::DoDataExchange(CDataExchange* pDX)
