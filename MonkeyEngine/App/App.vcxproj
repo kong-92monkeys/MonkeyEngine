@@ -188,7 +188,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="App.h" />
-    <ClInclude Include="ListBoxLoggerEngine.h" />
+    <ClInclude Include="ListBoxLoggerImpl.h" />
     <ClInclude Include="MainView.h" />
     <ClInclude Include="LogView.h" />
     <ClInclude Include="framework.h" />
@@ -199,7 +199,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="App.cpp" />
-    <ClCompile Include="ListBoxLoggerEngine.cpp" />
+    <ClCompile Include="ListBoxLoggerImpl.cpp" />
     <ClCompile Include="MainView.cpp" />
     <ClCompile Include="LogView.cpp" />
     <ClCompile Include="MainFrm.cpp" />

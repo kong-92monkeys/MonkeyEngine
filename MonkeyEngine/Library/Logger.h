@@ -2,7 +2,9 @@
 
 #include "Unique.h"
 #include <memory>
+#include <vector>
 #include <string>
+#include <mutex>
 
 namespace Lib
 {
@@ -17,22 +19,28 @@ namespace Lib
 			VERBOSE
 		};
 
-		class Engine : public Unique
+		class Impl : public Unique
 		{
 		public:
 			virtual void log(std::string message) noexcept = 0;
 		};
 
-		void emplaceEngine(std::shared_ptr<Engine> pEngine) noexcept;
+		void emplaceImpl(std::shared_ptr<Impl> pImpl) noexcept;
 		void log(const Severity severity, const std::string message) noexcept;
 
 		[[nodiscard]]
 		static Logger &getInstance() noexcept;
 
 	private:
-		std::shared_ptr<Engine> __pEngine;
+		std::mutex __mutex;
+
+		std::vector<std::string> __logBuffer;
+		std::shared_ptr<Impl> __pImpl;
 
 		Logger() = default;
+
+		[[nodiscard]]
+		static std::string __makeLogMessage(const Severity severity, const std::string &message) noexcept;
 
 		[[nodiscard]]
 		static std::string __getCurrentTimeStr() noexcept;

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ListBoxLoggerEngine.h"
+#include "ListBoxLoggerImpl.h"
 
 // CLogView form view
 
@@ -23,7 +23,7 @@ public:
 #endif
 #endif
 
-	void emplaceLoggerEngine() noexcept;
+	void emplaceLoggerImpl() noexcept;
 
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
@@ -33,7 +33,7 @@ protected:
 private:
 	CListBox __logListBox;
 
-	std::shared_ptr<ListBoxLoggerEngine> __pLoggerEngine;
+	std::shared_ptr<ListBoxLoggerImpl> __pLoggerImpl;
 	Lib::EventListenerPtr<> __pAppIdleListener;
 
 	void __onIdle();

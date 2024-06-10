@@ -1,17 +1,17 @@
 #include "pch.h"
-#include "ListBoxLoggerEngine.h"
+#include "ListBoxLoggerImpl.h"
 
-ListBoxLoggerEngine::ListBoxLoggerEngine(CListBox &listBox) noexcept :
+ListBoxLoggerImpl::ListBoxLoggerImpl(CListBox &listBox) noexcept :
 	__listBox{ listBox }
 {}
 
-void ListBoxLoggerEngine::log(std::string message) noexcept
+void ListBoxLoggerImpl::log(std::string message) noexcept
 {
 	std::lock_guard lock{ __mutex };
 	__logBuffer.emplace_back(std::move(message));
 }
 
-void ListBoxLoggerEngine::flush()
+void ListBoxLoggerImpl::flush()
 {
 	std::vector<std::string> logBuffer;
 

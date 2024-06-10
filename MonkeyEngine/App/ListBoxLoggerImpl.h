@@ -6,10 +6,10 @@
 #include <string>
 #include <afxwin.h>
 
-class ListBoxLoggerEngine : public Lib::Logger::Engine
+class ListBoxLoggerImpl : public Lib::Logger::Impl
 {
 public:
-	ListBoxLoggerEngine(CListBox &listBox) noexcept;
+	ListBoxLoggerImpl(CListBox &listBox) noexcept;
 
 	virtual void log(std::string message) noexcept override;
 

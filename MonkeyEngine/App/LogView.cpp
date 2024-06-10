@@ -13,7 +13,7 @@ IMPLEMENT_DYNCREATE(CLogView, CFormView)
 CLogView::CLogView()
 	: CFormView(IDD_LOGDIALOG)
 {
-	__pLoggerEngine = std::make_shared<ListBoxLoggerEngine>(__logListBox);
+	__pLoggerImpl = std::make_shared<ListBoxLoggerImpl>(__logListBox);
 	__pAppIdleListener = Lib::EventListener<>::bind(&CLogView::__onIdle, this);
 }
 
@@ -21,12 +21,9 @@ CLogView::~CLogView()
 {
 }
 
-void CLogView::emplaceLoggerEngine() noexcept
+void CLogView::emplaceLoggerImpl() noexcept
 {
-	auto &logger{ Lib::Logger::getInstance() };
-
-	logger.emplaceEngine(__pLoggerEngine);
-	logger.log(Lib::Logger::Severity::INFO, "test");
+	Lib::Logger::getInstance().emplaceImpl(__pLoggerImpl);
 }
 
 void CLogView::DoDataExchange(CDataExchange* pDX)
@@ -59,7 +56,7 @@ void CLogView::Dump(CDumpContext& dc) const
 
 void CLogView::__onIdle()
 {
-	__pLoggerEngine->flush();
+	__pLoggerImpl->flush();
 }
 
 // CLogView message handlers

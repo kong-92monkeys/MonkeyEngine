@@ -76,6 +76,9 @@ BOOL CApp::InitInstance()
 	// The one and only window has been initialized, so show and update it
 	pFrame->ShowWindow(SW_SHOW);
 	pFrame->UpdateWindow();
+
+	Lib::Logger::getInstance().log(Lib::Logger::Severity::INFO, "The app has been initialized.");
+
 	return TRUE;
 }
 
