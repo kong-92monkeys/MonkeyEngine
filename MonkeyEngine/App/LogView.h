@@ -32,7 +32,15 @@ protected:
 
 private:
 	CListBox __logListBox;
+
 	std::shared_ptr<ListBoxLoggerEngine> __pLoggerEngine;
+	Lib::EventListenerPtr<> __pAppIdleListener;
+
+	void __onIdle();
+
+public:
+	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
+	afx_msg void OnDestroy();
 };
 
 

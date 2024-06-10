@@ -8,7 +8,7 @@
 #endif
 
 #include "resource.h"       // main symbols
-
+#include "../Library/Event.h"
 
 // CApp:
 // See App.cpp for the implementation of this class
@@ -30,6 +30,20 @@ public:
 public:
 	afx_msg void OnAppAbout();
 	DECLARE_MESSAGE_MAP()
+
+public:
+	[[nodiscard]]
+	constexpr Lib::EventView<> &getIdleEvent() const noexcept;
+
+private:
+	mutable Lib::Event<> __idleEvent;
+public:
+	virtual BOOL OnIdle(LONG lCount);
 };
 
 extern CApp theApp;
+
+constexpr Lib::EventView<> &CApp::getIdleEvent() const noexcept
+{
+	return __idleEvent;
+}

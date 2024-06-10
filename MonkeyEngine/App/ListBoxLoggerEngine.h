@@ -11,9 +11,7 @@ class ListBoxLoggerEngine : public Lib::Logger::Engine
 public:
 	ListBoxLoggerEngine(CListBox &listBox) noexcept;
 
-	virtual void log(
-		const Lib::Logger::Severity severity,
-		const std::string_view &message) noexcept override;
+	virtual void log(std::string message) noexcept override;
 
 	void flush();
 

@@ -7,6 +7,12 @@
     <ClInclude Include="Unique.h">
       <Filter>Unique</Filter>
     </ClInclude>
+    <ClInclude Include="TimelineIdAllocator.h">
+      <Filter>TimelineIdAllocator</Filter>
+    </ClInclude>
+    <ClInclude Include="Event.h">
+      <Filter>Event</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Logger">
@@ -15,10 +21,22 @@
     <Filter Include="Unique">
       <UniqueIdentifier>{6c6e33c9-62c0-427c-818b-39b35beed0f8}</UniqueIdentifier>
     </Filter>
+    <Filter Include="TimelineIdAllocator">
+      <UniqueIdentifier>{a52fd0dc-5034-46e4-bb85-4225567771e1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Event">
+      <UniqueIdentifier>{df13daa7-ef78-4bdf-9e8b-98306dad3dae}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Logger.cpp">
       <Filter>Logger</Filter>
+    </ClCompile>
+    <ClCompile Include="TimelineIdAllocator.cpp">
+      <Filter>TimelineIdAllocator</Filter>
+    </ClCompile>
+    <ClCompile Include="Unique.cpp">
+      <Filter>Unique</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

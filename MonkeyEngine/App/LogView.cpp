@@ -14,6 +14,7 @@ CLogView::CLogView()
 	: CFormView(IDD_LOGDIALOG)
 {
 	__pLoggerEngine = std::make_shared<ListBoxLoggerEngine>(__logListBox);
+	__pAppIdleListener = Lib::EventListener<>::bind(&CLogView::__onIdle, this);
 }
 
 CLogView::~CLogView()
@@ -22,7 +23,10 @@ CLogView::~CLogView()
 
 void CLogView::emplaceLoggerEngine() noexcept
 {
-	Lib::Logger::getInstance().emplaceEngine(__pLoggerEngine);
+	auto &logger{ Lib::Logger::getInstance() };
+
+	logger.emplaceEngine(__pLoggerEngine);
+	logger.log(Lib::Logger::Severity::INFO, "test");
 }
 
 void CLogView::DoDataExchange(CDataExchange* pDX)
@@ -32,6 +36,8 @@ void CLogView::DoDataExchange(CDataExchange* pDX)
 }
 
 BEGIN_MESSAGE_MAP(CLogView, CFormView)
+	ON_WM_CREATE()
+	ON_WM_DESTROY()
 END_MESSAGE_MAP()
 
 
@@ -51,5 +57,30 @@ void CLogView::Dump(CDumpContext& dc) const
 #endif
 #endif //_DEBUG
 
+void CLogView::__onIdle()
+{
+	__pLoggerEngine->flush();
+}
 
 // CLogView message handlers
+
+
+int CLogView::OnCreate(LPCREATESTRUCT lpCreateStruct)
+{
+	if (CFormView::OnCreate(lpCreateStruct) == -1)
+		return -1;
+
+	// TODO:  Add your specialized creation code here
+	theApp.getIdleEvent() += __pAppIdleListener;
+
+	return 0;
+}
+
+
+void CLogView::OnDestroy()
+{
+	CFormView::OnDestroy();
+
+	// TODO: Add your message handler code here
+	theApp.getIdleEvent() -= __pAppIdleListener;
+}

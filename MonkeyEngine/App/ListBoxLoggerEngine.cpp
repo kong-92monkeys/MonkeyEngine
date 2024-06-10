@@ -5,12 +5,10 @@ ListBoxLoggerEngine::ListBoxLoggerEngine(CListBox &listBox) noexcept :
 	__listBox{ listBox }
 {}
 
-void ListBoxLoggerEngine::log(
-	const Lib::Logger::Severity severity,
-	const std::string_view &message) noexcept
+void ListBoxLoggerEngine::log(std::string message) noexcept
 {
 	std::lock_guard lock{ __mutex };
-	__logBuffer.emplace_back(std::format("[{} {}] {}", "time", "severity", message));
+	__logBuffer.emplace_back(std::move(message));
 }
 
 void ListBoxLoggerEngine::flush()

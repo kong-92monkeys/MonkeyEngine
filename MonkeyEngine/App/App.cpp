@@ -8,6 +8,7 @@
 #include "afxdialogex.h"
 #include "App.h"
 #include "MainFrm.h"
+#include "../Library/Logger.h"
 
 
 #ifdef _DEBUG
@@ -130,3 +131,12 @@ void CApp::OnAppAbout()
 
 
 
+
+
+BOOL CApp::OnIdle(LONG lCount)
+{
+	// TODO: Add your specialized code here and/or call the base class
+	__idleEvent.invoke();
+
+	return CWinApp::OnIdle(lCount);
+}

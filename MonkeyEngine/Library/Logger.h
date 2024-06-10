@@ -2,7 +2,7 @@
 
 #include "Unique.h"
 #include <memory>
-#include <string_view>
+#include <string>
 
 namespace Lib
 {
@@ -20,11 +20,11 @@ namespace Lib
 		class Engine : public Unique
 		{
 		public:
-			virtual void log(const Severity severity, const std::string_view &message) noexcept = 0;
+			virtual void log(std::string message) noexcept = 0;
 		};
 
 		void emplaceEngine(std::shared_ptr<Engine> pEngine) noexcept;
-		void log(const Severity severity, const std::string_view &message) noexcept;
+		void log(const Severity severity, const std::string message) noexcept;
 
 		[[nodiscard]]
 		static Logger &getInstance() noexcept;
@@ -33,5 +33,24 @@ namespace Lib
 		std::shared_ptr<Engine> __pEngine;
 
 		Logger() = default;
+
+		[[nodiscard]]
+		static std::string __getCurrentTimeStr() noexcept;
+
+		[[nodiscard]]
+		static constexpr const char *__getSeverityStrOf(const Severity severity) noexcept;
 	};
+
+	constexpr const char *Logger::__getSeverityStrOf(const Severity severity) noexcept
+	{
+		switch (severity)
+		{
+			case Severity::FATAL	: return "FATAL";
+			case Severity::WARNING	: return "WARNING";
+			case Severity::INFO		: return "INFO";
+			case Severity::VERBOSE	: return "VERBOSE";
+		};
+
+		return "Unknown";
+	}
 }

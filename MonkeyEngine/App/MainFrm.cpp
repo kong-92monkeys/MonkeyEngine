@@ -76,7 +76,6 @@ BOOL CMainFrame::OnCreateClient(LPCREATESTRUCT lpcs, CCreateContext *pContext)
 	{
 		TRACE("Cannot create the log view.");
 		return FALSE;
-
 	}
 
 	if (!(windowSplitter.CreateView(0, 1, RUNTIME_CLASS(CMainView), CSize{ 0, 0 }, pContext)))
@@ -84,6 +83,9 @@ BOOL CMainFrame::OnCreateClient(LPCREATESTRUCT lpcs, CCreateContext *pContext)
 		TRACE("Cannot create the main view.");
 		return FALSE;
 	}
+
+	const auto pLogView{ STATIC_DOWNCAST(CLogView, windowSplitter.GetPane(0, 0)) };
+	pLogView->emplaceLoggerEngine();
 
 	return CFrameWnd::OnCreateClient(lpcs, pContext);
 }
