@@ -15,16 +15,16 @@
 #endif
 
 
-// CAppApp
+// CApp
 
-BEGIN_MESSAGE_MAP(CAppApp, CWinApp)
-	ON_COMMAND(ID_APP_ABOUT, &CAppApp::OnAppAbout)
+BEGIN_MESSAGE_MAP(CApp, CWinApp)
+	ON_COMMAND(ID_APP_ABOUT, &CApp::OnAppAbout)
 END_MESSAGE_MAP()
 
 
-// CAppApp construction
+// CApp construction
 
-CAppApp::CAppApp() noexcept
+CApp::CApp() noexcept
 {
 
 	// TODO: replace application ID string below with unique ID string; recommended
@@ -35,14 +35,14 @@ CAppApp::CAppApp() noexcept
 	// Place all significant initialization in InitInstance
 }
 
-// The one and only CAppApp object
+// The one and only CApp object
 
-CAppApp theApp;
+CApp theApp;
 
 
-// CAppApp initialization
+// CApp initialization
 
-BOOL CAppApp::InitInstance()
+BOOL CApp::InitInstance()
 {
 	CWinApp::InitInstance();
 
@@ -78,13 +78,13 @@ BOOL CAppApp::InitInstance()
 	return TRUE;
 }
 
-int CAppApp::ExitInstance()
+int CApp::ExitInstance()
 {
 	//TODO: handle additional resources you may have added
 	return CWinApp::ExitInstance();
 }
 
-// CAppApp message handlers
+// CApp message handlers
 
 
 // CAboutDlg dialog used for App About
@@ -120,13 +120,13 @@ BEGIN_MESSAGE_MAP(CAboutDlg, CDialogEx)
 END_MESSAGE_MAP()
 
 // App command to run the dialog
-void CAppApp::OnAppAbout()
+void CApp::OnAppAbout()
 {
 	CAboutDlg aboutDlg;
 	aboutDlg.DoModal();
 }
 
-// CAppApp message handlers
+// CApp message handlers
 
 
 

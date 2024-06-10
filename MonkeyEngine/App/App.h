@@ -10,14 +10,14 @@
 #include "resource.h"       // main symbols
 
 
-// CAppApp:
+// CApp:
 // See App.cpp for the implementation of this class
 //
 
-class CAppApp : public CWinApp
+class CApp : public CWinApp
 {
 public:
-	CAppApp() noexcept;
+	CApp() noexcept;
 
 
 // Overrides
@@ -32,4 +32,4 @@ public:
 	DECLARE_MESSAGE_MAP()
 };
 
-extern CAppApp theApp;
+extern CApp theApp;

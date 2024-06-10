@@ -188,6 +188,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="App.h" />
+    <ClInclude Include="ListBoxLoggerEngine.h" />
     <ClInclude Include="MainView.h" />
     <ClInclude Include="LogView.h" />
     <ClInclude Include="framework.h" />
@@ -198,6 +199,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="App.cpp" />
+    <ClCompile Include="ListBoxLoggerEngine.cpp" />
     <ClCompile Include="MainView.cpp" />
     <ClCompile Include="LogView.cpp" />
     <ClCompile Include="MainFrm.cpp" />
@@ -216,6 +218,11 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\App.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Library\Library.vcxproj">
+      <Project>{b07a68cb-1c8b-490b-8900-411b4c3a9deb}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
