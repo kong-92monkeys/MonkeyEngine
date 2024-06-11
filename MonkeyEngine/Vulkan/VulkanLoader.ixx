@@ -6,12 +6,15 @@ export module ntmonkeys.com.VK.VulkanLoader;
 
 import ntmonkeys.com.Lib.Unique;
 import ntmonkeys.com.VK.VulkanProc;
+import <string>;
+import <string_view>;
 
 namespace VK
 {
 	export class VulkanLoader : public Lib::Unique
 	{
 	public:
+		VulkanLoader(const std::string_view &libName) noexcept;
 		virtual ~VulkanLoader() noexcept;
 
 		[[nodiscard]]
@@ -20,23 +23,19 @@ namespace VK
 		[[nodiscard]]
 		constexpr const GlobalProc &getGlobalProc() const noexcept;
 
-		[[nodiscard]]
-		static VulkanLoader &getInstance() noexcept;
-
 	private:
+		const std::string __libName;
+
 		HMODULE __hLib{ };
 		GlobalProc __globalProc;
-
-		static constexpr auto __libName{ "vulkan-1.dll" };
-
-		VulkanLoader() noexcept;
 
 		void __loadGlobalProc() noexcept;
 	};
 
-	VulkanLoader::VulkanLoader() noexcept
+	VulkanLoader::VulkanLoader(const std::string_view &libName) noexcept :
+		__libName{ libName }
 	{
-		__hLib = LoadLibraryA(__libName);
+		__hLib = LoadLibraryA(__libName.c_str());
 		if (!__hLib)
 			return;
 
@@ -57,12 +56,6 @@ namespace VK
 	constexpr const GlobalProc &VulkanLoader::getGlobalProc() const noexcept
 	{
 		return __globalProc;
-	}
-
-	VulkanLoader &VulkanLoader::getInstance() noexcept
-	{
-		static VulkanLoader instance;
-		return instance;
 	}
 
 	void VulkanLoader::__loadGlobalProc() noexcept

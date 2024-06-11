@@ -76,7 +76,7 @@ BOOL CApp::InitInstance()
 	pFrame->ShowWindow(SW_SHOW);
 	pFrame->UpdateWindow();
 
-	__createVulkanCore();
+	__createGraphicsCore();
 
 	return TRUE;
 }
@@ -87,19 +87,21 @@ int CApp::ExitInstance()
 	return CWinApp::ExitInstance();
 }
 
-void CApp::__createVulkanCore() noexcept
+void CApp::__createGraphicsCore() noexcept
 {
 	try
 	{
 		const Graphics::Core::CreateInfo coreCreateInfo
 		{
-			.appName			{ "MonkeyEngineDemo" },
-			.appVersion			{ 0U, 0U, 1U, 0U },
-			
-			.engineName			{ "MonkeyEngine" },
-			.engineVersion		{ 0U, 0U, 1U, 0U },
+			.vulkanLoaderLibName	{ "vulkan_loader_dedicated-1.dll" },
 
-			.instanceVersion	{ 1U, 4U, 0U, 0U }
+			.appName				{ "MonkeyEngineDemo" },
+			.appVersion				{ 0U, 0U, 1U, 0U },
+			
+			.engineName				{ "MonkeyEngine" },
+			.engineVersion			{ 0U, 0U, 1U, 0U },
+
+			.instanceVersion		{ 1U, 4U, 0U, 0U }
 		};
 
 		__pGraphicsCore = std::make_unique<Graphics::Core>(coreCreateInfo);
@@ -108,12 +110,12 @@ void CApp::__createVulkanCore() noexcept
 	{
 		Lib::Logger::log(
 			Lib::Logger::Severity::FATAL,
-			std::format("Error occurred while creating Vulkan core: {}", e.what()));
+			std::format("Error occurred while creating graphics core: {}", e.what()));
 
 		return;
 	}
 
-	Lib::Logger::log(Lib::Logger::Severity::INFO, "Vulkan core created.");
+	Lib::Logger::log(Lib::Logger::Severity::INFO, "Graphics core created.");
 }
 
 // CApp message handlers

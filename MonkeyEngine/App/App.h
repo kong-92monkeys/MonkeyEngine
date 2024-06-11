@@ -42,7 +42,7 @@ private:
 
 	mutable Lib::Event<> __idleEvent;
 
-	void __createVulkanCore() noexcept;
+	void __createGraphicsCore() noexcept;
 
 public:
 	virtual BOOL OnIdle(LONG lCount);
