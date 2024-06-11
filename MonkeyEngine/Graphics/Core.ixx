@@ -1,4 +1,4 @@
-module;
+﻿module;
 
 #include "../Vulkan/Vulkan.h"
 
@@ -12,6 +12,7 @@ import ntmonkeys.com.Graphics.ConversionUtil;
 import <stdexcept>;
 import <unordered_map>;
 import <memory>;
+import <array>;
 
 namespace Graphics
 {
@@ -55,7 +56,10 @@ namespace Graphics
 		void __resolveInstanceLayers() noexcept;
 		void __resolveInstanceExtensions() noexcept;
 		constexpr void __populateDebugUtilsMessengerCreateInfo() noexcept;
-		void __createVulkanInstance();
+
+		void __createVulkanInstance(
+			const std::string &appName, const Lib::Version &appVersion,
+			const std::string &engineName, const Lib::Version &engineVersion);
 
 		static VkBool32 __vkDebugUtilsMessengerCallbackEXT(
 			const VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
@@ -76,7 +80,9 @@ namespace Graphics
 		__populateDebugUtilsMessengerCreateInfo();
 #endif
 
-		__createVulkanInstance();
+		__createVulkanInstance(
+			createInfo.appName, createInfo.appVersion,
+			createInfo.engineName, createInfo.engineVersion);
 	}
 
 	Core::~Core() noexcept
@@ -143,28 +149,95 @@ namespace Graphics
 	{
 		__debugUtilsMessengerCreateInfo.sType = VkStructureType::VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
 		__debugUtilsMessengerCreateInfo.messageSeverity =
-			(
-				VkDebugUtilsMessageSeverityFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT |
-				VkDebugUtilsMessageSeverityFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
-				VkDebugUtilsMessageSeverityFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT |
-				VkDebugUtilsMessageSeverityFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT
-				);
+		(
+			VkDebugUtilsMessageSeverityFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT |
+			VkDebugUtilsMessageSeverityFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT
+		);
 
 		__debugUtilsMessengerCreateInfo.messageType =
-			(
-				VkDebugUtilsMessageTypeFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
-				VkDebugUtilsMessageTypeFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
-				VkDebugUtilsMessageTypeFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT |
-				VkDebugUtilsMessageTypeFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_TYPE_DEVICE_ADDRESS_BINDING_BIT_EXT |
-				VkDebugUtilsMessageTypeFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_TYPE_FLAG_BITS_MAX_ENUM_EXT
-				);
+		(
+			VkDebugUtilsMessageTypeFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
+			VkDebugUtilsMessageTypeFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
+			VkDebugUtilsMessageTypeFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT |
+			VkDebugUtilsMessageTypeFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_TYPE_DEVICE_ADDRESS_BINDING_BIT_EXT
+		);
 
 		__debugUtilsMessengerCreateInfo.pfnUserCallback = __vkDebugUtilsMessengerCallbackEXT;
 	}
 
-	void Core::__createVulkanInstance()
+	void Core::__createVulkanInstance(
+		const std::string &appName, const Lib::Version &appVersion,
+		const std::string &engineName, const Lib::Version &engineVersion)
 	{
-		// TODO: Validation layer �����ؾ� ��
+		const VkApplicationInfo appInfo
+		{
+			.sType				{ VkStructureType::VK_STRUCTURE_TYPE_APPLICATION_INFO },
+			.pApplicationName	{ appName.c_str() },
+			.applicationVersion	{ ConversionUtil::toVulkanVersion(appVersion) },
+			.pEngineName		{ engineName.c_str() },
+			.engineVersion		{ ConversionUtil::toVulkanVersion(engineVersion) },
+			.apiVersion			{ ConversionUtil::toVulkanVersion(__instanceVer) }
+		};
+
+		VkInstanceCreateInfo createInfo
+		{
+			.sType				{ VkStructureType::VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO },
+			.pApplicationInfo	{ &appInfo }
+		};
+
+		std::vector<const char *> layers;
+		std::vector<const char *> extensions;
+
+		if (!(__instanceExtensionMap.contains(VK_KHR_SURFACE_EXTENSION_NAME)))
+			throw std::runtime_error{ "WSI is not supported." };
+
+		if (!(__instanceExtensionMap.contains(VK_KHR_WIN32_SURFACE_EXTENSION_NAME)))
+			throw std::runtime_error{ "WSI is not supported." };
+
+		extensions.emplace_back(VK_KHR_SURFACE_EXTENSION_NAME);
+		extensions.emplace_back(VK_KHR_WIN32_SURFACE_EXTENSION_NAME);
+
+#ifndef NDEBUG
+		static constexpr std::array enabledFeatures
+		{
+			// 퍼포먼스 떨어지는 코드 경고
+			VkValidationFeatureEnableEXT::VK_VALIDATION_FEATURE_ENABLE_BEST_PRACTICES_EXT,
+
+			// 메모리 해저드 경고
+			VkValidationFeatureEnableEXT::VK_VALIDATION_FEATURE_ENABLE_SYNCHRONIZATION_VALIDATION_EXT
+		};
+
+		const VkValidationFeaturesEXT validationFeatures
+		{
+			.sType							{ VkStructureType::VK_STRUCTURE_TYPE_VALIDATION_FEATURES_EXT },
+			.pNext							{ &__debugUtilsMessengerCreateInfo },
+			.enabledValidationFeatureCount	{ static_cast<uint32_t>(enabledFeatures.size()) },
+			.pEnabledValidationFeatures		{ enabledFeatures.data() }
+		};
+
+		static constexpr auto vvlLayerName	{ "VK_LAYER_KHRONOS_validation" };
+		const bool vvlSupported				{ __instanceLayerMap.contains(vvlLayerName) };
+		const bool debuggerSupported		{ __instanceExtensionMap.contains(VK_EXT_DEBUG_UTILS_EXTENSION_NAME) };
+
+		if (vvlSupported && debuggerSupported)
+		{
+			layers.emplace_back(vvlLayerName);
+			extensions.emplace_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+			createInfo.pNext = &validationFeatures;
+		}
+#endif
+
+		createInfo.enabledLayerCount		= static_cast<uint32_t>(layers.size());
+		createInfo.ppEnabledLayerNames		= layers.data();
+
+		createInfo.enabledExtensionCount	= static_cast<uint32_t>(extensions.size());
+		createInfo.ppEnabledExtensionNames	= extensions.data();
+
+		const auto &globalProc{ __pVulkanLoader->getGlobalProc() };
+		globalProc.vkCreateInstance(&createInfo, nullptr, &__hVulkanInstance);
+
+		if (!__hVulkanInstance)
+			throw std::runtime_error{ "Cannot create Vulkan instance." };
 	}
 
 	VkBool32 Core::__vkDebugUtilsMessengerCallbackEXT(

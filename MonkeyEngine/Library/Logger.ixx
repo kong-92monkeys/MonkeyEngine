@@ -110,7 +110,7 @@ namespace Lib
 		using namespace std::chrono;
 
 		const auto localNow{ current_zone()->to_local(system_clock::now()) };
-		return std::format("{:%Y-%m-%d %H:%M:%OS}", localNow);
+		return std::format("{:%y-%m-%d %H:%M:%OS}", localNow);
 	}
 
 	constexpr const char *Logger::__getSeverityStrOf(const Severity severity) noexcept

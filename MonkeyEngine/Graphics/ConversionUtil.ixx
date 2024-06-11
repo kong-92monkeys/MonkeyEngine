@@ -21,5 +21,10 @@ namespace Graphics
 				.variant	{ VK_API_VERSION_VARIANT(version) }
 			};
 		}
+
+		constexpr uint32_t toVulkanVersion(const Lib::Version &version) noexcept
+		{
+			return VK_MAKE_API_VERSION(version.variant, version.major, version.minor, version.patch);
+		}
 	};
 }
