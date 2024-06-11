@@ -78,6 +78,10 @@ namespace VK
 			reinterpret_cast<PFN_vkDestroyDebugUtilsMessengerEXT>(
 				__globalProc.vkGetInstanceProcAddr(hInstance, "vkDestroyDebugUtilsMessengerEXT"));
 
+		retVal.vkEnumeratePhysicalDevices =
+			reinterpret_cast<PFN_vkEnumeratePhysicalDevices>(
+				__globalProc.vkGetInstanceProcAddr(hInstance, "vkEnumeratePhysicalDevices"));
+
 		return retVal;
 	}
 

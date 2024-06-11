@@ -10,6 +10,7 @@ import ntmonkeys.com.Lib.Logger;
 import ntmonkeys.com.VK.VulkanLoader;
 import ntmonkeys.com.VK.VulkanProc;
 import ntmonkeys.com.Graphics.ConversionUtil;
+import ntmonkeys.com.Graphics.DeviceInfo;
 import <stdexcept>;
 import <unordered_map>;
 import <memory>;
@@ -37,6 +38,9 @@ namespace Graphics
 		Core(const CreateInfo &createInfo);
 		virtual ~Core() noexcept;
 
+		[[nodiscard]]
+		constexpr const std::vector<DeviceInfo> &getDeviceInfos() const noexcept;
+
 	private:
 		std::unique_ptr<VK::VulkanLoader> __pVulkanLoader;
 
@@ -53,6 +57,8 @@ namespace Graphics
 		VkInstance __hInstance{ };
 		VK::InstanceProc __instanceProc{ };
 
+		std::vector<DeviceInfo> __deviceInfos;
+
 		void __createVulkanLoader(const std::string &libName);
 		void __resolveInstanceVersion();
 		void __resolveInstanceLayers() noexcept;
@@ -62,6 +68,8 @@ namespace Graphics
 		void __createInstance(
 			const std::string &appName, const Lib::Version &appVersion,
 			const std::string &engineName, const Lib::Version &engineVersion);
+
+		void __loadDeviceInfos();
 
 		static VkBool32 __vkDebugUtilsMessengerCallbackEXT(
 			const VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
@@ -85,11 +93,18 @@ namespace Graphics
 		__createInstance(
 			createInfo.appName, createInfo.appVersion,
 			createInfo.engineName, createInfo.engineVersion);
+
+		__loadDeviceInfos();
 	}
 
 	Core::~Core() noexcept
 	{
 		__instanceProc.vkDestroyInstance(__hInstance, nullptr);
+	}
+
+	constexpr const std::vector<DeviceInfo> &Core::getDeviceInfos() const noexcept
+	{
+		return __deviceInfos;
 	}
 
 	void Core::__createVulkanLoader(const std::string &libName)
@@ -242,6 +257,23 @@ namespace Graphics
 			throw std::runtime_error{ "Cannot create Vulkan instance." };
 
 		__instanceProc = __pVulkanLoader->loadInstanceProc(__hInstance);
+	}
+
+	void Core::__loadDeviceInfos()
+	{
+		uint32_t deviceCount{ };
+		std::vector<VkPhysicalDevice> deviceHandles;
+
+		__instanceProc.vkEnumeratePhysicalDevices(__hInstance, &deviceCount, nullptr);
+
+		if (!deviceCount)
+			throw std::runtime_error{ "There are no physical devices." };
+
+		deviceHandles.resize(deviceCount);
+		__instanceProc.vkEnumeratePhysicalDevices(__hInstance, &deviceCount, deviceHandles.data());
+
+		for (const auto handle : deviceHandles)
+			__deviceInfos.emplace_back(handle);
 	}
 
 	VkBool32 Core::__vkDebugUtilsMessengerCallbackEXT(
