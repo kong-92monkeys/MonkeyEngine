@@ -399,3 +399,6 @@ FodyWeavers.xsd
 
 # Third-party resources
 !MonkeyEngine/ThirdParty/**
+
+# App's custom environment variable setting
+!MonkeyEngine/App/App.vcxproj.user
