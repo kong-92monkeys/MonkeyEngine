@@ -24,5 +24,11 @@ namespace VK
 		PFN_vkCreateDebugUtilsMessengerEXT vkCreateDebugUtilsMessengerEXT{ };
 		PFN_vkDestroyDebugUtilsMessengerEXT vkDestroyDebugUtilsMessengerEXT{ };
 		PFN_vkEnumeratePhysicalDevices vkEnumeratePhysicalDevices{ };
+
+		// Physical device
+		PFN_vkGetPhysicalDeviceProperties2 vkGetPhysicalDeviceProperties2{ };
+		PFN_vkGetPhysicalDeviceFeatures2 vkGetPhysicalDeviceFeatures2{ };
+		PFN_vkEnumerateDeviceExtensionProperties vkEnumerateDeviceExtensionProperties{ };
+		PFN_vkGetPhysicalDeviceQueueFamilyProperties2 vkGetPhysicalDeviceQueueFamilyProperties2{ };
 	};
 }

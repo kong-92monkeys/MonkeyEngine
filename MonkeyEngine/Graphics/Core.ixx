@@ -52,10 +52,12 @@ namespace Graphics
 		std::unordered_map<std::string_view, const VkLayerProperties *> __instanceLayerMap;
 		std::unordered_map<std::string_view, const VkExtensionProperties *> __instanceExtensionMap;
 
-		VkDebugUtilsMessengerCreateInfoEXT __debugUtilsMessengerCreateInfo{ };
+		VkDebugUtilsMessengerCreateInfoEXT __debugMessengerCreateInfo{ };
 
 		VkInstance __hInstance{ };
 		VK::InstanceProc __instanceProc{ };
+
+		VkDebugUtilsMessengerEXT __hDebugMessenger{ };
 
 		std::vector<DeviceInfo> __deviceInfos;
 
@@ -63,11 +65,13 @@ namespace Graphics
 		void __resolveInstanceVersion();
 		void __resolveInstanceLayers() noexcept;
 		void __resolveInstanceExtensions() noexcept;
-		constexpr void __populateDebugUtilsMessengerCreateInfo() noexcept;
+		constexpr void __populateDebugMessengerCreateInfo() noexcept;
 
 		void __createInstance(
 			const std::string &appName, const Lib::Version &appVersion,
 			const std::string &engineName, const Lib::Version &engineVersion);
+
+		void __createDebugMessenger();
 
 		void __loadDeviceInfos();
 
@@ -87,18 +91,25 @@ namespace Graphics
 		__resolveInstanceExtensions();
 
 #ifndef NDEBUG
-		__populateDebugUtilsMessengerCreateInfo();
+		__populateDebugMessengerCreateInfo();
 #endif
 
 		__createInstance(
 			createInfo.appName, createInfo.appVersion,
 			createInfo.engineName, createInfo.engineVersion);
 
+#ifndef NDEBUG
+		__createDebugMessenger();
+#endif
+
 		__loadDeviceInfos();
 	}
 
 	Core::~Core() noexcept
 	{
+		if (__hDebugMessenger)
+			__instanceProc.vkDestroyDebugUtilsMessengerEXT(__hInstance, __hDebugMessenger, nullptr);
+
 		__instanceProc.vkDestroyInstance(__hInstance, nullptr);
 	}
 
@@ -162,16 +173,16 @@ namespace Graphics
 			__instanceExtensionMap[extension.extensionName] = &extension;
 	}
 
-	constexpr void Core::__populateDebugUtilsMessengerCreateInfo() noexcept
+	constexpr void Core::__populateDebugMessengerCreateInfo() noexcept
 	{
-		__debugUtilsMessengerCreateInfo.sType = VkStructureType::VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
-		__debugUtilsMessengerCreateInfo.messageSeverity =
+		__debugMessengerCreateInfo.sType = VkStructureType::VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
+		__debugMessengerCreateInfo.messageSeverity =
 		(
 			VkDebugUtilsMessageSeverityFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT |
 			VkDebugUtilsMessageSeverityFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT
 		);
 
-		__debugUtilsMessengerCreateInfo.messageType =
+		__debugMessengerCreateInfo.messageType =
 		(
 			VkDebugUtilsMessageTypeFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
 			VkDebugUtilsMessageTypeFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
@@ -179,7 +190,7 @@ namespace Graphics
 			VkDebugUtilsMessageTypeFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_TYPE_DEVICE_ADDRESS_BINDING_BIT_EXT
 		);
 
-		__debugUtilsMessengerCreateInfo.pfnUserCallback = __vkDebugUtilsMessengerCallbackEXT;
+		__debugMessengerCreateInfo.pfnUserCallback = __vkDebugUtilsMessengerCallbackEXT;
 	}
 
 	void Core::__createInstance(
@@ -227,16 +238,16 @@ namespace Graphics
 		const VkValidationFeaturesEXT validationFeatures
 		{
 			.sType							{ VkStructureType::VK_STRUCTURE_TYPE_VALIDATION_FEATURES_EXT },
-			.pNext							{ &__debugUtilsMessengerCreateInfo },
+			.pNext							{ &__debugMessengerCreateInfo },
 			.enabledValidationFeatureCount	{ static_cast<uint32_t>(enabledFeatures.size()) },
 			.pEnabledValidationFeatures		{ enabledFeatures.data() }
 		};
 
 		static constexpr auto vvlLayerName	{ "VK_LAYER_KHRONOS_validation" };
 		const bool vvlSupported				{ __instanceLayerMap.contains(vvlLayerName) };
-		const bool debuggerSupported		{ __instanceExtensionMap.contains(VK_EXT_DEBUG_UTILS_EXTENSION_NAME) };
+		const bool debugMessengerSupported	{ __instanceExtensionMap.contains(VK_EXT_DEBUG_UTILS_EXTENSION_NAME) };
 
-		if (vvlSupported && debuggerSupported)
+		if (vvlSupported && debugMessengerSupported)
 		{
 			layers.emplace_back(vvlLayerName);
 			extensions.emplace_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
@@ -259,6 +270,11 @@ namespace Graphics
 		__instanceProc = __pVulkanLoader->loadInstanceProc(__hInstance);
 	}
 
+	void Core::__createDebugMessenger()
+	{
+		__instanceProc.vkCreateDebugUtilsMessengerEXT(__hInstance, &__debugMessengerCreateInfo, nullptr, &__hDebugMessenger);
+	}
+
 	void Core::__loadDeviceInfos()
 	{
 		uint32_t deviceCount{ };
@@ -273,7 +289,7 @@ namespace Graphics
 		__instanceProc.vkEnumeratePhysicalDevices(__hInstance, &deviceCount, deviceHandles.data());
 
 		for (const auto handle : deviceHandles)
-			__deviceInfos.emplace_back(handle);
+			__deviceInfos.emplace_back(__instanceProc, handle);
 	}
 
 	VkBool32 Core::__vkDebugUtilsMessengerCallbackEXT(

@@ -82,6 +82,22 @@ namespace VK
 			reinterpret_cast<PFN_vkEnumeratePhysicalDevices>(
 				__globalProc.vkGetInstanceProcAddr(hInstance, "vkEnumeratePhysicalDevices"));
 
+		retVal.vkGetPhysicalDeviceProperties2 =
+			reinterpret_cast<PFN_vkGetPhysicalDeviceProperties2>(
+				__globalProc.vkGetInstanceProcAddr(hInstance, "vkGetPhysicalDeviceProperties2"));
+
+		retVal.vkGetPhysicalDeviceFeatures2 =
+			reinterpret_cast<PFN_vkGetPhysicalDeviceFeatures2>(
+				__globalProc.vkGetInstanceProcAddr(hInstance, "vkGetPhysicalDeviceFeatures2"));
+
+		retVal.vkEnumerateDeviceExtensionProperties =
+			reinterpret_cast<PFN_vkEnumerateDeviceExtensionProperties>(
+				__globalProc.vkGetInstanceProcAddr(hInstance, "vkEnumerateDeviceExtensionProperties"));
+
+		retVal.vkGetPhysicalDeviceQueueFamilyProperties2 =
+			reinterpret_cast<PFN_vkGetPhysicalDeviceQueueFamilyProperties2>(
+				__globalProc.vkGetInstanceProcAddr(hInstance, "vkGetPhysicalDeviceQueueFamilyProperties2"));
+
 		return retVal;
 	}
 
