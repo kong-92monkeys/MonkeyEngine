@@ -1,6 +1,7 @@
 module;
 
 #include <Windows.h>
+#include "Vulkan.h"
 
 export module ntmonkeys.com.VK.VulkanLoader;
 
@@ -22,6 +23,9 @@ namespace VK
 
 		[[nodiscard]]
 		constexpr const GlobalProc &getGlobalProc() const noexcept;
+
+		[[nodiscard]]
+		InstanceProc loadInstanceProc(const VkInstance hInstance) const noexcept;
 
 	private:
 		const std::string __libName;
@@ -56,6 +60,25 @@ namespace VK
 	constexpr const GlobalProc &VulkanLoader::getGlobalProc() const noexcept
 	{
 		return __globalProc;
+	}
+
+	InstanceProc VulkanLoader::loadInstanceProc(const VkInstance hInstance) const noexcept
+	{
+		InstanceProc retVal{ };
+
+		retVal.vkDestroyInstance =
+			reinterpret_cast<PFN_vkDestroyInstance>(
+				__globalProc.vkGetInstanceProcAddr(hInstance, "vkDestroyInstance"));
+
+		retVal.vkCreateDebugUtilsMessengerEXT =
+			reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>(
+				__globalProc.vkGetInstanceProcAddr(hInstance, "vkCreateDebugUtilsMessengerEXT"));
+
+		retVal.vkDestroyDebugUtilsMessengerEXT =
+			reinterpret_cast<PFN_vkDestroyDebugUtilsMessengerEXT>(
+				__globalProc.vkGetInstanceProcAddr(hInstance, "vkDestroyDebugUtilsMessengerEXT"));
+
+		return retVal;
 	}
 
 	void VulkanLoader::__loadGlobalProc() noexcept

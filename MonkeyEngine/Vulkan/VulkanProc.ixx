@@ -6,7 +6,7 @@ export module ntmonkeys.com.VK.VulkanProc;
 
 namespace VK
 {
-	export class GlobalProc
+	export struct GlobalProc
 	{
 	public:
 		PFN_vkGetInstanceProcAddr vkGetInstanceProcAddr{ };
@@ -14,5 +14,14 @@ namespace VK
 		PFN_vkEnumerateInstanceExtensionProperties vkEnumerateInstanceExtensionProperties{ };
 		PFN_vkEnumerateInstanceLayerProperties vkEnumerateInstanceLayerProperties{ };
 		PFN_vkCreateInstance vkCreateInstance{ };
+	};
+
+	export struct InstanceProc
+	{
+	public:
+		// Instance
+		PFN_vkDestroyInstance vkDestroyInstance{ };
+		PFN_vkCreateDebugUtilsMessengerEXT vkCreateDebugUtilsMessengerEXT{ };
+		PFN_vkDestroyDebugUtilsMessengerEXT vkDestroyDebugUtilsMessengerEXT{ };
 	};
 }

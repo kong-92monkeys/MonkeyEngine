@@ -8,6 +8,7 @@ import ntmonkeys.com.Lib.Unique;
 import ntmonkeys.com.Lib.Version;
 import ntmonkeys.com.Lib.Logger;
 import ntmonkeys.com.VK.VulkanLoader;
+import ntmonkeys.com.VK.VulkanProc;
 import ntmonkeys.com.Graphics.ConversionUtil;
 import <stdexcept>;
 import <unordered_map>;
@@ -49,7 +50,8 @@ namespace Graphics
 
 		VkDebugUtilsMessengerCreateInfoEXT __debugUtilsMessengerCreateInfo{ };
 
-		VkInstance __hVulkanInstance{ };
+		VkInstance __hInstance{ };
+		VK::InstanceProc __instanceProc{ };
 
 		void __createVulkanLoader(const std::string &libName);
 		void __resolveInstanceVersion();
@@ -57,7 +59,7 @@ namespace Graphics
 		void __resolveInstanceExtensions() noexcept;
 		constexpr void __populateDebugUtilsMessengerCreateInfo() noexcept;
 
-		void __createVulkanInstance(
+		void __createInstance(
 			const std::string &appName, const Lib::Version &appVersion,
 			const std::string &engineName, const Lib::Version &engineVersion);
 
@@ -80,14 +82,14 @@ namespace Graphics
 		__populateDebugUtilsMessengerCreateInfo();
 #endif
 
-		__createVulkanInstance(
+		__createInstance(
 			createInfo.appName, createInfo.appVersion,
 			createInfo.engineName, createInfo.engineVersion);
 	}
 
 	Core::~Core() noexcept
 	{
-
+		__instanceProc.vkDestroyInstance(__hInstance, nullptr);
 	}
 
 	void Core::__createVulkanLoader(const std::string &libName)
@@ -165,7 +167,7 @@ namespace Graphics
 		__debugUtilsMessengerCreateInfo.pfnUserCallback = __vkDebugUtilsMessengerCallbackEXT;
 	}
 
-	void Core::__createVulkanInstance(
+	void Core::__createInstance(
 		const std::string &appName, const Lib::Version &appVersion,
 		const std::string &engineName, const Lib::Version &engineVersion)
 	{
@@ -234,10 +236,12 @@ namespace Graphics
 		createInfo.ppEnabledExtensionNames	= extensions.data();
 
 		const auto &globalProc{ __pVulkanLoader->getGlobalProc() };
-		globalProc.vkCreateInstance(&createInfo, nullptr, &__hVulkanInstance);
+		globalProc.vkCreateInstance(&createInfo, nullptr, &__hInstance);
 
-		if (!__hVulkanInstance)
+		if (!__hInstance)
 			throw std::runtime_error{ "Cannot create Vulkan instance." };
+
+		__instanceProc = __pVulkanLoader->loadInstanceProc(__hInstance);
 	}
 
 	VkBool32 Core::__vkDebugUtilsMessengerCallbackEXT(

@@ -84,6 +84,8 @@ BOOL CApp::InitInstance()
 int CApp::ExitInstance()
 {
 	//TODO: handle additional resources you may have added
+	__pGraphicsCore = nullptr;
+
 	return CWinApp::ExitInstance();
 }
 
