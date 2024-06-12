@@ -11,6 +11,7 @@
 import <memory>;
 import ntmonkeys.com.Lib.Event;
 import ntmonkeys.com.Graphics.Core;
+import ntmonkeys.com.Graphics.Engine;
 
 // CApp:
 // See App.cpp for the implementation of this class
@@ -39,10 +40,12 @@ public:
 
 private:
 	std::unique_ptr<Graphics::Core> __pGraphicsCore;
+	std::unique_ptr<Graphics::Engine> __pGraphicsEngine;
 
 	mutable Lib::Event<> __idleEvent;
 
 	void __createGraphicsCore() noexcept;
+	void __createGraphicsEngine() noexcept;
 
 public:
 	virtual BOOL OnIdle(LONG lCount);

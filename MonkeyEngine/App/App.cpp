@@ -77,6 +77,7 @@ BOOL CApp::InitInstance()
 	pFrame->UpdateWindow();
 
 	__createGraphicsCore();
+	__createGraphicsEngine();
 
 	return TRUE;
 }
@@ -84,6 +85,7 @@ BOOL CApp::InitInstance()
 int CApp::ExitInstance()
 {
 	//TODO: handle additional resources you may have added
+	__pGraphicsEngine = nullptr;
 	__pGraphicsCore = nullptr;
 
 	return CWinApp::ExitInstance();
@@ -93,7 +95,7 @@ void CApp::__createGraphicsCore() noexcept
 {
 	try
 	{
-		const Graphics::Core::CreateInfo coreCreateInfo
+		const Graphics::Core::CreateInfo createInfo
 		{
 			.vulkanLoaderLibName	{ "vulkan_loader_dedicated-1.dll" },
 
@@ -106,7 +108,7 @@ void CApp::__createGraphicsCore() noexcept
 			.instanceVersion		{ 1U, 4U, 0U, 0U }
 		};
 
-		__pGraphicsCore = std::make_unique<Graphics::Core>(coreCreateInfo);
+		__pGraphicsCore = std::make_unique<Graphics::Core>(createInfo);
 	}
 	catch (const std::runtime_error &e)
 	{
@@ -118,6 +120,31 @@ void CApp::__createGraphicsCore() noexcept
 	}
 
 	Lib::Logger::log(Lib::Logger::Severity::INFO, "Graphics core created.");
+}
+
+void CApp::__createGraphicsEngine() noexcept
+{
+	try
+	{
+		const auto &physicalDevice{ __pGraphicsCore->getDeviceInfos().front() };
+
+		const Graphics::Engine::CreateInfo createInfo
+		{
+			.pPhysicalDevice	{ &physicalDevice }
+		};
+
+		__pGraphicsEngine = std::make_unique<Graphics::Engine>(createInfo);
+	}
+	catch (const std::runtime_error &e)
+	{
+		Lib::Logger::log(
+			Lib::Logger::Severity::FATAL,
+			std::format("Error occurred while creating graphics engine: {}", e.what()));
+
+		return;
+	}
+
+	Lib::Logger::log(Lib::Logger::Severity::INFO, "Graphics engine created.");
 }
 
 // CApp message handlers

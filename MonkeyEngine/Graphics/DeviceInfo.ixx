@@ -11,10 +11,56 @@ import ntmonkeys.com.VK.VulkanProc;
 
 namespace Graphics
 {
+	export struct QueueFamilyInfo
+	{
+	public:
+		const VkQueueFamilyProperties *pProps{ };
+		const VkQueueFamilyGlobalPriorityPropertiesKHR *pGlobalPriorityProps{ };
+	};
+
 	export class DeviceInfo
 	{
 	public:
 		DeviceInfo(const VK::InstanceProc &proc, const VkPhysicalDevice hPhysicalDevice) noexcept;
+
+		[[nodiscard]]
+		constexpr VkPhysicalDevice getDeviceHandle() const noexcept;
+
+		[[nodiscard]]
+		constexpr const VkPhysicalDeviceProperties &get10Props() const noexcept;
+
+		[[nodiscard]]
+		constexpr const VkPhysicalDeviceVulkan11Properties &get11Props() const noexcept;
+
+		[[nodiscard]]
+		constexpr const VkPhysicalDeviceVulkan12Properties &get12Props() const noexcept;
+
+		[[nodiscard]]
+		constexpr const VkPhysicalDeviceVulkan13Properties &get13Props() const noexcept;
+
+		[[nodiscard]]
+		constexpr const VkPhysicalDeviceRobustness2PropertiesEXT &getRobustness2Props() const noexcept;
+
+		[[nodiscard]]
+		constexpr const VkPhysicalDeviceFeatures &get10Features() const noexcept;
+
+		[[nodiscard]]
+		constexpr const VkPhysicalDeviceVulkan11Features &get11Features() const noexcept;
+
+		[[nodiscard]]
+		constexpr const VkPhysicalDeviceVulkan12Features &get12Features() const noexcept;
+
+		[[nodiscard]]
+		constexpr const VkPhysicalDeviceVulkan13Features &get13Features() const noexcept;
+
+		[[nodiscard]]
+		constexpr const VkPhysicalDeviceRobustness2FeaturesEXT &getRobustness2Features() const noexcept;
+
+		[[nodiscard]]
+		constexpr const std::unordered_map<std::string_view, const VkExtensionProperties *> &getExtensionMap() const noexcept;
+
+		[[nodiscard]]
+		constexpr const std::vector<QueueFamilyInfo> &getQueueFamilyInfos() const noexcept;
 
 	private:
 		const VK::InstanceProc &__proc;
@@ -37,12 +83,78 @@ namespace Graphics
 
 		std::vector<VkQueueFamilyProperties2> __queueFamilyProps;
 		std::vector<VkQueueFamilyGlobalPriorityPropertiesKHR> __queueFamilyGlobalPriorityProps;
+		std::vector<QueueFamilyInfo> __queueFamilyInfos;
 
 		void __resolveProps() noexcept;
 		void __resolveFeatures() noexcept;
 		void __resolveExtensions() noexcept;
-		void __resolveQueueFamilies() noexcept;
+		void __resolveQueueFamilyInfos() noexcept;
 	};
+
+	constexpr VkPhysicalDevice DeviceInfo::getDeviceHandle() const noexcept
+	{
+		return __hPhysicalDevice;
+	}
+
+	constexpr const VkPhysicalDeviceProperties &DeviceInfo::get10Props() const noexcept
+	{
+		return __props.properties;
+	}
+
+	constexpr const VkPhysicalDeviceVulkan11Properties &DeviceInfo::get11Props() const noexcept
+	{
+		return __11props;
+	}
+
+	constexpr const VkPhysicalDeviceVulkan12Properties &DeviceInfo::get12Props() const noexcept
+	{
+		return __12props;
+	}
+
+	constexpr const VkPhysicalDeviceVulkan13Properties &DeviceInfo::get13Props() const noexcept
+	{
+		return __13props;
+	}
+
+	constexpr const VkPhysicalDeviceRobustness2PropertiesEXT &DeviceInfo::getRobustness2Props() const noexcept
+	{
+		return __robustness2Props;
+	}
+
+	constexpr const VkPhysicalDeviceFeatures &DeviceInfo::get10Features() const noexcept
+	{
+		return __features.features;
+	}
+
+	constexpr const VkPhysicalDeviceVulkan11Features &DeviceInfo::get11Features() const noexcept
+	{
+		return __11features;
+	}
+
+	constexpr const VkPhysicalDeviceVulkan12Features &DeviceInfo::get12Features() const noexcept
+	{
+		return __12features;
+	}
+
+	constexpr const VkPhysicalDeviceVulkan13Features &DeviceInfo::get13Features() const noexcept
+	{
+		return __13features;
+	}
+
+	constexpr const VkPhysicalDeviceRobustness2FeaturesEXT &DeviceInfo::getRobustness2Features() const noexcept
+	{
+		return __robustness2Features;
+	}
+
+	constexpr const std::unordered_map<std::string_view, const VkExtensionProperties *> &DeviceInfo::getExtensionMap() const noexcept
+	{
+		return __extensionMap;
+	}
+
+	constexpr const std::vector<QueueFamilyInfo> &DeviceInfo::getQueueFamilyInfos() const noexcept 
+	{
+		return __queueFamilyInfos;
+	}
 }
 
 module: private;
@@ -55,7 +167,7 @@ namespace Graphics
 		__resolveProps();
 		__resolveFeatures();
 		__resolveExtensions();
-		__resolveQueueFamilies();
+		__resolveQueueFamilyInfos();
 	}
 
 	void DeviceInfo::__resolveProps() noexcept
@@ -110,26 +222,33 @@ namespace Graphics
 			__extensionMap[extension.extensionName] = &extension;
 	}
 
-	void DeviceInfo::__resolveQueueFamilies() noexcept
+	void DeviceInfo::__resolveQueueFamilyInfos() noexcept
 	{
 		uint32_t familyCount{ };
 		__proc.vkGetPhysicalDeviceQueueFamilyProperties2(__hPhysicalDevice, &familyCount, nullptr);
 
 		__queueFamilyProps.resize(familyCount);
 		__queueFamilyGlobalPriorityProps.resize(familyCount);
+		__queueFamilyInfos.resize(familyCount);
 
 		for (uint32_t iter{ }; iter < familyCount; ++iter)
 		{
-			auto &props{ __queueFamilyProps[iter] };
-			auto &globalPriorityProps{ __queueFamilyGlobalPriorityProps[iter] };
+			auto &props					{ __queueFamilyProps[iter] };
+			auto &globalPriorityProps	{ __queueFamilyGlobalPriorityProps[iter] };
+			auto &infos					{ __queueFamilyInfos[iter] };
 
 			props.sType = VkStructureType::VK_STRUCTURE_TYPE_QUEUE_FAMILY_PROPERTIES_2;
 			props.pNext = &globalPriorityProps;
 
 			globalPriorityProps.sType = VkStructureType::VK_STRUCTURE_TYPE_QUEUE_FAMILY_GLOBAL_PRIORITY_PROPERTIES_KHR;
 			globalPriorityProps.pNext = nullptr;
+
+			infos.pProps = &(props.queueFamilyProperties);
+			infos.pGlobalPriorityProps = &globalPriorityProps;
 		}
 
 		__proc.vkGetPhysicalDeviceQueueFamilyProperties2(__hPhysicalDevice, &familyCount, __queueFamilyProps.data());
+
+
 	}
 }
