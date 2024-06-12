@@ -22,6 +22,7 @@
     <ClCompile Include="ConversionUtil.ixx" />
     <ClCompile Include="Core.ixx" />
     <ClCompile Include="DeviceInfo.ixx" />
+    <ClCompile Include="Engine.ixx" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Library\Library.vcxproj">

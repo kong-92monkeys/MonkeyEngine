@@ -54,7 +54,12 @@ namespace Lib
 		[[nodiscard]]
 		static constexpr const char *__getSeverityStrOf(const Severity severity) noexcept;
 	};
+}
 
+module: private;
+
+namespace Lib
+{
 	void Logger::emplaceImpl(std::shared_ptr<Impl> pImpl) noexcept
 	{
 		__getInstance().__emplaceImpl(std::move(pImpl));

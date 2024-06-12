@@ -43,9 +43,14 @@ namespace Graphics
 		void __resolveExtensions() noexcept;
 		void __resolveQueueFamilies() noexcept;
 	};
+}
 
+module: private;
+
+namespace Graphics
+{
 	DeviceInfo::DeviceInfo(const VK::InstanceProc &proc, const VkPhysicalDevice hPhysicalDevice) noexcept :
-		__proc{ proc }, __hPhysicalDevice { hPhysicalDevice }
+		__proc{ proc }, __hPhysicalDevice{ hPhysicalDevice }
 	{
 		__resolveProps();
 		__resolveFeatures();
@@ -115,8 +120,8 @@ namespace Graphics
 
 		for (uint32_t iter{ }; iter < familyCount; ++iter)
 		{
-			auto &props					{ __queueFamilyProps[iter] };
-			auto &globalPriorityProps	{ __queueFamilyGlobalPriorityProps[iter] };
+			auto &props{ __queueFamilyProps[iter] };
+			auto &globalPriorityProps{ __queueFamilyGlobalPriorityProps[iter] };
 
 			props.sType = VkStructureType::VK_STRUCTURE_TYPE_QUEUE_FAMILY_PROPERTIES_2;
 			props.pNext = &globalPriorityProps;

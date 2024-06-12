@@ -26,6 +26,8 @@ private:
 	std::vector<std::string> __logBuffer;
 };
 
+module: private;
+
 ListBoxLoggerImpl::ListBoxLoggerImpl(CListBox &listBox) noexcept :
 	__listBox{ listBox }
 {}

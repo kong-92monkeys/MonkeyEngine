@@ -36,6 +36,21 @@ namespace VK
 		void __loadGlobalProc() noexcept;
 	};
 
+	constexpr bool VulkanLoader::isVulkanSupported() const noexcept
+	{
+		return __hLib;
+	}
+
+	constexpr const GlobalProc &VulkanLoader::getGlobalProc() const noexcept
+	{
+		return __globalProc;
+	}
+}
+
+module: private;
+
+namespace VK
+{
 	VulkanLoader::VulkanLoader(const std::string_view &libName) noexcept :
 		__libName{ libName }
 	{
@@ -50,16 +65,6 @@ namespace VK
 	{
 		if (__hLib)
 			FreeLibrary(__hLib);
-	}
-
-	constexpr bool VulkanLoader::isVulkanSupported() const noexcept
-	{
-		return __hLib;
-	}
-
-	constexpr const GlobalProc &VulkanLoader::getGlobalProc() const noexcept
-	{
-		return __globalProc;
 	}
 
 	InstanceProc VulkanLoader::loadInstanceProc(const VkInstance hInstance) const noexcept

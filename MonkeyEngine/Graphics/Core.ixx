@@ -82,6 +82,16 @@ namespace Graphics
 			void *const pUserData) noexcept;
 	};
 
+	constexpr const std::vector<DeviceInfo> &Core::getDeviceInfos() const noexcept
+	{
+		return __deviceInfos;
+	}
+}
+
+module: private;
+
+namespace Graphics
+{
 	Core::Core(const CreateInfo &createInfo) :
 		__instanceVer{ createInfo.instanceVersion }
 	{
@@ -111,11 +121,6 @@ namespace Graphics
 			__instanceProc.vkDestroyDebugUtilsMessengerEXT(__hInstance, __hDebugMessenger, nullptr);
 
 		__instanceProc.vkDestroyInstance(__hInstance, nullptr);
-	}
-
-	constexpr const std::vector<DeviceInfo> &Core::getDeviceInfos() const noexcept
-	{
-		return __deviceInfos;
 	}
 
 	void Core::__createVulkanLoader(const std::string &libName)

@@ -65,6 +65,18 @@ namespace Lib
 	};
 
 	template <typename ...$Args>
+	template <typename ...$Params>
+	EventListenerPtr<$Args...> EventListener<$Args...>::bind($Params &&...params) noexcept
+	{
+		return make(std::bind(std::forward<$Params>(params)...));
+	}
+}
+
+module: private;
+
+namespace Lib
+{
+	template <typename ...$Args>
 	EventListener<$Args...>::EventListener(EventCallback<$Args...> &&callback) noexcept :
 		__callbackFunc{ std::move(callback) }
 	{}
@@ -79,13 +91,6 @@ namespace Lib
 	EventListenerPtr<$Args...> EventListener<$Args...>::make(EventCallback<$Args...> &&callback) noexcept
 	{
 		return std::make_shared<EventListener<$Args...>>(std::move(callback));
-	}
-
-	template <typename ...$Args>
-	template <typename ...$Params>
-	static EventListenerPtr<$Args...> EventListener<$Args...>::bind($Params &&...params) noexcept
-	{
-		return make(std::bind(std::forward<$Params>(params)...));
 	}
 
 	template <typename ...$Args>

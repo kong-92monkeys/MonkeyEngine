@@ -28,7 +28,12 @@ namespace Lib
 	private:
 		uint64_t __timeline{ };
 	};
+}
 
+module: private;
+
+namespace Lib
+{
 	uint64_t TimelineIdAllocator<true>::allocate() noexcept
 	{
 		return __timeline.fetch_add(1ULL, std::memory_order::acq_rel);

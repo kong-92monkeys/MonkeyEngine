@@ -37,11 +37,16 @@ namespace Lib
 		static inline TimelineIdAllocator<true> __idAllocator;
 	};
 
-	UniqueId::UniqueId() noexcept : __uid{ __idAllocator.allocate() }
-	{}
-
 	constexpr uint64_t UniqueId::getUID() const noexcept
 	{
 		return __uid;
 	}
+}
+
+module: private;
+
+namespace Lib
+{
+	UniqueId::UniqueId() noexcept : __uid{ __idAllocator.allocate() }
+	{}
 }
