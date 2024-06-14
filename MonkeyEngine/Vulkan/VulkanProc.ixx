@@ -38,6 +38,12 @@ namespace VK
 	export struct DeviceProc
 	{
 	public:
+		PFN_vkDeviceWaitIdle vkDeviceWaitIdle{ };
 		PFN_vkDestroyDevice vkDestroyDevice{ };
+
+		PFN_vkGetDeviceQueue2 vkGetDeviceQueue2{ };
+		PFN_vkQueueWaitIdle vkQueueWaitIdle{ };
+		PFN_vkQueueSubmit2 vkQueueSubmit2{ };
+		PFN_vkQueuePresentKHR vkQueuePresentKHR{ };
 	};
 }

@@ -63,7 +63,10 @@ namespace Graphics
 		constexpr const std::vector<QueueFamilyInfo> &getQueueFamilyInfos() const noexcept;
 
 		[[nodiscard]]
-		std::unique_ptr<LogicalDevice> createLogicalDevice(const VkDeviceCreateInfo &createInfo) const;
+		std::unique_ptr<LogicalDevice> createLogicalDevice(
+			const VkPhysicalDeviceFeatures2 &features,
+			const std::vector<const char *> &extensions,
+			const uint32_t queueFamilyIndex) const;
 
 	private:
 		const VK::InstanceProc &__proc;
@@ -171,15 +174,38 @@ namespace Graphics
 		__resolveQueueFamilyInfos();
 	}
 
-	std::unique_ptr<LogicalDevice> PhysicalDevice::createLogicalDevice(const VkDeviceCreateInfo &createInfo) const
+	std::unique_ptr<LogicalDevice> PhysicalDevice::createLogicalDevice(
+		const VkPhysicalDeviceFeatures2 &features,
+		const std::vector<const char *> &extensions,
+		const uint32_t queueFamilyIndex) const
 	{
+		static constexpr float queuePriority{ 1.0f };
+
+		const VkDeviceQueueCreateInfo queueCreateInfo
+		{
+			.sType				{ VkStructureType::VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO },
+			.queueFamilyIndex	{ queueFamilyIndex },
+			.queueCount			{ 1U },
+			.pQueuePriorities	{ &queuePriority }
+		};
+
+		const VkDeviceCreateInfo createInfo
+		{
+			.sType						{ VkStructureType::VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO },
+			.pNext						{ &features },
+			.queueCreateInfoCount		{ 1U },
+			.pQueueCreateInfos			{ &queueCreateInfo },
+			.enabledExtensionCount		{ static_cast<uint32_t>(extensions.size()) },
+			.ppEnabledExtensionNames	{ extensions.data() }
+		};
+
 		VkDevice hLogicalDevice{ };
 		__proc.vkCreateDevice(__handle, &createInfo, nullptr, &hLogicalDevice);
 
 		if (!hLogicalDevice)
 			throw std::runtime_error{ "Cannot create a logical device." };
 
-		return std::make_unique<LogicalDevice>(__loadDeviceProc(hLogicalDevice), hLogicalDevice);
+		return std::make_unique<LogicalDevice>(__loadDeviceProc(hLogicalDevice), hLogicalDevice, queueFamilyIndex);
 	}
 
 	void PhysicalDevice::__resolveProps() noexcept
@@ -266,9 +292,29 @@ namespace Graphics
 	{
 		VK::DeviceProc retVal;
 
+		retVal.vkDeviceWaitIdle =
+			reinterpret_cast<PFN_vkDeviceWaitIdle>(
+				__proc.vkGetDeviceProcAddr(hDevice, "vkDeviceWaitIdle"));
+
 		retVal.vkDestroyDevice =
 			reinterpret_cast<PFN_vkDestroyDevice>(
 				__proc.vkGetDeviceProcAddr(hDevice, "vkDestroyDevice"));
+
+		retVal.vkGetDeviceQueue2 =
+			reinterpret_cast<PFN_vkGetDeviceQueue2>(
+				__proc.vkGetDeviceProcAddr(hDevice, "vkGetDeviceQueue2"));
+
+		retVal.vkQueueWaitIdle =
+			reinterpret_cast<PFN_vkQueueWaitIdle>(
+				__proc.vkGetDeviceProcAddr(hDevice, "vkQueueWaitIdle"));
+
+		retVal.vkQueueSubmit2 =
+			reinterpret_cast<PFN_vkQueueSubmit2>(
+				__proc.vkGetDeviceProcAddr(hDevice, "vkQueueSubmit2"));
+
+		retVal.vkQueuePresentKHR =
+			reinterpret_cast<PFN_vkQueuePresentKHR>(
+				__proc.vkGetDeviceProcAddr(hDevice, "vkQueuePresentKHR"));
 
 		return retVal;
 	}

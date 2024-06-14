@@ -147,26 +147,6 @@ namespace Graphics
 		extensions.emplace_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
 		extensions.emplace_back(VK_EXT_ROBUSTNESS_2_EXTENSION_NAME);
 
-		static constexpr float queuePriority{ 1.0f };
-
-		const VkDeviceQueueCreateInfo queueCreateInfo
-		{
-			.sType				{ VkStructureType::VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO },
-			.queueFamilyIndex	{ __queueFamilyIndex },
-			.queueCount			{ 1U },
-			.pQueuePriorities	{ &queuePriority }
-		};
-
-		const VkDeviceCreateInfo deviceCreateInfo
-		{
-			.sType						{ VkStructureType::VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO },
-			.pNext						{ &features },
-			.queueCreateInfoCount		{ 1U },
-			.pQueueCreateInfos			{ &queueCreateInfo },
-			.enabledExtensionCount		{ static_cast<uint32_t>(extensions.size()) },
-			.ppEnabledExtensionNames	{ extensions.data() }
-		};
-
-		__pLogicalDevice = __physicalDevice.createLogicalDevice(deviceCreateInfo);
+		__pLogicalDevice = __physicalDevice.createLogicalDevice(features, extensions, __queueFamilyIndex);
 	}
 }
