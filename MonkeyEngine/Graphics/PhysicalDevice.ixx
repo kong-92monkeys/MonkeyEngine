@@ -2,12 +2,15 @@ module;
 
 #include "../Vulkan/Vulkan.h"
 
-export module ntmonkeys.com.Graphics.DeviceInfo;
+export module ntmonkeys.com.Graphics.PhysicalDevice;
 
 import <vector>;
 import <unordered_map>;
 import <string_view>;
+import <memory>;
+import <stdexcept>;
 import ntmonkeys.com.VK.VulkanProc;
+import ntmonkeys.com.Graphics.LogicalDevice;
 
 namespace Graphics
 {
@@ -18,13 +21,10 @@ namespace Graphics
 		const VkQueueFamilyGlobalPriorityPropertiesKHR *pGlobalPriorityProps{ };
 	};
 
-	export class DeviceInfo
+	export class PhysicalDevice
 	{
 	public:
-		DeviceInfo(const VK::InstanceProc &proc, const VkPhysicalDevice hPhysicalDevice) noexcept;
-
-		[[nodiscard]]
-		constexpr VkPhysicalDevice getDeviceHandle() const noexcept;
+		PhysicalDevice(const VK::InstanceProc &proc, const VkPhysicalDevice handle) noexcept;
 
 		[[nodiscard]]
 		constexpr const VkPhysicalDeviceProperties &get10Props() const noexcept;
@@ -62,9 +62,12 @@ namespace Graphics
 		[[nodiscard]]
 		constexpr const std::vector<QueueFamilyInfo> &getQueueFamilyInfos() const noexcept;
 
+		[[nodiscard]]
+		std::unique_ptr<LogicalDevice> createLogicalDevice(const VkDeviceCreateInfo &createInfo) const;
+
 	private:
 		const VK::InstanceProc &__proc;
-		const VkPhysicalDevice __hPhysicalDevice;
+		const VkPhysicalDevice __handle;
 
 		VkPhysicalDeviceProperties2 __props{ };
 		VkPhysicalDeviceVulkan11Properties __11props{ };
@@ -89,69 +92,67 @@ namespace Graphics
 		void __resolveFeatures() noexcept;
 		void __resolveExtensions() noexcept;
 		void __resolveQueueFamilyInfos() noexcept;
+
+		[[nodiscard]]
+		VK::DeviceProc __loadDeviceProc(const VkDevice hDevice) const noexcept;
 	};
 
-	constexpr VkPhysicalDevice DeviceInfo::getDeviceHandle() const noexcept
-	{
-		return __hPhysicalDevice;
-	}
-
-	constexpr const VkPhysicalDeviceProperties &DeviceInfo::get10Props() const noexcept
+	constexpr const VkPhysicalDeviceProperties &PhysicalDevice::get10Props() const noexcept
 	{
 		return __props.properties;
 	}
 
-	constexpr const VkPhysicalDeviceVulkan11Properties &DeviceInfo::get11Props() const noexcept
+	constexpr const VkPhysicalDeviceVulkan11Properties &PhysicalDevice::get11Props() const noexcept
 	{
 		return __11props;
 	}
 
-	constexpr const VkPhysicalDeviceVulkan12Properties &DeviceInfo::get12Props() const noexcept
+	constexpr const VkPhysicalDeviceVulkan12Properties &PhysicalDevice::get12Props() const noexcept
 	{
 		return __12props;
 	}
 
-	constexpr const VkPhysicalDeviceVulkan13Properties &DeviceInfo::get13Props() const noexcept
+	constexpr const VkPhysicalDeviceVulkan13Properties &PhysicalDevice::get13Props() const noexcept
 	{
 		return __13props;
 	}
 
-	constexpr const VkPhysicalDeviceRobustness2PropertiesEXT &DeviceInfo::getRobustness2Props() const noexcept
+	constexpr const VkPhysicalDeviceRobustness2PropertiesEXT &PhysicalDevice::getRobustness2Props() const noexcept
 	{
 		return __robustness2Props;
 	}
 
-	constexpr const VkPhysicalDeviceFeatures &DeviceInfo::get10Features() const noexcept
+	constexpr const VkPhysicalDeviceFeatures &PhysicalDevice::get10Features() const noexcept
 	{
 		return __features.features;
 	}
 
-	constexpr const VkPhysicalDeviceVulkan11Features &DeviceInfo::get11Features() const noexcept
+	constexpr const VkPhysicalDeviceVulkan11Features &PhysicalDevice::get11Features() const noexcept
 	{
 		return __11features;
 	}
 
-	constexpr const VkPhysicalDeviceVulkan12Features &DeviceInfo::get12Features() const noexcept
+	constexpr const VkPhysicalDeviceVulkan12Features &PhysicalDevice::get12Features() const noexcept
 	{
 		return __12features;
 	}
 
-	constexpr const VkPhysicalDeviceVulkan13Features &DeviceInfo::get13Features() const noexcept
+	constexpr const VkPhysicalDeviceVulkan13Features &PhysicalDevice::get13Features() const noexcept
 	{
 		return __13features;
 	}
 
-	constexpr const VkPhysicalDeviceRobustness2FeaturesEXT &DeviceInfo::getRobustness2Features() const noexcept
+	constexpr const VkPhysicalDeviceRobustness2FeaturesEXT &PhysicalDevice::getRobustness2Features() const noexcept
 	{
 		return __robustness2Features;
 	}
 
-	constexpr const std::unordered_map<std::string_view, const VkExtensionProperties *> &DeviceInfo::getExtensionMap() const noexcept
+	constexpr const std::unordered_map<std::string_view, const VkExtensionProperties *> &PhysicalDevice::getExtensionMap() const noexcept
 	{
 		return __extensionMap;
 	}
 
-	constexpr const std::vector<QueueFamilyInfo> &DeviceInfo::getQueueFamilyInfos() const noexcept 
+	constexpr const std::vector<QueueFamilyInfo> &PhysicalDevice::getQueueFamilyInfos() const noexcept 
 	{
 		return __queueFamilyInfos;
 	}
@@ -161,8 +162,8 @@ module: private;
 
 namespace Graphics
 {
-	DeviceInfo::DeviceInfo(const VK::InstanceProc &proc, const VkPhysicalDevice hPhysicalDevice) noexcept :
-		__proc{ proc }, __hPhysicalDevice{ hPhysicalDevice }
+	PhysicalDevice::PhysicalDevice(const VK::InstanceProc &proc, const VkPhysicalDevice handle) noexcept :
+		__proc{ proc }, __handle{ handle }
 	{
 		__resolveProps();
 		__resolveFeatures();
@@ -170,7 +171,18 @@ namespace Graphics
 		__resolveQueueFamilyInfos();
 	}
 
-	void DeviceInfo::__resolveProps() noexcept
+	std::unique_ptr<LogicalDevice> PhysicalDevice::createLogicalDevice(const VkDeviceCreateInfo &createInfo) const
+	{
+		VkDevice hLogicalDevice{ };
+		__proc.vkCreateDevice(__handle, &createInfo, nullptr, &hLogicalDevice);
+
+		if (!hLogicalDevice)
+			throw std::runtime_error{ "Cannot create a logical device." };
+
+		return std::make_unique<LogicalDevice>(__loadDeviceProc(hLogicalDevice), hLogicalDevice);
+	}
+
+	void PhysicalDevice::__resolveProps() noexcept
 	{
 		__props.sType = VkStructureType::VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2;
 		__props.pNext = &__11props;
@@ -187,10 +199,10 @@ namespace Graphics
 		__robustness2Props.sType = VkStructureType::VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ROBUSTNESS_2_PROPERTIES_EXT;
 		__robustness2Props.pNext = nullptr;
 
-		__proc.vkGetPhysicalDeviceProperties2(__hPhysicalDevice, &__props);
+		__proc.vkGetPhysicalDeviceProperties2(__handle, &__props);
 	}
 
-	void DeviceInfo::__resolveFeatures() noexcept
+	void PhysicalDevice::__resolveFeatures() noexcept
 	{
 		__features.sType = VkStructureType::VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
 		__features.pNext = &__11features;
@@ -207,25 +219,25 @@ namespace Graphics
 		__robustness2Features.sType = VkStructureType::VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ROBUSTNESS_2_FEATURES_EXT;
 		__robustness2Features.pNext = nullptr;
 
-		__proc.vkGetPhysicalDeviceFeatures2(__hPhysicalDevice, &__features);
+		__proc.vkGetPhysicalDeviceFeatures2(__handle, &__features);
 	}
 
-	void DeviceInfo::__resolveExtensions() noexcept
+	void PhysicalDevice::__resolveExtensions() noexcept
 	{
 		uint32_t extensionCount{ };
-		__proc.vkEnumerateDeviceExtensionProperties(__hPhysicalDevice, nullptr, &extensionCount, nullptr);
+		__proc.vkEnumerateDeviceExtensionProperties(__handle, nullptr, &extensionCount, nullptr);
 
 		__extensions.resize(extensionCount);
-		__proc.vkEnumerateDeviceExtensionProperties(__hPhysicalDevice, nullptr, &extensionCount, __extensions.data());
+		__proc.vkEnumerateDeviceExtensionProperties(__handle, nullptr, &extensionCount, __extensions.data());
 
 		for (const auto &extension : __extensions)
 			__extensionMap[extension.extensionName] = &extension;
 	}
 
-	void DeviceInfo::__resolveQueueFamilyInfos() noexcept
+	void PhysicalDevice::__resolveQueueFamilyInfos() noexcept
 	{
 		uint32_t familyCount{ };
-		__proc.vkGetPhysicalDeviceQueueFamilyProperties2(__hPhysicalDevice, &familyCount, nullptr);
+		__proc.vkGetPhysicalDeviceQueueFamilyProperties2(__handle, &familyCount, nullptr);
 
 		__queueFamilyProps.resize(familyCount);
 		__queueFamilyGlobalPriorityProps.resize(familyCount);
@@ -247,8 +259,17 @@ namespace Graphics
 			infos.pGlobalPriorityProps = &globalPriorityProps;
 		}
 
-		__proc.vkGetPhysicalDeviceQueueFamilyProperties2(__hPhysicalDevice, &familyCount, __queueFamilyProps.data());
+		__proc.vkGetPhysicalDeviceQueueFamilyProperties2(__handle, &familyCount, __queueFamilyProps.data());
+	}
 
+	VK::DeviceProc PhysicalDevice::__loadDeviceProc(const VkDevice hDevice) const noexcept
+	{
+		VK::DeviceProc retVal;
 
+		retVal.vkDestroyDevice =
+			reinterpret_cast<PFN_vkDestroyDevice>(
+				__proc.vkGetDeviceProcAddr(hDevice, "vkDestroyDevice"));
+
+		return retVal;
 	}
 }

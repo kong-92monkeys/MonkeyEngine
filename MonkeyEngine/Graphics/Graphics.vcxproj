@@ -21,7 +21,8 @@
   <ItemGroup>
     <ClCompile Include="ConversionUtil.ixx" />
     <ClCompile Include="Core.ixx" />
-    <ClCompile Include="DeviceInfo.ixx" />
+    <ClCompile Include="LogicalDevice.ixx" />
+    <ClCompile Include="PhysicalDevice.ixx" />
     <ClCompile Include="Engine.ixx" />
   </ItemGroup>
   <ItemGroup>

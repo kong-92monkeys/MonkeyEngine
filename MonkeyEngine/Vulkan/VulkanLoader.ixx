@@ -103,6 +103,14 @@ namespace VK
 			reinterpret_cast<PFN_vkGetPhysicalDeviceQueueFamilyProperties2>(
 				__globalProc.vkGetInstanceProcAddr(hInstance, "vkGetPhysicalDeviceQueueFamilyProperties2"));
 
+		retVal.vkCreateDevice =
+			reinterpret_cast<PFN_vkCreateDevice>(
+				__globalProc.vkGetInstanceProcAddr(hInstance, "vkCreateDevice"));
+
+		retVal.vkGetDeviceProcAddr =
+			reinterpret_cast<PFN_vkGetDeviceProcAddr>(
+				__globalProc.vkGetInstanceProcAddr(hInstance, "vkGetDeviceProcAddr"));
+
 		return retVal;
 	}
 

@@ -10,7 +10,7 @@ import ntmonkeys.com.Lib.Logger;
 import ntmonkeys.com.VK.VulkanLoader;
 import ntmonkeys.com.VK.VulkanProc;
 import ntmonkeys.com.Graphics.ConversionUtil;
-import ntmonkeys.com.Graphics.DeviceInfo;
+import ntmonkeys.com.Graphics.PhysicalDevice;
 import <stdexcept>;
 import <unordered_map>;
 import <memory>;
@@ -39,7 +39,7 @@ namespace Graphics
 		virtual ~Core() noexcept;
 
 		[[nodiscard]]
-		constexpr const std::vector<DeviceInfo> &getDeviceInfos() const noexcept;
+		constexpr const std::vector<PhysicalDevice> &getDeviceInfos() const noexcept;
 
 	private:
 		std::unique_ptr<VK::VulkanLoader> __pVulkanLoader;
@@ -59,7 +59,7 @@ namespace Graphics
 
 		VkDebugUtilsMessengerEXT __hDebugMessenger{ };
 
-		std::vector<DeviceInfo> __deviceInfos;
+		std::vector<PhysicalDevice> __deviceInfos;
 
 		void __createVulkanLoader(const std::string &libName);
 		void __resolveInstanceVersion();
@@ -82,7 +82,7 @@ namespace Graphics
 			void *const pUserData) noexcept;
 	};
 
-	constexpr const std::vector<DeviceInfo> &Core::getDeviceInfos() const noexcept
+	constexpr const std::vector<PhysicalDevice> &Core::getDeviceInfos() const noexcept
 	{
 		return __deviceInfos;
 	}

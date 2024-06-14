@@ -30,5 +30,14 @@ namespace VK
 		PFN_vkGetPhysicalDeviceFeatures2 vkGetPhysicalDeviceFeatures2{ };
 		PFN_vkEnumerateDeviceExtensionProperties vkEnumerateDeviceExtensionProperties{ };
 		PFN_vkGetPhysicalDeviceQueueFamilyProperties2 vkGetPhysicalDeviceQueueFamilyProperties2{ };
+
+		PFN_vkCreateDevice vkCreateDevice{ };
+		PFN_vkGetDeviceProcAddr vkGetDeviceProcAddr{ };
+	};
+
+	export struct DeviceProc
+	{
+	public:
+		PFN_vkDestroyDevice vkDestroyDevice{ };
 	};
 }
