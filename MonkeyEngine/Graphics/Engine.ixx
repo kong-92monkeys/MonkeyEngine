@@ -110,6 +110,9 @@ namespace Graphics
 			featureRobustness.nullDescriptor
 		};
 
+		if (!(__physicalDevice.isWin32PresentSupported(__queueFamilyIndex)))
+			throw std::runtime_error{ "The device doesn't support win32 presentation." };
+
 		if ((deviceVersion.major <= 1U) && (deviceVersion.minor < 3U))
 			throw std::runtime_error{ "The device API version is too low." };
 

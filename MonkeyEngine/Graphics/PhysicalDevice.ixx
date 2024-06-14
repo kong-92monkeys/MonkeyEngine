@@ -63,6 +63,9 @@ namespace Graphics
 		constexpr const std::vector<QueueFamilyInfo> &getQueueFamilyInfos() const noexcept;
 
 		[[nodiscard]]
+		bool isWin32PresentSupported(const uint32_t queueFamilyIndex) const noexcept;
+
+		[[nodiscard]]
 		std::unique_ptr<LogicalDevice> createLogicalDevice(
 			const uint32_t queueFamilyIndex,
 			const VkPhysicalDeviceFeatures2 &features,
@@ -172,6 +175,11 @@ namespace Graphics
 		__resolveFeatures();
 		__resolveExtensions();
 		__resolveQueueFamilyInfos();
+	}
+
+	bool PhysicalDevice::isWin32PresentSupported(const uint32_t queueFamilyIndex) const noexcept
+	{
+		return __proc.vkGetPhysicalDeviceWin32PresentationSupportKHR(__handle, queueFamilyIndex);
 	}
 
 	std::unique_ptr<LogicalDevice> PhysicalDevice::createLogicalDevice(
