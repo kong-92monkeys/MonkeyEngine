@@ -67,6 +67,9 @@ BOOL CApp::InitInstance()
 	if (!pFrame)
 		return FALSE;
 	m_pMainWnd = pFrame;
+
+	__onInitBeforeMainFrame();
+
 	// create and load the frame with its resources
 	pFrame->LoadFrame(IDR_MAINFRAME,
 		WS_OVERLAPPEDWINDOW | FWS_ADDTOTITLE, nullptr,
@@ -75,9 +78,6 @@ BOOL CApp::InitInstance()
 	// The one and only window has been initialized, so show and update it
 	pFrame->ShowWindow(SW_SHOW);
 	pFrame->UpdateWindow();
-
-	__createGraphicsCore();
-	__createGraphicsEngine();
 
 	return TRUE;
 }
@@ -91,7 +91,13 @@ int CApp::ExitInstance()
 	return CWinApp::ExitInstance();
 }
 
-void CApp::__createGraphicsCore() noexcept
+void CApp::__onInitBeforeMainFrame()
+{
+	__createGraphicsCore();
+	__createGraphicsEngine();
+}
+
+void CApp::__createGraphicsCore()
 {
 	try
 	{
@@ -122,7 +128,7 @@ void CApp::__createGraphicsCore() noexcept
 	Lib::Logger::log(Lib::Logger::Severity::INFO, "Graphics core created.");
 }
 
-void CApp::__createGraphicsEngine() noexcept
+void CApp::__createGraphicsEngine()
 {
 	try
 	{

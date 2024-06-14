@@ -6,8 +6,9 @@ export module ntmonkeys.com.Graphics.RenderContext;
 
 import ntmonkeys.com.Lib.Unique;
 import ntmonkeys.com.VK.VulkanProc;
-import ntmonkeys.com.Graphics.DebugMessenger;
 import ntmonkeys.com.Graphics.PhysicalDevice;
+import ntmonkeys.com.Graphics.DebugMessenger;
+import ntmonkeys.com.Graphics.Surface;
 import <stdexcept>;
 import <memory>;
 import <vector>;
@@ -27,7 +28,10 @@ namespace Graphics
 		constexpr const std::vector<PhysicalDevice> &getPhysicalDevices() const noexcept;
 
 		[[nodiscard]]
-		std::unique_ptr<DebugMessenger> createDebugMessenger(const VkDebugUtilsMessengerCreateInfoEXT &createInfo) noexcept;
+		std::unique_ptr<DebugMessenger> createDebugMessenger(const VkDebugUtilsMessengerCreateInfoEXT &createInfo);
+
+		[[nodiscard]]
+		std::unique_ptr<Surface> createSurface(const VkWin32SurfaceCreateInfoKHR &createInfo);
 
 	private:
 		const VK::GlobalProc &__globalProc;
@@ -67,9 +71,14 @@ namespace Graphics
 		__proc.vkDestroyInstance(__handle, nullptr);
 	}
 
-	std::unique_ptr<DebugMessenger> RenderContext::createDebugMessenger(const VkDebugUtilsMessengerCreateInfoEXT &createInfo) noexcept
+	std::unique_ptr<DebugMessenger> RenderContext::createDebugMessenger(const VkDebugUtilsMessengerCreateInfoEXT &createInfo)
 	{
 		return std::make_unique<DebugMessenger>(__proc, __handle, createInfo);
+	}
+
+	std::unique_ptr<Surface> RenderContext::createSurface(const VkWin32SurfaceCreateInfoKHR &createInfo)
+	{
+		return std::make_unique<Surface>(__proc, __handle, createInfo);
 	}
 
 	void RenderContext::__create(const VkInstanceCreateInfo &createInfo)
@@ -117,6 +126,14 @@ namespace Graphics
 		__proc.vkGetPhysicalDeviceWin32PresentationSupportKHR =
 			reinterpret_cast<PFN_vkGetPhysicalDeviceWin32PresentationSupportKHR>(
 				__globalProc.vkGetInstanceProcAddr(__handle, "vkGetPhysicalDeviceWin32PresentationSupportKHR"));
+
+		__proc.vkCreateWin32SurfaceKHR =
+			reinterpret_cast<PFN_vkCreateWin32SurfaceKHR>(
+				__globalProc.vkGetInstanceProcAddr(__handle, "vkCreateWin32SurfaceKHR"));
+
+		__proc.vkDestroySurfaceKHR =
+			reinterpret_cast<PFN_vkDestroySurfaceKHR>(
+				__globalProc.vkGetInstanceProcAddr(__handle, "vkDestroySurfaceKHR"));
 
 		__proc.vkCreateDevice =
 			reinterpret_cast<PFN_vkCreateDevice>(

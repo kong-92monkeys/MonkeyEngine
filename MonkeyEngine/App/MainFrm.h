@@ -39,5 +39,3 @@ protected:
 private:
 	CSplitterWnd windowSplitter;
 };
-
-

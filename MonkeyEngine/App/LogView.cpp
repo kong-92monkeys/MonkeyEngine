@@ -5,7 +5,6 @@
 #include "App.h"
 #include "LogView.h"
 
-
 // CLogView
 
 IMPLEMENT_DYNCREATE(CLogView, CFormView)

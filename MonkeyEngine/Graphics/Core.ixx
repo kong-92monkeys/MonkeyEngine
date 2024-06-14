@@ -13,6 +13,7 @@ import ntmonkeys.com.Graphics.ConversionUtil;
 import ntmonkeys.com.Graphics.RenderContext;
 import ntmonkeys.com.Graphics.PhysicalDevice;
 import ntmonkeys.com.Graphics.DebugMessenger;
+import ntmonkeys.com.Graphics.Surface;
 import <stdexcept>;
 import <unordered_map>;
 import <memory>;
@@ -42,6 +43,9 @@ namespace Graphics
 
 		[[nodiscard]]
 		constexpr const std::vector<PhysicalDevice> &getPhysicalDevices() const noexcept;
+
+		[[nodiscard]]
+		std::unique_ptr<Surface> createSurface(const VkWin32SurfaceCreateInfoKHR &createInfo);
 
 	private:
 		std::unique_ptr<VK::VulkanLoader> __pVulkanLoader;
@@ -113,6 +117,11 @@ namespace Graphics
 	{
 		__pDebugMessenger = nullptr;
 		__pRenderContext = nullptr;
+	}
+
+	std::unique_ptr<Surface> Core::createSurface(const VkWin32SurfaceCreateInfoKHR &createInfo)
+	{
+		return __pRenderContext->createSurface(createInfo);
 	}
 
 	void Core::__createVulkanLoader(const std::string &libName)

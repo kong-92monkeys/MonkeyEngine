@@ -36,6 +36,12 @@ public:
 
 public:
 	[[nodiscard]]
+	constexpr Graphics::Core &getCore() noexcept;
+
+	[[nodiscard]]
+	constexpr Graphics::Engine &getEngine() noexcept;
+
+	[[nodiscard]]
 	constexpr Lib::EventView<> &getIdleEvent() const noexcept;
 
 private:
@@ -44,14 +50,25 @@ private:
 
 	mutable Lib::Event<> __idleEvent;
 
-	void __createGraphicsCore() noexcept;
-	void __createGraphicsEngine() noexcept;
+	void __onInitBeforeMainFrame();
+	void __createGraphicsCore();
+	void __createGraphicsEngine();
 
 public:
 	virtual BOOL OnIdle(LONG lCount);
 };
 
 extern CApp theApp;
+
+constexpr Graphics::Core &CApp::getCore() noexcept
+{
+	return *__pGraphicsCore;
+}
+
+constexpr Graphics::Engine &CApp::getEngine() noexcept
+{
+	return *__pGraphicsEngine;
+}
 
 constexpr Lib::EventView<> &CApp::getIdleEvent() const noexcept
 {

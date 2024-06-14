@@ -32,6 +32,11 @@ namespace VK
 		PFN_vkGetPhysicalDeviceQueueFamilyProperties2 vkGetPhysicalDeviceQueueFamilyProperties2{ };
 		PFN_vkGetPhysicalDeviceWin32PresentationSupportKHR vkGetPhysicalDeviceWin32PresentationSupportKHR{ };
 
+		// Surface
+		PFN_vkCreateWin32SurfaceKHR vkCreateWin32SurfaceKHR{ };
+		PFN_vkDestroySurfaceKHR vkDestroySurfaceKHR{ };
+
+		// Device
 		PFN_vkCreateDevice vkCreateDevice{ };
 		PFN_vkGetDeviceProcAddr vkGetDeviceProcAddr{ };
 	};

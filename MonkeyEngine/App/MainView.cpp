@@ -11,8 +11,9 @@
 #define new DEBUG_NEW
 #endif
 
+import ntmonkeys.com.Graphics.Core;
 
-// CChildView
+IMPLEMENT_DYNCREATE(CMainView, CWnd)
 
 CMainView::CMainView()
 {
@@ -26,6 +27,7 @@ CMainView::~CMainView()
 BEGIN_MESSAGE_MAP(CMainView, CWnd)
 	ON_WM_PAINT()
 	ON_WM_CREATE()
+	ON_WM_DESTROY()
 END_MESSAGE_MAP()
 
 
@@ -62,6 +64,27 @@ int CMainView::OnCreate(LPCREATESTRUCT lpCreateStruct)
 		return -1;
 
 	// TODO:  Add your specialized creation code here
+	__createSurface(lpCreateStruct->hInstance);
 
 	return 0;
+}
+
+void CMainView::__createSurface(const HINSTANCE hInstance)
+{
+	auto &core{ theApp.getCore() };
+
+	const VkWin32SurfaceCreateInfoKHR createInfo
+	{
+		.sType			{ VkStructureType::VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR },
+		.hinstance		{ hInstance },
+		.hwnd			{ GetSafeHwnd() }
+	};
+
+	__pSurface = core.createSurface(createInfo);
+}
+
+void CMainView::OnDestroy()
+{
+	__pSurface = nullptr;
+	CWnd::OnDestroy();
 }

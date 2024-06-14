@@ -5,11 +5,14 @@
 
 #pragma once
 
+import ntmonkeys.com.Graphics.Surface;
 
 // CChildView window
 
 class CMainView : public CWnd
 {
+	DECLARE_DYNCREATE(CMainView)
+
 // Construction
 public:
 	CMainView();
@@ -34,5 +37,11 @@ protected:
 	DECLARE_MESSAGE_MAP()
 public:
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
+	afx_msg void OnDestroy();
+
+private:
+	std::unique_ptr<Graphics::Surface> __pSurface;
+
+	void __createSurface(const HINSTANCE hInstance);
 };
 
