@@ -126,11 +126,11 @@ void CApp::__createGraphicsEngine() noexcept
 {
 	try
 	{
-		const auto &physicalDevice{ __pGraphicsCore->getDeviceInfos().front() };
+		const auto &physicalDevice{ __pGraphicsCore->getPhysicalDevices().front() };
 
 		const Graphics::Engine::CreateInfo createInfo
 		{
-			.pPhysicalDevice	{ &physicalDevice }
+			.pPhysicalDevice{ &physicalDevice }
 		};
 
 		__pGraphicsEngine = std::make_unique<Graphics::Engine>(createInfo);

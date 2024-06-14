@@ -71,49 +71,7 @@ namespace VK
 	{
 		InstanceProc retVal{ };
 
-		retVal.vkDestroyInstance =
-			reinterpret_cast<PFN_vkDestroyInstance>(
-				__globalProc.vkGetInstanceProcAddr(hInstance, "vkDestroyInstance"));
-
-		retVal.vkCreateDebugUtilsMessengerEXT =
-			reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>(
-				__globalProc.vkGetInstanceProcAddr(hInstance, "vkCreateDebugUtilsMessengerEXT"));
-
-		retVal.vkDestroyDebugUtilsMessengerEXT =
-			reinterpret_cast<PFN_vkDestroyDebugUtilsMessengerEXT>(
-				__globalProc.vkGetInstanceProcAddr(hInstance, "vkDestroyDebugUtilsMessengerEXT"));
-
-		retVal.vkEnumeratePhysicalDevices =
-			reinterpret_cast<PFN_vkEnumeratePhysicalDevices>(
-				__globalProc.vkGetInstanceProcAddr(hInstance, "vkEnumeratePhysicalDevices"));
-
-		retVal.vkGetPhysicalDeviceProperties2 =
-			reinterpret_cast<PFN_vkGetPhysicalDeviceProperties2>(
-				__globalProc.vkGetInstanceProcAddr(hInstance, "vkGetPhysicalDeviceProperties2"));
-
-		retVal.vkGetPhysicalDeviceFeatures2 =
-			reinterpret_cast<PFN_vkGetPhysicalDeviceFeatures2>(
-				__globalProc.vkGetInstanceProcAddr(hInstance, "vkGetPhysicalDeviceFeatures2"));
-
-		retVal.vkEnumerateDeviceExtensionProperties =
-			reinterpret_cast<PFN_vkEnumerateDeviceExtensionProperties>(
-				__globalProc.vkGetInstanceProcAddr(hInstance, "vkEnumerateDeviceExtensionProperties"));
-
-		retVal.vkGetPhysicalDeviceQueueFamilyProperties2 =
-			reinterpret_cast<PFN_vkGetPhysicalDeviceQueueFamilyProperties2>(
-				__globalProc.vkGetInstanceProcAddr(hInstance, "vkGetPhysicalDeviceQueueFamilyProperties2"));
-
-		retVal.vkGetPhysicalDeviceWin32PresentationSupportKHR =
-			reinterpret_cast<PFN_vkGetPhysicalDeviceWin32PresentationSupportKHR>(
-				__globalProc.vkGetInstanceProcAddr(hInstance, "vkGetPhysicalDeviceWin32PresentationSupportKHR"));
-
-		retVal.vkCreateDevice =
-			reinterpret_cast<PFN_vkCreateDevice>(
-				__globalProc.vkGetInstanceProcAddr(hInstance, "vkCreateDevice"));
-
-		retVal.vkGetDeviceProcAddr =
-			reinterpret_cast<PFN_vkGetDeviceProcAddr>(
-				__globalProc.vkGetInstanceProcAddr(hInstance, "vkGetDeviceProcAddr"));
+		
 
 		return retVal;
 	}

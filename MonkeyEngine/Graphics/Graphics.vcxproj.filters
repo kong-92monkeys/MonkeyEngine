@@ -10,17 +10,22 @@
     <ClCompile Include="PhysicalDevice.ixx">
       <Filter>Foundation</Filter>
     </ClCompile>
-    <ClCompile Include="Core.ixx">
-      <Filter>Foundation</Filter>
-    </ClCompile>
     <ClCompile Include="Queue.ixx">
       <Filter>Foundation</Filter>
     </ClCompile>
     <ClCompile Include="PipelineCache.ixx">
       <Filter>Foundation</Filter>
     </ClCompile>
-    <ClCompile Include="Engine.ixx">
-      <Filter>Engine</Filter>
+    <ClCompile Include="Surface.ixx">
+      <Filter>Foundation</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderContext.ixx">
+      <Filter>Foundation</Filter>
+    </ClCompile>
+    <ClCompile Include="Core.ixx" />
+    <ClCompile Include="Engine.ixx" />
+    <ClCompile Include="DebugMessenger.ixx">
+      <Filter>Foundation</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -29,9 +34,6 @@
     </Filter>
     <Filter Include="Util">
       <UniqueIdentifier>{b3e94550-67b8-4a8e-b284-686d947dd121}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Engine">
-      <UniqueIdentifier>{56cb7cd1-bb0d-488c-9dc7-fbd17e0629d6}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

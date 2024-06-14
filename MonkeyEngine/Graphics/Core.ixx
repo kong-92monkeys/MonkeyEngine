@@ -10,7 +10,9 @@ import ntmonkeys.com.Lib.Logger;
 import ntmonkeys.com.VK.VulkanLoader;
 import ntmonkeys.com.VK.VulkanProc;
 import ntmonkeys.com.Graphics.ConversionUtil;
+import ntmonkeys.com.Graphics.RenderContext;
 import ntmonkeys.com.Graphics.PhysicalDevice;
+import ntmonkeys.com.Graphics.DebugMessenger;
 import <stdexcept>;
 import <unordered_map>;
 import <memory>;
@@ -39,7 +41,7 @@ namespace Graphics
 		virtual ~Core() noexcept;
 
 		[[nodiscard]]
-		constexpr const std::vector<PhysicalDevice> &getDeviceInfos() const noexcept;
+		constexpr const std::vector<PhysicalDevice> &getPhysicalDevices() const noexcept;
 
 	private:
 		std::unique_ptr<VK::VulkanLoader> __pVulkanLoader;
@@ -54,12 +56,8 @@ namespace Graphics
 
 		VkDebugUtilsMessengerCreateInfoEXT __debugMessengerCreateInfo{ };
 
-		VkInstance __hInstance{ };
-		VK::InstanceProc __instanceProc{ };
-
-		VkDebugUtilsMessengerEXT __hDebugMessenger{ };
-
-		std::vector<PhysicalDevice> __deviceInfos;
+		std::unique_ptr<RenderContext> __pRenderContext;
+		std::unique_ptr<DebugMessenger> __pDebugMessenger;
 
 		void __createVulkanLoader(const std::string &libName);
 		void __resolveInstanceVersion();
@@ -67,13 +65,11 @@ namespace Graphics
 		void __resolveInstanceExtensions() noexcept;
 		constexpr void __populateDebugMessengerCreateInfo() noexcept;
 
-		void __createInstance(
+		void __createRenderContext(
 			const std::string &appName, const Lib::Version &appVersion,
 			const std::string &engineName, const Lib::Version &engineVersion);
 
 		void __createDebugMessenger();
-
-		void __loadDeviceInfos();
 
 		static VkBool32 __vkDebugUtilsMessengerCallbackEXT(
 			const VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
@@ -82,9 +78,9 @@ namespace Graphics
 			void *const pUserData) noexcept;
 	};
 
-	constexpr const std::vector<PhysicalDevice> &Core::getDeviceInfos() const noexcept
+	constexpr const std::vector<PhysicalDevice> &Core::getPhysicalDevices() const noexcept
 	{
-		return __deviceInfos;
+		return __pRenderContext->getPhysicalDevices();
 	}
 }
 
@@ -104,23 +100,19 @@ namespace Graphics
 		__populateDebugMessengerCreateInfo();
 #endif
 
-		__createInstance(
+		__createRenderContext(
 			createInfo.appName, createInfo.appVersion,
 			createInfo.engineName, createInfo.engineVersion);
 
 #ifndef NDEBUG
 		__createDebugMessenger();
 #endif
-
-		__loadDeviceInfos();
 	}
 
 	Core::~Core() noexcept
 	{
-		if (__hDebugMessenger)
-			__instanceProc.vkDestroyDebugUtilsMessengerEXT(__hInstance, __hDebugMessenger, nullptr);
-
-		__instanceProc.vkDestroyInstance(__hInstance, nullptr);
+		__pDebugMessenger = nullptr;
+		__pRenderContext = nullptr;
 	}
 
 	void Core::__createVulkanLoader(const std::string &libName)
@@ -198,7 +190,7 @@ namespace Graphics
 		__debugMessengerCreateInfo.pfnUserCallback = __vkDebugUtilsMessengerCallbackEXT;
 	}
 
-	void Core::__createInstance(
+	void Core::__createRenderContext(
 		const std::string &appName, const Lib::Version &appVersion,
 		const std::string &engineName, const Lib::Version &engineVersion)
 	{
@@ -266,35 +258,12 @@ namespace Graphics
 		createInfo.enabledExtensionCount	= static_cast<uint32_t>(extensions.size());
 		createInfo.ppEnabledExtensionNames	= extensions.data();
 
-		const auto &globalProc{ __pVulkanLoader->getGlobalProc() };
-		globalProc.vkCreateInstance(&createInfo, nullptr, &__hInstance);
-
-		if (!__hInstance)
-			throw std::runtime_error{ "Cannot create Vulkan instance." };
-
-		__instanceProc = __pVulkanLoader->loadInstanceProc(__hInstance);
+		__pRenderContext = std::make_unique<RenderContext>(__pVulkanLoader->getGlobalProc(), createInfo);
 	}
 
 	void Core::__createDebugMessenger()
 	{
-		__instanceProc.vkCreateDebugUtilsMessengerEXT(__hInstance, &__debugMessengerCreateInfo, nullptr, &__hDebugMessenger);
-	}
-
-	void Core::__loadDeviceInfos()
-	{
-		uint32_t deviceCount{ };
-		std::vector<VkPhysicalDevice> deviceHandles;
-
-		__instanceProc.vkEnumeratePhysicalDevices(__hInstance, &deviceCount, nullptr);
-
-		if (!deviceCount)
-			throw std::runtime_error{ "There are no physical devices." };
-
-		deviceHandles.resize(deviceCount);
-		__instanceProc.vkEnumeratePhysicalDevices(__hInstance, &deviceCount, deviceHandles.data());
-
-		for (const auto handle : deviceHandles)
-			__deviceInfos.emplace_back(__instanceProc, handle);
+		__pDebugMessenger = __pRenderContext->createDebugMessenger(__debugMessengerCreateInfo);
 	}
 
 	VkBool32 Core::__vkDebugUtilsMessengerCallbackEXT(

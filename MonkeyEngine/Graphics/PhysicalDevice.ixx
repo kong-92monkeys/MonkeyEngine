@@ -98,9 +98,6 @@ namespace Graphics
 		void __resolveFeatures() noexcept;
 		void __resolveExtensions() noexcept;
 		void __resolveQueueFamilyInfos() noexcept;
-
-		[[nodiscard]]
-		VK::DeviceProc __loadDeviceProc(const VkDevice hDevice) const noexcept;
 	};
 
 	constexpr const VkPhysicalDeviceProperties &PhysicalDevice::get10Props() const noexcept
