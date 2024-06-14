@@ -24,6 +24,7 @@
     <ClCompile Include="LogicalDevice.ixx" />
     <ClCompile Include="PhysicalDevice.ixx" />
     <ClCompile Include="Engine.ixx" />
+    <ClCompile Include="PipelineCache.ixx" />
     <ClCompile Include="Queue.ixx" />
   </ItemGroup>
   <ItemGroup>

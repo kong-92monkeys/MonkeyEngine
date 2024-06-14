@@ -7,6 +7,7 @@ export module ntmonkeys.com.Graphics.Engine;
 import ntmonkeys.com.Lib.Unique;
 import ntmonkeys.com.Graphics.PhysicalDevice;
 import ntmonkeys.com.Graphics.LogicalDevice;
+import ntmonkeys.com.Graphics.PipelineCache;
 import ntmonkeys.com.Graphics.ConversionUtil;
 import <optional>;
 import <stdexcept>;
@@ -31,9 +32,11 @@ namespace Graphics
 
 		uint32_t __queueFamilyIndex{ };
 		std::unique_ptr<LogicalDevice> __pLogicalDevice;
+		std::unique_ptr<PipelineCache> __pPipelineCache;
 
 		void __resolveQueueFamilyIndex();
 		void __createLogicalDevice();
+		void __createPipelineCache();
 	};
 }
 
@@ -46,10 +49,12 @@ namespace Graphics
 	{
 		__resolveQueueFamilyIndex();
 		__createLogicalDevice();
+		__createPipelineCache();
 	}
 
 	Engine::~Engine() noexcept
 	{
+		__pPipelineCache = nullptr;
 		__pLogicalDevice = nullptr;
 	}
 
@@ -147,6 +152,16 @@ namespace Graphics
 		extensions.emplace_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
 		extensions.emplace_back(VK_EXT_ROBUSTNESS_2_EXTENSION_NAME);
 
-		__pLogicalDevice = __physicalDevice.createLogicalDevice(features, extensions, __queueFamilyIndex);
+		__pLogicalDevice = __physicalDevice.createLogicalDevice(__queueFamilyIndex, features, extensions);
+	}
+
+	void Engine::__createPipelineCache()
+	{
+		const VkPipelineCacheCreateInfo createInfo
+		{
+			.sType{ VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO }
+		};
+
+		__pPipelineCache = __pLogicalDevice->createPipelineCache(createInfo);
 	}
 }

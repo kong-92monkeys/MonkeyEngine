@@ -7,6 +7,8 @@ export module ntmonkeys.com.Graphics.LogicalDevice;
 import ntmonkeys.com.Lib.Unique;
 import ntmonkeys.com.VK.VulkanProc;
 import ntmonkeys.com.Graphics.Queue;
+import ntmonkeys.com.Graphics.PipelineCache;
+import <vector>;
 import <memory>;
 import <stdexcept>;
 
@@ -15,19 +17,33 @@ namespace Graphics
 	export class LogicalDevice : public Lib::Unique
 	{
 	public:
-		LogicalDevice(const VK::DeviceProc &proc, const VkDevice handle, const uint32_t queueFamilyIndex) noexcept;
+		LogicalDevice(
+			const VK::InstanceProc &instanceProc,
+			const VkPhysicalDevice hPhysicalDevice,
+			const uint32_t queueFamilyIndex,
+			const VkPhysicalDeviceFeatures2 &features,
+			const std::vector<const char *> &extensions) noexcept;
+
 		virtual ~LogicalDevice() noexcept override;
 		
 		[[nodiscard]]
 		constexpr Queue &getQueue() noexcept;
 
+		[[nodiscard]]
+		std::unique_ptr<PipelineCache> createPipelineCache(const VkPipelineCacheCreateInfo &createInfo);
+
 	private:
-		const VK::DeviceProc __proc;
-		const VkDevice __handle;
+		const VK::InstanceProc &__instanceProc;
+		const VkPhysicalDevice __hPhysicalDevice;
 		const uint32_t __queueFamilyIndex;
+
+		VkDevice __handle{ };
+		VK::DeviceProc __proc;
 
 		std::unique_ptr<Queue> __pQueue;
 
+		void __create(const VkPhysicalDeviceFeatures2 &features, const std::vector<const char *> &extensions);
+		void __loadProc() noexcept;
 		void __resolveQueue();
 	};
 
@@ -41,9 +57,18 @@ module: private;
 
 namespace Graphics
 {
-	LogicalDevice::LogicalDevice(const VK::DeviceProc &proc, const VkDevice handle, const uint32_t queueFamilyIndex) noexcept :
-		__proc{ proc }, __handle{ handle }, __queueFamilyIndex{ queueFamilyIndex }
+	LogicalDevice::LogicalDevice(
+		const VK::InstanceProc &instanceProc,
+		const VkPhysicalDevice hPhysicalDevice,
+		const uint32_t queueFamilyIndex,
+		const VkPhysicalDeviceFeatures2 &features,
+		const std::vector<const char *> &extensions) noexcept :
+		__instanceProc		{ instanceProc },
+		__hPhysicalDevice	{ hPhysicalDevice },
+		__queueFamilyIndex	{ queueFamilyIndex }
 	{
+		__create(features, extensions);
+		__loadProc();
 		__resolveQueue();
 	}
 
@@ -52,21 +77,75 @@ namespace Graphics
 		__proc.vkDestroyDevice(__handle, nullptr);
 	}
 
-	void LogicalDevice::__resolveQueue()
+	std::unique_ptr<PipelineCache> LogicalDevice::createPipelineCache(const VkPipelineCacheCreateInfo &createInfo)
 	{
-		const VkDeviceQueueInfo2 queueInfo
+		return std::make_unique<PipelineCache>(__proc, __handle, createInfo);
+	}
+
+	void LogicalDevice::__create(const VkPhysicalDeviceFeatures2 &features, const std::vector<const char *> &extensions)
+	{
+		static constexpr float queuePriority{ 1.0f };
+
+		const VkDeviceQueueCreateInfo queueCreateInfo
 		{
-			.sType				{ VkStructureType::VK_STRUCTURE_TYPE_DEVICE_QUEUE_INFO_2 },
+			.sType				{ VkStructureType::VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO },
 			.queueFamilyIndex	{ __queueFamilyIndex },
-			.queueIndex			{ 0U }
+			.queueCount			{ 1U },
+			.pQueuePriorities	{ &queuePriority }
 		};
 
-		VkQueue hQueue{ };
-		__proc.vkGetDeviceQueue2(__handle, &queueInfo, &hQueue);
+		const VkDeviceCreateInfo createInfo
+		{
+			.sType						{ VkStructureType::VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO },
+			.pNext						{ &features },
+			.queueCreateInfoCount		{ 1U },
+			.pQueueCreateInfos			{ &queueCreateInfo },
+			.enabledExtensionCount		{ static_cast<uint32_t>(extensions.size()) },
+			.ppEnabledExtensionNames	{ extensions.data() }
+		};
 
-		if (!hQueue)
-			throw std::runtime_error{ "Cannot resolve a queue." };
+		__instanceProc.vkCreateDevice(__hPhysicalDevice, &createInfo, nullptr, &__handle);
+		if (!__handle)
+			throw std::runtime_error{ "Cannot create a logical device." };
+	}
 
-		__pQueue = std::make_unique<Queue>(__proc, hQueue);
+	void LogicalDevice::__loadProc() noexcept
+	{
+		__proc.vkDeviceWaitIdle =
+			reinterpret_cast<PFN_vkDeviceWaitIdle>(
+				__instanceProc.vkGetDeviceProcAddr(__handle, "vkDeviceWaitIdle"));
+
+		__proc.vkDestroyDevice =
+			reinterpret_cast<PFN_vkDestroyDevice>(
+				__instanceProc.vkGetDeviceProcAddr(__handle, "vkDestroyDevice"));
+
+		__proc.vkGetDeviceQueue2 =
+			reinterpret_cast<PFN_vkGetDeviceQueue2>(
+				__instanceProc.vkGetDeviceProcAddr(__handle, "vkGetDeviceQueue2"));
+
+		__proc.vkQueueWaitIdle =
+			reinterpret_cast<PFN_vkQueueWaitIdle>(
+				__instanceProc.vkGetDeviceProcAddr(__handle, "vkQueueWaitIdle"));
+
+		__proc.vkQueueSubmit2 =
+			reinterpret_cast<PFN_vkQueueSubmit2>(
+				__instanceProc.vkGetDeviceProcAddr(__handle, "vkQueueSubmit2"));
+
+		__proc.vkQueuePresentKHR =
+			reinterpret_cast<PFN_vkQueuePresentKHR>(
+				__instanceProc.vkGetDeviceProcAddr(__handle, "vkQueuePresentKHR"));
+
+		__proc.vkCreatePipelineCache =
+			reinterpret_cast<PFN_vkCreatePipelineCache>(
+				__instanceProc.vkGetDeviceProcAddr(__handle, "vkCreatePipelineCache"));
+
+		__proc.vkDestroyPipelineCache =
+			reinterpret_cast<PFN_vkDestroyPipelineCache>(
+				__instanceProc.vkGetDeviceProcAddr(__handle, "vkDestroyPipelineCache"));
+	}
+
+	void LogicalDevice::__resolveQueue()
+	{
+		__pQueue = std::make_unique<Queue>(__proc, __handle, __queueFamilyIndex, 0U);
 	}
 }
