@@ -123,6 +123,10 @@ namespace Graphics
 			reinterpret_cast<PFN_vkGetPhysicalDeviceQueueFamilyProperties2>(
 				__globalProc.vkGetInstanceProcAddr(__handle, "vkGetPhysicalDeviceQueueFamilyProperties2"));
 
+		__proc.vkGetPhysicalDeviceSurfaceSupportKHR =
+			reinterpret_cast<PFN_vkGetPhysicalDeviceSurfaceSupportKHR>(
+				__globalProc.vkGetInstanceProcAddr(__handle, "vkGetPhysicalDeviceSurfaceSupportKHR"));
+		
 		__proc.vkGetPhysicalDeviceWin32PresentationSupportKHR =
 			reinterpret_cast<PFN_vkGetPhysicalDeviceWin32PresentationSupportKHR>(
 				__globalProc.vkGetInstanceProcAddr(__handle, "vkGetPhysicalDeviceWin32PresentationSupportKHR"));

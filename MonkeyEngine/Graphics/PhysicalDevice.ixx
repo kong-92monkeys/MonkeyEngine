@@ -11,6 +11,7 @@ import <memory>;
 import <stdexcept>;
 import ntmonkeys.com.VK.VulkanProc;
 import ntmonkeys.com.Graphics.LogicalDevice;
+import ntmonkeys.com.Graphics.Surface;
 
 namespace Graphics
 {
@@ -64,6 +65,9 @@ namespace Graphics
 
 		[[nodiscard]]
 		bool isWin32PresentSupported(const uint32_t queueFamilyIndex) const noexcept;
+
+		[[nodiscard]]
+		bool isPresentSupported(const uint32_t queueFamilyIndex, const Surface &surface) const noexcept;
 
 		[[nodiscard]]
 		std::unique_ptr<LogicalDevice> createLogicalDevice(
@@ -177,6 +181,14 @@ namespace Graphics
 	bool PhysicalDevice::isWin32PresentSupported(const uint32_t queueFamilyIndex) const noexcept
 	{
 		return __proc.vkGetPhysicalDeviceWin32PresentationSupportKHR(__handle, queueFamilyIndex);
+	}
+
+	bool PhysicalDevice::isPresentSupported(const uint32_t queueFamilyIndex, const Surface &surface) const noexcept
+	{
+		VkBool32 supported{ };
+		__proc.vkGetPhysicalDeviceSurfaceSupportKHR(__handle, queueFamilyIndex, surface.__handle, &supported);
+
+		return supported;
 	}
 
 	std::unique_ptr<LogicalDevice> PhysicalDevice::createLogicalDevice(

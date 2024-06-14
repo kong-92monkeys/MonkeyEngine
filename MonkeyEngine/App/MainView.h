@@ -42,6 +42,6 @@ public:
 private:
 	std::unique_ptr<Graphics::Surface> __pSurface;
 
-	void __createSurface(const HINSTANCE hInstance);
+	int __createSurface(const HINSTANCE hInstance);
 };
 

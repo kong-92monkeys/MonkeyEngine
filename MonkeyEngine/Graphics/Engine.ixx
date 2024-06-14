@@ -9,6 +9,7 @@ import ntmonkeys.com.Graphics.PhysicalDevice;
 import ntmonkeys.com.Graphics.LogicalDevice;
 import ntmonkeys.com.Graphics.PipelineCache;
 import ntmonkeys.com.Graphics.ConversionUtil;
+import ntmonkeys.com.Graphics.Surface;
 import <optional>;
 import <stdexcept>;
 import <memory>;
@@ -26,6 +27,9 @@ namespace Graphics
 
 		Engine(const CreateInfo &createInfo);
 		virtual ~Engine() noexcept override;
+
+		[[nodiscard]]
+		bool isPresentSupported(const Surface &surface) const noexcept;
 
 	private:
 		const PhysicalDevice &__physicalDevice;
@@ -56,6 +60,11 @@ namespace Graphics
 	{
 		__pPipelineCache = nullptr;
 		__pLogicalDevice = nullptr;
+	}
+
+	bool Engine::isPresentSupported(const Surface &surface) const noexcept
+	{
+		return __physicalDevice.isPresentSupported(__queueFamilyIndex, surface);
 	}
 
 	void Engine::__resolveQueueFamilyIndex()

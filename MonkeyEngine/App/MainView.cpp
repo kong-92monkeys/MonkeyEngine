@@ -12,6 +12,7 @@
 #endif
 
 import ntmonkeys.com.Graphics.Core;
+import ntmonkeys.com.Lib.Logger;
 
 IMPLEMENT_DYNCREATE(CMainView, CWnd)
 
@@ -56,22 +57,24 @@ void CMainView::OnPaint()
 	// Do not call CWnd::OnPaint() for painting messages
 }
 
-
-
 int CMainView::OnCreate(LPCREATESTRUCT lpCreateStruct)
 {
 	if (CWnd::OnCreate(lpCreateStruct) == -1)
 		return -1;
 
 	// TODO:  Add your specialized creation code here
-	__createSurface(lpCreateStruct->hInstance);
+	if (__createSurface(lpCreateStruct->hInstance) == -1)
+		return -1;
+
+	Lib::Logger::log(Lib::Logger::Severity::INFO, "Main surface created.");
 
 	return 0;
 }
 
-void CMainView::__createSurface(const HINSTANCE hInstance)
+int CMainView::__createSurface(const HINSTANCE hInstance)
 {
-	auto &core{ theApp.getCore() };
+	auto &core		{ theApp.getCore() };
+	auto &engine	{ theApp.getEngine() };
 
 	const VkWin32SurfaceCreateInfoKHR createInfo
 	{
@@ -81,6 +84,11 @@ void CMainView::__createSurface(const HINSTANCE hInstance)
 	};
 
 	__pSurface = core.createSurface(createInfo);
+	
+	if (engine.isPresentSupported(*__pSurface))
+		return 0;
+
+	return -1;
 }
 
 void CMainView::OnDestroy()

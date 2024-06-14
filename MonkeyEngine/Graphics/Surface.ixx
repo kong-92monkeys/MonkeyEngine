@@ -13,6 +13,8 @@ namespace Graphics
 	export class Surface : public Lib::Unique
 	{
 	public:
+		friend class PhysicalDevice;
+
 		Surface(
 			const VK::InstanceProc &proc,
 			const VkInstance hInstance,

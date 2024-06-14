@@ -30,9 +30,10 @@ namespace VK
 		PFN_vkGetPhysicalDeviceFeatures2 vkGetPhysicalDeviceFeatures2{ };
 		PFN_vkEnumerateDeviceExtensionProperties vkEnumerateDeviceExtensionProperties{ };
 		PFN_vkGetPhysicalDeviceQueueFamilyProperties2 vkGetPhysicalDeviceQueueFamilyProperties2{ };
+		PFN_vkGetPhysicalDeviceSurfaceSupportKHR vkGetPhysicalDeviceSurfaceSupportKHR{ };
 		PFN_vkGetPhysicalDeviceWin32PresentationSupportKHR vkGetPhysicalDeviceWin32PresentationSupportKHR{ };
-
-		// Surface
+		
+	// Surface
 		PFN_vkCreateWin32SurfaceKHR vkCreateWin32SurfaceKHR{ };
 		PFN_vkDestroySurfaceKHR vkDestroySurfaceKHR{ };
 
