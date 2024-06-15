@@ -65,5 +65,8 @@ namespace VK
 		// Pipeline cache
 		PFN_vkCreatePipelineCache vkCreatePipelineCache{ };
 		PFN_vkDestroyPipelineCache vkDestroyPipelineCache{ };
+
+		// Swapchain
+		PFN_vkCreateSwapchainKHR vkCreateSwapchainKHR{ };
 	};
 }

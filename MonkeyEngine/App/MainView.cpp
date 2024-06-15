@@ -98,5 +98,5 @@ void CMainView::OnSize(UINT nType, int cx, int cy)
 	CWnd::OnSize(nType, cx, cy);
 
 	// TODO: Add your message handler code here
-
+	__pSurface->sync();
 }

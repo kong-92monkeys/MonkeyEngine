@@ -35,7 +35,7 @@ namespace Graphics
 		std::unique_ptr<PipelineCache> createPipelineCache(const VkPipelineCacheCreateInfo &createInfo);
 
 		[[nodiscard]]
-		std::unique_ptr<Surface> createSurface(const VkWin32SurfaceCreateInfoKHR &createInfo);
+		std::unique_ptr<Surface> createSurface(const VkWin32SurfaceCreateInfoKHR &vkCreateInfo);
 
 	private:
 		const VK::InstanceProc &__instanceProc;
@@ -44,12 +44,12 @@ namespace Graphics
 		const uint32_t __queueFamilyIndex;
 
 		VkDevice __handle{ };
-		VK::DeviceProc __proc;
+		VK::DeviceProc __deviceProc;
 
 		std::unique_ptr<Queue> __pQueue;
 
 		void __create(const VkPhysicalDeviceFeatures2 &features, const std::vector<const char *> &extensions);
-		void __loadProc() noexcept;
+		void __loadDeviceProc() noexcept;
 		void __resolveQueue();
 	};
 
@@ -62,7 +62,7 @@ namespace Graphics
 module: private;
 
 #pragma warning(disable: 5103)
-#define LOAD_PROC(funcName) (__proc.##funcName = reinterpret_cast<PFN_##funcName>(__instanceProc.vkGetDeviceProcAddr(__handle, #funcName)))
+#define LOAD_DEVICE_PROC(funcName) (__deviceProc.##funcName = reinterpret_cast<PFN_##funcName>(__instanceProc.vkGetDeviceProcAddr(__handle, #funcName)))
 
 namespace Graphics
 {
@@ -79,23 +79,34 @@ namespace Graphics
 		__queueFamilyIndex	{ queueFamilyIndex }
 	{
 		__create(features, extensions);
-		__loadProc();
+		__loadDeviceProc();
 		__resolveQueue();
 	}
 
 	LogicalDevice::~LogicalDevice() noexcept
 	{
-		__proc.vkDestroyDevice(__handle, nullptr);
+		__deviceProc.vkDestroyDevice(__handle, nullptr);
 	}
 
 	std::unique_ptr<PipelineCache> LogicalDevice::createPipelineCache(const VkPipelineCacheCreateInfo &createInfo)
 	{
-		return std::make_unique<PipelineCache>(__proc, __handle, createInfo);
+		return std::make_unique<PipelineCache>(__deviceProc, __handle, createInfo);
 	}
 
-	std::unique_ptr<Surface> LogicalDevice::createSurface(const VkWin32SurfaceCreateInfoKHR &createInfo)
+	std::unique_ptr<Surface> LogicalDevice::createSurface(const VkWin32SurfaceCreateInfoKHR &vkCreateInfo)
 	{
-		return std::make_unique<Surface>(__instanceProc, __hInstance, __hPhysicalDevice, __queueFamilyIndex, createInfo);
+		const Surface::CreateInfo createInfo
+		{
+			.pInstanceProc		{ &__instanceProc },
+			.hInstance			{ __hInstance },
+			.hPhysicalDevice	{ __hPhysicalDevice },
+			.pDeviceProc		{ &__deviceProc },
+			.hDevice			{ __handle },
+			.queueFamilyIndex	{ __queueFamilyIndex },
+			.vkCreateInfo		{ &vkCreateInfo }
+		};
+
+		return std::make_unique<Surface>(createInfo);
 	}
 
 	void LogicalDevice::__create(const VkPhysicalDeviceFeatures2 &features, const std::vector<const char *> &extensions)
@@ -125,25 +136,28 @@ namespace Graphics
 			throw std::runtime_error{ "Cannot create a logical device." };
 	}
 
-	void LogicalDevice::__loadProc() noexcept
+	void LogicalDevice::__loadDeviceProc() noexcept
 	{
 		// Device
-		LOAD_PROC(vkDeviceWaitIdle);
-		LOAD_PROC(vkDestroyDevice);
+		LOAD_DEVICE_PROC(vkDeviceWaitIdle);
+		LOAD_DEVICE_PROC(vkDestroyDevice);
 
 		// Queue
-		LOAD_PROC(vkGetDeviceQueue2);
-		LOAD_PROC(vkQueueWaitIdle);
-		LOAD_PROC(vkQueueSubmit2);
-		LOAD_PROC(vkQueuePresentKHR);
+		LOAD_DEVICE_PROC(vkGetDeviceQueue2);
+		LOAD_DEVICE_PROC(vkQueueWaitIdle);
+		LOAD_DEVICE_PROC(vkQueueSubmit2);
+		LOAD_DEVICE_PROC(vkQueuePresentKHR);
 
 		// Pipeline cache
-		LOAD_PROC(vkCreatePipelineCache);
-		LOAD_PROC(vkDestroyPipelineCache);
+		LOAD_DEVICE_PROC(vkCreatePipelineCache);
+		LOAD_DEVICE_PROC(vkDestroyPipelineCache);
+
+		// Swapchain
+		LOAD_DEVICE_PROC(vkCreateSwapchainKHR);
 	}
 
 	void LogicalDevice::__resolveQueue()
 	{
-		__pQueue = std::make_unique<Queue>(__proc, __handle, __queueFamilyIndex, 0U);
+		__pQueue = std::make_unique<Queue>(__deviceProc, __handle, __queueFamilyIndex, 0U);
 	}
 }

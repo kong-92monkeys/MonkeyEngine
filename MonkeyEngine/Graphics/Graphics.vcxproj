@@ -26,6 +26,7 @@
     <ClCompile Include="Queue.ixx" />
     <ClCompile Include="RenderContext.ixx" />
     <ClCompile Include="Surface.ixx" />
+    <ClCompile Include="Swapchain.ixx" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Library\Library.vcxproj">

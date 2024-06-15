@@ -14,14 +14,14 @@ namespace Graphics
 	{
 	public:
 		PipelineCache(
-			const VK::DeviceProc &proc,
+			const VK::DeviceProc &deviceProc,
 			const VkDevice hDevice,
 			const VkPipelineCacheCreateInfo &createInfo) noexcept;
 
 		virtual ~PipelineCache() noexcept override;
 
 	private:
-		const VK::DeviceProc &__proc;
+		const VK::DeviceProc &__deviceProc;
 		const VkDevice __hDevice;
 
 		VkPipelineCache __handle{ };
@@ -35,22 +35,22 @@ module: private;
 namespace Graphics
 {
 	PipelineCache::PipelineCache(
-		const VK::DeviceProc &proc,
+		const VK::DeviceProc &deviceProc,
 		const VkDevice hDevice,
 		const VkPipelineCacheCreateInfo &createInfo) noexcept :
-		__proc{ proc }, __hDevice{ hDevice }
+		__deviceProc{ deviceProc }, __hDevice{ hDevice }
 	{
 		__create(createInfo);
 	}
 
 	PipelineCache::~PipelineCache() noexcept
 	{
-		__proc.vkDestroyPipelineCache(__hDevice, __handle, nullptr);
+		__deviceProc.vkDestroyPipelineCache(__hDevice, __handle, nullptr);
 	}
 
 	void PipelineCache::__create(const VkPipelineCacheCreateInfo &createInfo)
 	{
-		__proc.vkCreatePipelineCache(__hDevice, &createInfo, nullptr, &__handle);
+		__deviceProc.vkCreatePipelineCache(__hDevice, &createInfo, nullptr, &__handle);
 		if (!__handle)
 			throw std::runtime_error{ "Cannot create a VkPipelineCache." };
 	}

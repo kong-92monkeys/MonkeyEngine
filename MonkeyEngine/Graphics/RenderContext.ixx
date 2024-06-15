@@ -28,13 +28,17 @@ namespace Graphics
 		constexpr const std::vector<PhysicalDevice> &getPhysicalDevices() const noexcept;
 
 		[[nodiscard]]
-		std::unique_ptr<DebugMessenger> createDebugMessenger(const VkDebugUtilsMessengerCreateInfoEXT &createInfo);
+		std::unique_ptr<DebugMessenger> createDebugMessenger(
+			const VkDebugUtilsMessageSeverityFlagsEXT messageSeverity,
+			const VkDebugUtilsMessageTypeFlagsEXT messageType,
+			const PFN_vkDebugUtilsMessengerCallbackEXT pfnUserCallback,
+			void *const pUserData);
 
 	private:
 		const VK::GlobalProc &__globalProc;
 		
 		VkInstance __handle{ };
-		VK::InstanceProc __proc;
+		VK::InstanceProc __instanceProc;
 
 		std::vector<PhysicalDevice> __physicalDevices;
 
@@ -52,7 +56,7 @@ namespace Graphics
 module: private;
 
 #pragma warning(disable: 5103)
-#define LOAD_PROC(funcName) (__proc.##funcName = reinterpret_cast<PFN_##funcName>(__globalProc.vkGetInstanceProcAddr(__handle, #funcName)))
+#define LOAD_INSTANCE_PROC(funcName) (__instanceProc.##funcName = reinterpret_cast<PFN_##funcName>(__globalProc.vkGetInstanceProcAddr(__handle, #funcName)))
 
 namespace Graphics
 {
@@ -68,12 +72,26 @@ namespace Graphics
 
 	RenderContext::~RenderContext() noexcept
 	{
-		__proc.vkDestroyInstance(__handle, nullptr);
+		__instanceProc.vkDestroyInstance(__handle, nullptr);
 	}
 
-	std::unique_ptr<DebugMessenger> RenderContext::createDebugMessenger(const VkDebugUtilsMessengerCreateInfoEXT &createInfo)
+	std::unique_ptr<DebugMessenger> RenderContext::createDebugMessenger(
+		const VkDebugUtilsMessageSeverityFlagsEXT messageSeverity,
+		const VkDebugUtilsMessageTypeFlagsEXT messageType,
+		const PFN_vkDebugUtilsMessengerCallbackEXT pfnUserCallback,
+		void *const pUserData)
 	{
-		return std::make_unique<DebugMessenger>(__proc, __handle, createInfo);
+		const DebugMessenger::CreateInfo createInfo
+		{
+			.pInstanceProc		{ &__instanceProc },
+			.hInstance			{ __handle },
+			.messageSeverity	{ messageSeverity },
+			.messageType		{ messageType },
+			.pfnUserCallback	{ pfnUserCallback },
+			.pUserData			{ pUserData }
+		};
+
+		return std::make_unique<DebugMessenger>(createInfo);
 	}
 
 	void RenderContext::__create(const VkInstanceCreateInfo &createInfo)
@@ -86,33 +104,33 @@ namespace Graphics
 	void RenderContext::__loadProc() noexcept
 	{
 		// Instance
-		LOAD_PROC(vkDestroyInstance);
-		LOAD_PROC(vkCreateDebugUtilsMessengerEXT);
-		LOAD_PROC(vkDestroyDebugUtilsMessengerEXT);
-		LOAD_PROC(vkEnumeratePhysicalDevices);
+		LOAD_INSTANCE_PROC(vkDestroyInstance);
+		LOAD_INSTANCE_PROC(vkCreateDebugUtilsMessengerEXT);
+		LOAD_INSTANCE_PROC(vkDestroyDebugUtilsMessengerEXT);
+		LOAD_INSTANCE_PROC(vkEnumeratePhysicalDevices);
 
 		// Physical device
-		LOAD_PROC(vkGetPhysicalDeviceProperties2);
-		LOAD_PROC(vkGetPhysicalDeviceFeatures2);
-		LOAD_PROC(vkGetPhysicalDeviceFormatProperties2);
-		LOAD_PROC(vkEnumerateDeviceExtensionProperties);
-		LOAD_PROC(vkGetPhysicalDeviceQueueFamilyProperties2);
-		LOAD_PROC(vkGetPhysicalDeviceSurfaceSupportKHR);
-		LOAD_PROC(vkGetPhysicalDeviceWin32PresentationSupportKHR);
+		LOAD_INSTANCE_PROC(vkGetPhysicalDeviceProperties2);
+		LOAD_INSTANCE_PROC(vkGetPhysicalDeviceFeatures2);
+		LOAD_INSTANCE_PROC(vkGetPhysicalDeviceFormatProperties2);
+		LOAD_INSTANCE_PROC(vkEnumerateDeviceExtensionProperties);
+		LOAD_INSTANCE_PROC(vkGetPhysicalDeviceQueueFamilyProperties2);
+		LOAD_INSTANCE_PROC(vkGetPhysicalDeviceSurfaceSupportKHR);
+		LOAD_INSTANCE_PROC(vkGetPhysicalDeviceWin32PresentationSupportKHR);
 
 		// Physical device - Surface
-		LOAD_PROC(vkGetPhysicalDeviceSurfaceCapabilities2KHR);
-		LOAD_PROC(vkGetPhysicalDeviceSurfaceFormats2KHR);
-		LOAD_PROC(vkGetPhysicalDeviceSurfacePresentModesKHR);
-		LOAD_PROC(vkGetPhysicalDeviceSurfacePresentModes2EXT);
+		LOAD_INSTANCE_PROC(vkGetPhysicalDeviceSurfaceCapabilities2KHR);
+		LOAD_INSTANCE_PROC(vkGetPhysicalDeviceSurfaceFormats2KHR);
+		LOAD_INSTANCE_PROC(vkGetPhysicalDeviceSurfacePresentModesKHR);
+		LOAD_INSTANCE_PROC(vkGetPhysicalDeviceSurfacePresentModes2EXT);
 
 		// Surface
-		LOAD_PROC(vkCreateWin32SurfaceKHR);
-		LOAD_PROC(vkDestroySurfaceKHR);
+		LOAD_INSTANCE_PROC(vkCreateWin32SurfaceKHR);
+		LOAD_INSTANCE_PROC(vkDestroySurfaceKHR);
 
 		// Device
-		LOAD_PROC(vkCreateDevice);
-		LOAD_PROC(vkGetDeviceProcAddr);
+		LOAD_INSTANCE_PROC(vkCreateDevice);
+		LOAD_INSTANCE_PROC(vkGetDeviceProcAddr);
 	}
 
 	void RenderContext::__resolvePhysicalDevices() noexcept
@@ -120,12 +138,12 @@ namespace Graphics
 		std::vector<VkPhysicalDevice> deviceHandles;
 
 		uint32_t deviceCount{ };
-		__proc.vkEnumeratePhysicalDevices(__handle, &deviceCount, nullptr);
+		__instanceProc.vkEnumeratePhysicalDevices(__handle, &deviceCount, nullptr);
 
 		deviceHandles.resize(deviceCount);
-		__proc.vkEnumeratePhysicalDevices(__handle, &deviceCount, deviceHandles.data());
+		__instanceProc.vkEnumeratePhysicalDevices(__handle, &deviceCount, deviceHandles.data());
 
 		for (const auto handle : deviceHandles)
-			__physicalDevices.emplace_back(__proc, __handle, handle);
+			__physicalDevices.emplace_back(__instanceProc, __handle, handle);
 	}
 }

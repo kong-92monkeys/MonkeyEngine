@@ -56,7 +56,8 @@ namespace Engine
 		std::unordered_map<std::string_view, const VkLayerProperties *> __instanceLayerMap;
 		std::unordered_map<std::string_view, const VkExtensionProperties *> __instanceExtensionMap;
 
-		VkDebugUtilsMessengerCreateInfoEXT __debugMessengerCreateInfo{ };
+		VkDebugUtilsMessageSeverityFlagsEXT __debugMessageSeverity{ };
+		VkDebugUtilsMessageTypeFlagsEXT __debugMessageType{ };
 
 		std::unique_ptr<Graphics::RenderContext> __pRenderContext;
 		std::unique_ptr<Graphics::DebugMessenger> __pDebugMessenger;
@@ -175,22 +176,19 @@ namespace Engine
 
 	constexpr void Core::__populateDebugMessengerCreateInfo() noexcept
 	{
-		__debugMessengerCreateInfo.sType = VkStructureType::VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
-		__debugMessengerCreateInfo.messageSeverity =
+		__debugMessageSeverity =
 		(
 			VkDebugUtilsMessageSeverityFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT |
 			VkDebugUtilsMessageSeverityFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT
 		);
 
-		__debugMessengerCreateInfo.messageType =
+		__debugMessageType =
 		(
 			VkDebugUtilsMessageTypeFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
 			VkDebugUtilsMessageTypeFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
 			VkDebugUtilsMessageTypeFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT |
 			VkDebugUtilsMessageTypeFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_TYPE_DEVICE_ADDRESS_BINDING_BIT_EXT
 		);
-
-		__debugMessengerCreateInfo.pfnUserCallback = __vkDebugUtilsMessengerCallbackEXT;
 	}
 
 	void Core::__createRenderContext(
@@ -221,6 +219,14 @@ namespace Engine
 		extensions.emplace_back(VK_KHR_GET_SURFACE_CAPABILITIES_2_EXTENSION_NAME);
 
 #ifndef NDEBUG
+		const VkDebugUtilsMessengerCreateInfoEXT debugMessengerCreateInfo
+		{
+			.sType				{ VkStructureType::VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT },
+			.messageSeverity	{ __debugMessageSeverity },
+			.messageType		{ __debugMessageType },
+			.pfnUserCallback	{ __vkDebugUtilsMessengerCallbackEXT }
+		};
+
 		static constexpr std::array enabledFeatures
 		{
 			// 퍼포먼스 떨어지는 코드 경고
@@ -233,7 +239,7 @@ namespace Engine
 		const VkValidationFeaturesEXT validationFeatures
 		{
 			.sType							{ VkStructureType::VK_STRUCTURE_TYPE_VALIDATION_FEATURES_EXT },
-			.pNext							{ &__debugMessengerCreateInfo },
+			.pNext							{ &debugMessengerCreateInfo },
 			.enabledValidationFeatureCount	{ static_cast<uint32_t>(enabledFeatures.size()) },
 			.pEnabledValidationFeatures		{ enabledFeatures.data() }
 		};
@@ -272,7 +278,9 @@ namespace Engine
 
 	void Core::__createDebugMessenger()
 	{
-		__pDebugMessenger = __pRenderContext->createDebugMessenger(__debugMessengerCreateInfo);
+		__pDebugMessenger = __pRenderContext->createDebugMessenger(
+			__debugMessageSeverity, __debugMessageType,
+			__vkDebugUtilsMessengerCallbackEXT, nullptr);
 	}
 
 	VkBool32 Core::__vkDebugUtilsMessengerCallbackEXT(

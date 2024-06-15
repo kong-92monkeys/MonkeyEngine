@@ -6,28 +6,46 @@ export module ntmonkeys.com.Graphics.Surface;
 
 import ntmonkeys.com.Lib.Unique;
 import ntmonkeys.com.VK.VulkanProc;
+import ntmonkeys.com.Graphics.Swapchain;
 import <vector>;
 import <stdexcept>;
+import <memory>;
 
 namespace Graphics
 {
 	export class Surface : public Lib::Unique
 	{
 	public:
-		Surface(
-			const VK::InstanceProc &proc,
-			const VkInstance hInstance,
-			const VkPhysicalDevice hPhysicalDevice,
-			const uint32_t familyQueueIndex,
-			const VkWin32SurfaceCreateInfoKHR &createInfo) noexcept;
+		struct CreateInfo
+		{
+		public:
+			const VK::InstanceProc *pInstanceProc{ };
+			VkInstance hInstance{ };
+			VkPhysicalDevice hPhysicalDevice{ };
 
+			const VK::DeviceProc *pDeviceProc{ };
+			VkDevice hDevice{ };
+			uint32_t queueFamilyIndex{ };
+			const VkWin32SurfaceCreateInfoKHR *vkCreateInfo{ };
+		};
+
+		Surface(const CreateInfo &createInfo) noexcept;
 		virtual ~Surface() noexcept override;
 
+		void sync();
+
+		[[nodiscard]]
+		std::unique_ptr<Swapchain> createSwapchain(const VkSwapchainCreateInfoKHR &vkCreateInfo);
+
 	private:
-		const VK::InstanceProc &__proc;
+		const VK::InstanceProc &__instanceProc;
 		const VkInstance __hInstance;
 		const VkPhysicalDevice __hPhysicalDevice;
-		const uint32_t __familyQueueIndex;
+
+		const VK::DeviceProc &__deviceProc;
+		const VkDevice __hDevice;
+		const uint32_t __queueFamilyIndex;
+
 		const HWND __hWnd;
 
 		VkSurfaceKHR __handle{ };
@@ -46,10 +64,11 @@ namespace Graphics
 		VkColorSpaceKHR __colorSpace{ };
 
 		void __create(const VkWin32SurfaceCreateInfoKHR &createInfo);
+
 		void __checkDeviceSupport();
 		void __resolvePresentMode() noexcept;
 		void __populateQueryInfos();
-		void __resolveProperties();
+		void __resolveCapabilities();
 		void __resolveFormat();
 
 		[[nodiscard]]
@@ -67,34 +86,50 @@ module: private;
 
 namespace Graphics
 {
-	Surface::Surface(
-		const VK::InstanceProc &proc,
-		const VkInstance hInstance,
-		const VkPhysicalDevice hPhysicalDevice,
-		const uint32_t familyQueueIndex,
-		const VkWin32SurfaceCreateInfoKHR &createInfo) noexcept :
-		__proc				{ proc },
-		__hInstance			{ hInstance },
-		__hPhysicalDevice	{ hPhysicalDevice },
-		__familyQueueIndex	{ familyQueueIndex },
-		__hWnd				{ createInfo.hwnd }
+	Surface::Surface(const CreateInfo &createInfo) noexcept :
+		__instanceProc		{ *(createInfo.pInstanceProc) },
+		__hInstance			{ createInfo.hInstance },
+		__hPhysicalDevice	{ createInfo.hPhysicalDevice },
+
+		__deviceProc		{ *(createInfo.pDeviceProc) },
+		__hDevice			{ createInfo.hDevice },
+		__queueFamilyIndex	{ createInfo.queueFamilyIndex },
+		__hWnd				{ createInfo.vkCreateInfo->hwnd }
 	{
-		__create(createInfo);
-		__checkDeviceSupport();
-		__resolvePresentMode();
-		__populateQueryInfos();
-		__resolveProperties();
-		__resolveFormat();
+		__create(*(createInfo.vkCreateInfo));
+		sync();
 	}
 
 	Surface::~Surface() noexcept
 	{
-		__proc.vkDestroySurfaceKHR(__hInstance, __handle, nullptr);
+		__instanceProc.vkDestroySurfaceKHR(__hInstance, __handle, nullptr);
+	}
+
+	void Surface::sync()
+	{
+		__checkDeviceSupport();
+		__resolvePresentMode();
+		__populateQueryInfos();
+		__resolveCapabilities();
+		__resolveFormat();
+	}
+
+	std::unique_ptr<Swapchain> Surface::createSwapchain(const VkSwapchainCreateInfoKHR &vkCreateInfo)
+	{
+		const Swapchain::CreateInfo createInfo
+		{
+			.pDeviceProc	{ &__deviceProc },
+			.hDevice		{ __hDevice },
+			.hSurface		{ __handle },
+			.vkCreateInfo	{ &vkCreateInfo }
+		};
+
+		return std::make_unique<Swapchain>(createInfo);
 	}
 
 	void Surface::__create(const VkWin32SurfaceCreateInfoKHR &createInfo)
 	{
-		__proc.vkCreateWin32SurfaceKHR(__hInstance, &createInfo, nullptr, &__handle);
+		__instanceProc.vkCreateWin32SurfaceKHR(__hInstance, &createInfo, nullptr, &__handle);
 		if (!__handle)
 			throw std::runtime_error{ "Cannot create a Surface." };
 	}
@@ -102,7 +137,7 @@ namespace Graphics
 	void Surface::__checkDeviceSupport()
 	{
 		VkBool32 supported{ };
-		__proc.vkGetPhysicalDeviceSurfaceSupportKHR(__hPhysicalDevice, __familyQueueIndex, __handle, &supported);
+		__instanceProc.vkGetPhysicalDeviceSurfaceSupportKHR(__hPhysicalDevice, __queueFamilyIndex, __handle, &supported);
 
 		if (!supported)
 			throw std::runtime_error{ "The device doesn't support current surface." };
@@ -111,11 +146,11 @@ namespace Graphics
 	void Surface::__resolvePresentMode() noexcept
 	{
 		uint32_t presentModeCount{ };
-		__proc.vkGetPhysicalDeviceSurfacePresentModesKHR(__hPhysicalDevice, __handle, &presentModeCount, nullptr);
+		__instanceProc.vkGetPhysicalDeviceSurfacePresentModesKHR(__hPhysicalDevice, __handle, &presentModeCount, nullptr);
 
 		std::vector<VkPresentModeKHR> supportedModes;
 		supportedModes.resize(presentModeCount);
-		__proc.vkGetPhysicalDeviceSurfacePresentModesKHR(__hPhysicalDevice, __handle, &presentModeCount, supportedModes.data());
+		__instanceProc.vkGetPhysicalDeviceSurfacePresentModesKHR(__hPhysicalDevice, __handle, &presentModeCount, supportedModes.data());
 
 		__presentMode = VkPresentModeKHR::VK_PRESENT_MODE_FIFO_KHR;
 		for (const auto mode : supportedModes)
@@ -151,14 +186,14 @@ namespace Graphics
 		__surfaceInfo.surface					= __handle;
 	}
 
-	void Surface::__resolveProperties()
+	void Surface::__resolveCapabilities()
 	{
 		__fullScreenCapabilities.sType = VkStructureType::VK_STRUCTURE_TYPE_SURFACE_CAPABILITIES_FULL_SCREEN_EXCLUSIVE_EXT;
 
 		__capabilities.sType = VkStructureType::VK_STRUCTURE_TYPE_SURFACE_CAPABILITIES_2_KHR ;
 		__capabilities.pNext = &__fullScreenCapabilities;
 
-		__proc.vkGetPhysicalDeviceSurfaceCapabilities2KHR(__hPhysicalDevice, &__surfaceInfo, &__capabilities);
+		__instanceProc.vkGetPhysicalDeviceSurfaceCapabilities2KHR(__hPhysicalDevice, &__surfaceInfo, &__capabilities);
 		
 		if (!(__fullScreenCapabilities.fullScreenExclusiveSupported))
 			throw std::runtime_error{ "Fullscreen mode is not supported on the device." };
@@ -167,7 +202,7 @@ namespace Graphics
 	void Surface::__resolveFormat()
 	{
 		uint32_t formatCount{ };
-		__proc.vkGetPhysicalDeviceSurfaceFormats2KHR(__hPhysicalDevice, &__surfaceInfo, &formatCount, nullptr);
+		__instanceProc.vkGetPhysicalDeviceSurfaceFormats2KHR(__hPhysicalDevice, &__surfaceInfo, &formatCount, nullptr);
 
 		std::vector<VkSurfaceFormat2KHR> formats;
 		formats.resize(formatCount);
@@ -175,7 +210,7 @@ namespace Graphics
 		for (auto &format : formats)
 			format.sType = VkStructureType::VK_STRUCTURE_TYPE_SURFACE_FORMAT_2_KHR;
 
-		__proc.vkGetPhysicalDeviceSurfaceFormats2KHR(__hPhysicalDevice, &__surfaceInfo, &formatCount, formats.data());
+		__instanceProc.vkGetPhysicalDeviceSurfaceFormats2KHR(__hPhysicalDevice, &__surfaceInfo, &formatCount, formats.data());
 
 		__format = VkFormat::VK_FORMAT_UNDEFINED;
 		for (const auto &format : formats)

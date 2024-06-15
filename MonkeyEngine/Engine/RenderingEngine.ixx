@@ -59,14 +59,14 @@ namespace Engine
 
 	std::unique_ptr<Graphics::Surface> RenderingEngine::createSurface(const HINSTANCE hinstance, const HWND hwnd)
 	{
-		const VkWin32SurfaceCreateInfoKHR createInfo
+		const VkWin32SurfaceCreateInfoKHR vkCreateInfo
 		{
 			.sType			{ VkStructureType::VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR },
 			.hinstance		{ hinstance },
 			.hwnd			{ hwnd }
 		};
 
-		return __pLogicalDevice->createSurface(createInfo);
+		return __pLogicalDevice->createSurface(vkCreateInfo);
 	}
 
 	void RenderingEngine::__resolveQueueFamilyIndex()

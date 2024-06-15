@@ -9,6 +9,7 @@ import <unordered_map>;
 import <string_view>;
 import <memory>;
 import <stdexcept>;
+import <array>;
 import ntmonkeys.com.VK.VulkanProc;
 import ntmonkeys.com.Graphics.LogicalDevice;
 import ntmonkeys.com.Graphics.Surface;
@@ -26,7 +27,7 @@ namespace Graphics
 	{
 	public:
 		PhysicalDevice(
-			const VK::InstanceProc &proc,
+			const VK::InstanceProc &instanceProc,
 			const VkInstance hInstance,
 			const VkPhysicalDevice hPhysicalDevice) noexcept;
 
@@ -64,6 +65,9 @@ namespace Graphics
 		constexpr const std::unordered_map<std::string_view, const VkExtensionProperties *> &getExtensionMap() const noexcept;
 
 		[[nodiscard]]
+		constexpr const std::unordered_map<VkFormat, VkFormatProperties3> &getFormatPropertiesMap() const noexcept;
+
+		[[nodiscard]]
 		constexpr const std::vector<QueueFamilyInfo> &getQueueFamilyInfos() const noexcept;
 
 		[[nodiscard]]
@@ -76,7 +80,7 @@ namespace Graphics
 			const std::vector<const char *> &extensions) const;
 
 	private:
-		const VK::InstanceProc &__proc;
+		const VK::InstanceProc &__instanceProc;
 		const VkInstance __hInstance;
 		const VkPhysicalDevice __hPhysicalDevice;
 
@@ -94,6 +98,7 @@ namespace Graphics
 
 		std::vector<VkExtensionProperties> __extensions;
 		std::unordered_map<std::string_view, const VkExtensionProperties *> __extensionMap;
+		std::unordered_map<VkFormat, VkFormatProperties3> __formatPropMap;
 
 		std::vector<VkQueueFamilyProperties2> __queueFamilyProps;
 		std::vector<VkQueueFamilyGlobalPriorityPropertiesKHR> __queueFamilyGlobalPriorityProps;
@@ -102,6 +107,7 @@ namespace Graphics
 		void __resolveProps() noexcept;
 		void __resolveFeatures() noexcept;
 		void __resolveExtensions() noexcept;
+		void __resolveFormatProps() noexcept;
 		void __resolveQueueFamilyInfos() noexcept;
 	};
 
@@ -160,6 +166,11 @@ namespace Graphics
 		return __extensionMap;
 	}
 
+	constexpr const std::unordered_map<VkFormat, VkFormatProperties3> &PhysicalDevice::getFormatPropertiesMap() const noexcept
+	{
+		return __formatPropMap;
+	}
+
 	constexpr const std::vector<QueueFamilyInfo> &PhysicalDevice::getQueueFamilyInfos() const noexcept 
 	{
 		return __queueFamilyInfos;
@@ -171,22 +182,23 @@ module: private;
 namespace Graphics
 {
 	PhysicalDevice::PhysicalDevice(
-		const VK::InstanceProc &proc,
+		const VK::InstanceProc &instanceProc,
 		const VkInstance hInstance,
 		const VkPhysicalDevice hPhysicalDevice) noexcept :
-		__proc				{ proc },
+		__instanceProc		{ instanceProc },
 		__hInstance			{ hInstance },
 		__hPhysicalDevice	{ hPhysicalDevice }
 	{
 		__resolveProps();
 		__resolveFeatures();
 		__resolveExtensions();
+		__resolveFormatProps();
 		__resolveQueueFamilyInfos();
 	}
 
 	bool PhysicalDevice::isWin32PresentSupported(const uint32_t queueFamilyIndex) const noexcept
 	{
-		return __proc.vkGetPhysicalDeviceWin32PresentationSupportKHR(__hPhysicalDevice, queueFamilyIndex);
+		return __instanceProc.vkGetPhysicalDeviceWin32PresentationSupportKHR(__hPhysicalDevice, queueFamilyIndex);
 	}
 
 	std::unique_ptr<LogicalDevice> PhysicalDevice::createLogicalDevice(
@@ -194,7 +206,7 @@ namespace Graphics
 		const VkPhysicalDeviceFeatures2 &features,
 		const std::vector<const char *> &extensions) const
 	{
-		return std::make_unique<LogicalDevice>(__proc, __hInstance, __hPhysicalDevice, queueFamilyIndex, features, extensions);
+		return std::make_unique<LogicalDevice>(__instanceProc, __hInstance, __hPhysicalDevice, queueFamilyIndex, features, extensions);
 	}
 
 	void PhysicalDevice::__resolveProps() noexcept
@@ -214,7 +226,7 @@ namespace Graphics
 		__robustness2Props.sType = VkStructureType::VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ROBUSTNESS_2_PROPERTIES_EXT;
 		__robustness2Props.pNext = nullptr;
 
-		__proc.vkGetPhysicalDeviceProperties2(__hPhysicalDevice, &__props);
+		__instanceProc.vkGetPhysicalDeviceProperties2(__hPhysicalDevice, &__props);
 	}
 
 	void PhysicalDevice::__resolveFeatures() noexcept
@@ -234,25 +246,51 @@ namespace Graphics
 		__robustness2Features.sType = VkStructureType::VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ROBUSTNESS_2_FEATURES_EXT;
 		__robustness2Features.pNext = nullptr;
 
-		__proc.vkGetPhysicalDeviceFeatures2(__hPhysicalDevice, &__features);
+		__instanceProc.vkGetPhysicalDeviceFeatures2(__hPhysicalDevice, &__features);
 	}
 
 	void PhysicalDevice::__resolveExtensions() noexcept
 	{
 		uint32_t extensionCount{ };
-		__proc.vkEnumerateDeviceExtensionProperties(__hPhysicalDevice, nullptr, &extensionCount, nullptr);
+		__instanceProc.vkEnumerateDeviceExtensionProperties(__hPhysicalDevice, nullptr, &extensionCount, nullptr);
 
 		__extensions.resize(extensionCount);
-		__proc.vkEnumerateDeviceExtensionProperties(__hPhysicalDevice, nullptr, &extensionCount, __extensions.data());
+		__instanceProc.vkEnumerateDeviceExtensionProperties(__hPhysicalDevice, nullptr, &extensionCount, __extensions.data());
 
 		for (const auto &extension : __extensions)
 			__extensionMap[extension.extensionName] = &extension;
 	}
 
+	void PhysicalDevice::__resolveFormatProps() noexcept
+	{
+		static constexpr std::array formats
+		{
+			VkFormat::VK_FORMAT_D24_UNORM_S8_UINT,
+			VkFormat::VK_FORMAT_D32_SFLOAT_S8_UINT
+		};
+
+		for (const auto format : formats)
+		{
+			VkFormatProperties3 prop3
+			{
+				.sType	{ VkStructureType::VK_STRUCTURE_TYPE_FORMAT_PROPERTIES_3 },
+			};
+
+			VkFormatProperties2 props
+			{
+				.sType	{ VkStructureType::VK_STRUCTURE_TYPE_FORMAT_PROPERTIES_2 },
+				.pNext	{ &prop3 }
+			};
+
+			__instanceProc.vkGetPhysicalDeviceFormatProperties2(__hPhysicalDevice, format, &props);
+			__formatPropMap[format] = prop3;
+		}
+	}
+
 	void PhysicalDevice::__resolveQueueFamilyInfos() noexcept
 	{
 		uint32_t familyCount{ };
-		__proc.vkGetPhysicalDeviceQueueFamilyProperties2(__hPhysicalDevice, &familyCount, nullptr);
+		__instanceProc.vkGetPhysicalDeviceQueueFamilyProperties2(__hPhysicalDevice, &familyCount, nullptr);
 
 		__queueFamilyProps.resize(familyCount);
 		__queueFamilyGlobalPriorityProps.resize(familyCount);
@@ -274,6 +312,6 @@ namespace Graphics
 			infos.pGlobalPriorityProps = &globalPriorityProps;
 		}
 
-		__proc.vkGetPhysicalDeviceQueueFamilyProperties2(__hPhysicalDevice, &familyCount, __queueFamilyProps.data());
+		__instanceProc.vkGetPhysicalDeviceQueueFamilyProperties2(__hPhysicalDevice, &familyCount, __queueFamilyProps.data());
 	}
 }

@@ -13,20 +13,33 @@ namespace Graphics
 	export class DebugMessenger : public Lib::Unique
 	{
 	public:
-		DebugMessenger(
-			const VK::InstanceProc &proc,
-			const VkInstance hInstance,
-			const VkDebugUtilsMessengerCreateInfoEXT &createInfo) noexcept;
+		struct CreateInfo
+		{
+		public:
+			const VK::InstanceProc *pInstanceProc{ };
+			VkInstance hInstance{ };
+			
+			VkDebugUtilsMessageSeverityFlagsEXT messageSeverity{ };
+			VkDebugUtilsMessageTypeFlagsEXT messageType{ };
+			PFN_vkDebugUtilsMessengerCallbackEXT pfnUserCallback{ };
+			void *pUserData{ };
+		};
+
+		DebugMessenger(const CreateInfo &createInfo) noexcept;
 
 		virtual ~DebugMessenger() noexcept override;
 
 	private:
-		const VK::InstanceProc &__proc;
+		const VK::InstanceProc &__instanceProc;
 		const VkInstance __hInstance;
 
 		VkDebugUtilsMessengerEXT __handle{ };
 
-		void __create(const VkDebugUtilsMessengerCreateInfoEXT &createInfo);
+		void __create(
+			const VkDebugUtilsMessageSeverityFlagsEXT messageSeverity,
+			const VkDebugUtilsMessageTypeFlagsEXT messageType,
+			const PFN_vkDebugUtilsMessengerCallbackEXT pfnUserCallback,
+			void *const pUserData);
 	};
 }
 
@@ -34,23 +47,36 @@ module: private;
 
 namespace Graphics
 {
-	DebugMessenger::DebugMessenger(
-		const VK::InstanceProc &proc,
-		const VkInstance hInstance,
-		const VkDebugUtilsMessengerCreateInfoEXT &createInfo) noexcept :
-		__proc{ proc }, __hInstance{ hInstance }
+	DebugMessenger::DebugMessenger(const CreateInfo &createInfo) noexcept :
+		__instanceProc	{ *(createInfo.pInstanceProc) },
+		__hInstance		{ createInfo.hInstance }
 	{
-		__create(createInfo);
+		__create(
+			createInfo.messageSeverity, createInfo.messageType,
+			createInfo.pfnUserCallback, createInfo.pUserData);
 	}
 
 	DebugMessenger::~DebugMessenger() noexcept
 	{
-		__proc.vkDestroyDebugUtilsMessengerEXT(__hInstance, __handle, nullptr);
+		__instanceProc.vkDestroyDebugUtilsMessengerEXT(__hInstance, __handle, nullptr);
 	}
 
-	void DebugMessenger::__create(const VkDebugUtilsMessengerCreateInfoEXT &createInfo)
+	void DebugMessenger::__create(
+		const VkDebugUtilsMessageSeverityFlagsEXT messageSeverity,
+		const VkDebugUtilsMessageTypeFlagsEXT messageType,
+		const PFN_vkDebugUtilsMessengerCallbackEXT pfnUserCallback,
+		void *const pUserData)
 	{
-		__proc.vkCreateDebugUtilsMessengerEXT(__hInstance, &createInfo, nullptr, &__handle);
+		const VkDebugUtilsMessengerCreateInfoEXT createInfo
+		{
+			.sType				{ VkStructureType::VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT },
+			.messageSeverity	{ messageSeverity },
+			.messageType		{ messageType },
+			.pfnUserCallback	{ pfnUserCallback },
+			.pUserData			{ pUserData }
+		};
+
+		__instanceProc.vkCreateDebugUtilsMessengerEXT(__hInstance, &createInfo, nullptr, &__handle);
 		if (!__handle)
 			throw std::runtime_error{ "Cannot create a DebugMessenger." };
 	}
