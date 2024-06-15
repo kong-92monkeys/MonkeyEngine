@@ -13,10 +13,14 @@ namespace Graphics
 	export class PipelineCache : public Lib::Unique
 	{
 	public:
-		PipelineCache(
-			const VK::DeviceProc &deviceProc,
-			const VkDevice hDevice,
-			const VkPipelineCacheCreateInfo &createInfo) noexcept;
+		struct CreateInfo
+		{
+		public:
+			const VK::DeviceProc *pDeviceProc{ };
+			VkDevice hDevice{ };
+		};
+
+		PipelineCache(const CreateInfo &createInfo) noexcept;
 
 		virtual ~PipelineCache() noexcept override;
 
@@ -26,7 +30,7 @@ namespace Graphics
 
 		VkPipelineCache __handle{ };
 
-		void __create(const VkPipelineCacheCreateInfo &createInfo);
+		void __create();
 	};
 }
 
@@ -34,13 +38,11 @@ module: private;
 
 namespace Graphics
 {
-	PipelineCache::PipelineCache(
-		const VK::DeviceProc &deviceProc,
-		const VkDevice hDevice,
-		const VkPipelineCacheCreateInfo &createInfo) noexcept :
-		__deviceProc{ deviceProc }, __hDevice{ hDevice }
+	PipelineCache::PipelineCache(const CreateInfo &createInfo) noexcept :
+		__deviceProc	{ *(createInfo.pDeviceProc) },
+		__hDevice		{ createInfo.hDevice }
 	{
-		__create(createInfo);
+		__create();
 	}
 
 	PipelineCache::~PipelineCache() noexcept
@@ -48,8 +50,13 @@ namespace Graphics
 		__deviceProc.vkDestroyPipelineCache(__hDevice, __handle, nullptr);
 	}
 
-	void PipelineCache::__create(const VkPipelineCacheCreateInfo &createInfo)
+	void PipelineCache::__create()
 	{
+		const VkPipelineCacheCreateInfo createInfo
+		{
+			.sType{ VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO }
+		};
+
 		__deviceProc.vkCreatePipelineCache(__hDevice, &createInfo, nullptr, &__handle);
 		if (!__handle)
 			throw std::runtime_error{ "Cannot create a VkPipelineCache." };

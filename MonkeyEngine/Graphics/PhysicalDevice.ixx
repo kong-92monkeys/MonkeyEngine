@@ -26,10 +26,15 @@ namespace Graphics
 	export class PhysicalDevice
 	{
 	public:
-		PhysicalDevice(
-			const VK::InstanceProc &instanceProc,
-			const VkInstance hInstance,
-			const VkPhysicalDevice hPhysicalDevice) noexcept;
+		struct CreateInfo
+		{
+		public:
+			const VK::InstanceProc *pInstanceProc{ };
+			VkInstance hInstance{ };
+			VkPhysicalDevice hPhysicalDevice{ };
+		};
+
+		PhysicalDevice(const CreateInfo &createInfo) noexcept;
 
 		[[nodiscard]]
 		constexpr const VkPhysicalDeviceProperties &get10Props() const noexcept;
@@ -181,13 +186,10 @@ module: private;
 
 namespace Graphics
 {
-	PhysicalDevice::PhysicalDevice(
-		const VK::InstanceProc &instanceProc,
-		const VkInstance hInstance,
-		const VkPhysicalDevice hPhysicalDevice) noexcept :
-		__instanceProc		{ instanceProc },
-		__hInstance			{ hInstance },
-		__hPhysicalDevice	{ hPhysicalDevice }
+	PhysicalDevice::PhysicalDevice(const CreateInfo &createInfo) noexcept :
+		__instanceProc		{ *(createInfo.pInstanceProc) },
+		__hInstance			{ createInfo.hInstance },
+		__hPhysicalDevice	{ createInfo.hPhysicalDevice }
 	{
 		__resolveProps();
 		__resolveFeatures();

@@ -59,14 +59,7 @@ namespace Engine
 
 	std::unique_ptr<Graphics::Surface> RenderingEngine::createSurface(const HINSTANCE hinstance, const HWND hwnd)
 	{
-		const VkWin32SurfaceCreateInfoKHR vkCreateInfo
-		{
-			.sType			{ VkStructureType::VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR },
-			.hinstance		{ hinstance },
-			.hwnd			{ hwnd }
-		};
-
-		return __pLogicalDevice->createSurface(vkCreateInfo);
+		return __pLogicalDevice->createSurface(hinstance, hwnd);
 	}
 
 	void RenderingEngine::__resolveQueueFamilyIndex()
@@ -174,11 +167,6 @@ namespace Engine
 
 	void RenderingEngine::__createPipelineCache()
 	{
-		const VkPipelineCacheCreateInfo createInfo
-		{
-			.sType{ VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO }
-		};
-
-		__pPipelineCache = __pLogicalDevice->createPipelineCache(createInfo);
+		__pPipelineCache = __pLogicalDevice->createPipelineCache();
 	}
 }

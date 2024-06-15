@@ -143,7 +143,17 @@ namespace Graphics
 		deviceHandles.resize(deviceCount);
 		__instanceProc.vkEnumeratePhysicalDevices(__handle, &deviceCount, deviceHandles.data());
 
-		for (const auto handle : deviceHandles)
-			__physicalDevices.emplace_back(__instanceProc, __handle, handle);
+		for (const auto deviceHandle : deviceHandles)
+		{
+			const PhysicalDevice::CreateInfo createInfo
+			{
+				.pInstanceProc		{ &__instanceProc },
+				.hInstance			{ __handle },
+				.hPhysicalDevice	{ deviceHandle }
+			};
+
+			__physicalDevices.emplace_back(createInfo);
+
+		}
 	}
 }

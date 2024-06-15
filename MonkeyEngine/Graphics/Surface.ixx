@@ -26,7 +26,9 @@ namespace Graphics
 			const VK::DeviceProc *pDeviceProc{ };
 			VkDevice hDevice{ };
 			uint32_t queueFamilyIndex{ };
-			const VkWin32SurfaceCreateInfoKHR *vkCreateInfo{ };
+
+			HINSTANCE hAppInstance{ };
+			HWND hwnd{ };
 		};
 
 		Surface(const CreateInfo &createInfo) noexcept;
@@ -46,7 +48,7 @@ namespace Graphics
 		const VkDevice __hDevice;
 		const uint32_t __queueFamilyIndex;
 
-		const HWND __hWnd;
+		const HWND __hwnd;
 
 		VkSurfaceKHR __handle{ };
 
@@ -63,7 +65,7 @@ namespace Graphics
 		VkFormat __format{ };
 		VkColorSpaceKHR __colorSpace{ };
 
-		void __create(const VkWin32SurfaceCreateInfoKHR &createInfo);
+		void __create(const HINSTANCE hAppInstance);
 
 		void __checkDeviceSupport();
 		void __resolvePresentMode() noexcept;
@@ -94,9 +96,9 @@ namespace Graphics
 		__deviceProc		{ *(createInfo.pDeviceProc) },
 		__hDevice			{ createInfo.hDevice },
 		__queueFamilyIndex	{ createInfo.queueFamilyIndex },
-		__hWnd				{ createInfo.vkCreateInfo->hwnd }
+		__hwnd				{ createInfo.hwnd }
 	{
-		__create(*(createInfo.vkCreateInfo));
+		__create(createInfo.hAppInstance);
 		sync();
 	}
 
@@ -127,8 +129,15 @@ namespace Graphics
 		return std::make_unique<Swapchain>(createInfo);
 	}
 
-	void Surface::__create(const VkWin32SurfaceCreateInfoKHR &createInfo)
+	void Surface::__create(const HINSTANCE hAppInstance)
 	{
+		const VkWin32SurfaceCreateInfoKHR createInfo
+		{
+			.sType			{ VkStructureType::VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR },
+			.hinstance		{ hAppInstance },
+			.hwnd			{ __hwnd }
+		};
+
 		__instanceProc.vkCreateWin32SurfaceKHR(__hInstance, &createInfo, nullptr, &__handle);
 		if (!__handle)
 			throw std::runtime_error{ "Cannot create a Surface." };
@@ -165,7 +174,7 @@ namespace Graphics
 
 	void Surface::__populateQueryInfos()
 	{
-		const auto hMonitor{ MonitorFromWindow(__hWnd, MONITOR_DEFAULTTONEAREST) };
+		const auto hMonitor{ MonitorFromWindow(__hwnd, MONITOR_DEFAULTTONEAREST) };
 		if (!hMonitor)
 			throw std::runtime_error{ "Cannot find the monitor handle." };
 

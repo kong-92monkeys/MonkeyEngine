@@ -37,10 +37,10 @@ namespace Graphics
 		constexpr Queue &getQueue() noexcept;
 
 		[[nodiscard]]
-		std::unique_ptr<PipelineCache> createPipelineCache(const VkPipelineCacheCreateInfo &createInfo);
+		std::unique_ptr<PipelineCache> createPipelineCache();
 
 		[[nodiscard]]
-		std::unique_ptr<Surface> createSurface(const VkWin32SurfaceCreateInfoKHR &vkCreateInfo);
+		std::unique_ptr<Surface> createSurface(const HINSTANCE hAppInstance, const HWND hwnd);
 
 	private:
 		const VK::InstanceProc &__instanceProc;
@@ -87,12 +87,18 @@ namespace Graphics
 		__deviceProc.vkDestroyDevice(__handle, nullptr);
 	}
 
-	std::unique_ptr<PipelineCache> LogicalDevice::createPipelineCache(const VkPipelineCacheCreateInfo &createInfo)
+	std::unique_ptr<PipelineCache> LogicalDevice::createPipelineCache()
 	{
-		return std::make_unique<PipelineCache>(__deviceProc, __handle, createInfo);
+		const PipelineCache::CreateInfo createInfo
+		{
+			.pDeviceProc	{ &__deviceProc },
+			.hDevice		{ __handle }
+		};
+
+		return std::make_unique<PipelineCache>(createInfo);
 	}
 
-	std::unique_ptr<Surface> LogicalDevice::createSurface(const VkWin32SurfaceCreateInfoKHR &vkCreateInfo)
+	std::unique_ptr<Surface> LogicalDevice::createSurface(const HINSTANCE hAppInstance, const HWND hwnd)
 	{
 		const Surface::CreateInfo createInfo
 		{
@@ -102,7 +108,8 @@ namespace Graphics
 			.pDeviceProc		{ &__deviceProc },
 			.hDevice			{ __handle },
 			.queueFamilyIndex	{ __queueFamilyIndex },
-			.vkCreateInfo		{ &vkCreateInfo }
+			.hAppInstance		{ hAppInstance },
+			.hwnd				{ hwnd }
 		};
 
 		return std::make_unique<Surface>(createInfo);
@@ -157,6 +164,14 @@ namespace Graphics
 
 	void LogicalDevice::__resolveQueue()
 	{
-		__pQueue = std::make_unique<Queue>(__deviceProc, __handle, __queueFamilyIndex, 0U);
+		const Queue::CreateInfo createInfo
+		{
+			.pDeviceProc	{ &__deviceProc },
+			.hDevice		{ __handle },
+			.familyIndex	{__queueFamilyIndex },
+			.queueIndex		{ 0U }
+		};
+
+		__pQueue = std::make_unique<Queue>(createInfo);
 	}
 }

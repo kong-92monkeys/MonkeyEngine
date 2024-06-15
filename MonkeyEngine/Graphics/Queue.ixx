@@ -13,11 +13,16 @@ namespace Graphics
 	export class Queue : public Lib::Unique
 	{
 	public:
-		Queue(
-			const VK::DeviceProc &deviceProc,
-			const VkDevice hDevice,
-			const uint32_t familyIndex,
-			const uint32_t queueIndex) noexcept;
+		struct CreateInfo
+		{
+		public:
+			const VK::DeviceProc *pDeviceProc{ };
+			VkDevice hDevice{ };
+			uint32_t familyIndex{ };
+			uint32_t queueIndex{ };
+		};
+
+		Queue(const CreateInfo &createInfo) noexcept;
 
 		VkResult waitIdle() noexcept;
 
@@ -36,14 +41,12 @@ module: private;
 
 namespace Graphics
 {
-	Queue::Queue(
-		const VK::DeviceProc &deviceProc,
-		const VkDevice hDevice,
-		const uint32_t familyIndex,
-		const uint32_t queueIndex) noexcept :
-		__deviceProc{ deviceProc }, __familyIndex{ familyIndex }, __queueIndex{ queueIndex }
+	Queue::Queue(const CreateInfo &createInfo) noexcept :
+		__deviceProc	{ *(createInfo.pDeviceProc) },
+		__familyIndex	{ createInfo.familyIndex },
+		__queueIndex	{ createInfo.queueIndex }
 	{
-		__resolve(hDevice);
+		__resolve(createInfo.hDevice);
 	}
 
 	VkResult Queue::waitIdle() noexcept
@@ -57,7 +60,7 @@ namespace Graphics
 		{
 			.sType				{ VkStructureType::VK_STRUCTURE_TYPE_DEVICE_QUEUE_INFO_2 },
 			.queueFamilyIndex	{ __familyIndex },
-			.queueIndex			{ 0U }
+			.queueIndex			{ __queueIndex }
 		};
 
 		__deviceProc.vkGetDeviceQueue2(hDevice, &queueInfo, &__handle);
