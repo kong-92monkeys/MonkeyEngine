@@ -18,6 +18,7 @@ import <stdexcept>;
 import <unordered_map>;
 import <memory>;
 import <array>;
+import <format>;
 
 namespace Engine
 {
@@ -215,14 +216,9 @@ namespace Engine
 		std::vector<const char *> layers;
 		std::vector<const char *> extensions;
 
-		if (!(__instanceExtensionMap.contains(VK_KHR_SURFACE_EXTENSION_NAME)))
-			throw std::runtime_error{ "WSI is not supported." };
-
-		if (!(__instanceExtensionMap.contains(VK_KHR_WIN32_SURFACE_EXTENSION_NAME)))
-			throw std::runtime_error{ "WSI is not supported." };
-
 		extensions.emplace_back(VK_KHR_SURFACE_EXTENSION_NAME);
 		extensions.emplace_back(VK_KHR_WIN32_SURFACE_EXTENSION_NAME);
+		extensions.emplace_back(VK_KHR_GET_SURFACE_CAPABILITIES_2_EXTENSION_NAME);
 
 #ifndef NDEBUG
 		static constexpr std::array enabledFeatures
@@ -242,17 +238,28 @@ namespace Engine
 			.pEnabledValidationFeatures		{ enabledFeatures.data() }
 		};
 
-		static constexpr auto vvlLayerName	{ "VK_LAYER_KHRONOS_validation" };
-		const bool vvlSupported				{ __instanceLayerMap.contains(vvlLayerName) };
-		const bool debugMessengerSupported	{ __instanceExtensionMap.contains(VK_EXT_DEBUG_UTILS_EXTENSION_NAME) };
+		static constexpr auto vvlLayerName{ "VK_LAYER_KHRONOS_validation" };
 
-		if (vvlSupported && debugMessengerSupported)
-		{
-			layers.emplace_back(vvlLayerName);
-			extensions.emplace_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
-			createInfo.pNext = &validationFeatures;
-		}
+		layers.emplace_back(vvlLayerName);
+		extensions.emplace_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+		createInfo.pNext = &validationFeatures;
 #endif
+
+		for (const auto layer : layers)
+		{
+			if (__instanceLayerMap.contains(layer))
+				continue;
+
+			throw std::runtime_error{ std::format("Instance layer not supported: {}", layer) };
+		}
+
+		for (const auto extension : extensions)
+		{
+			if (__instanceExtensionMap.contains(extension))
+				continue;
+
+			throw std::runtime_error{ std::format("Instance extension not supported: {}", extension) };
+		}
 
 		createInfo.enabledLayerCount		= static_cast<uint32_t>(layers.size());
 		createInfo.ppEnabledLayerNames		= layers.data();

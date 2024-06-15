@@ -99,8 +99,11 @@ namespace Graphics
 		LOAD_PROC(vkGetPhysicalDeviceQueueFamilyProperties2);
 		LOAD_PROC(vkGetPhysicalDeviceSurfaceSupportKHR);
 		LOAD_PROC(vkGetPhysicalDeviceWin32PresentationSupportKHR);
+
+		// Physical device - Surface
 		LOAD_PROC(vkGetPhysicalDeviceSurfaceCapabilities2KHR);
 		LOAD_PROC(vkGetPhysicalDeviceSurfaceFormats2KHR);
+		LOAD_PROC(vkGetPhysicalDeviceSurfacePresentModesKHR);
 		LOAD_PROC(vkGetPhysicalDeviceSurfacePresentModes2EXT);
 
 		// Surface
