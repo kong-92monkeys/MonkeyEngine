@@ -2,41 +2,35 @@ module;
 
 #include "../Vulkan/Vulkan.h"
 
-export module ntmonkeys.com.Graphics.Engine;
+export module ntmonkeys.com.Engine.RenderingEngine;
 
 import ntmonkeys.com.Lib.Unique;
 import ntmonkeys.com.Graphics.PhysicalDevice;
 import ntmonkeys.com.Graphics.LogicalDevice;
 import ntmonkeys.com.Graphics.PipelineCache;
-import ntmonkeys.com.Graphics.ConversionUtil;
 import ntmonkeys.com.Graphics.Surface;
+import ntmonkeys.com.Engine.ConversionUtil;
 import <optional>;
 import <stdexcept>;
 import <memory>;
 
-namespace Graphics
+namespace Engine
 {
-	export class Engine : public Lib::Unique
+	export class RenderingEngine : public Lib::Unique
 	{
 	public:
-		struct CreateInfo
-		{
-		public:
-			const PhysicalDevice *pPhysicalDevice{ };
-		};
-
-		Engine(const CreateInfo &createInfo);
-		virtual ~Engine() noexcept override;
+		RenderingEngine(const Graphics::PhysicalDevice &physicalDevice);
+		virtual ~RenderingEngine() noexcept override;
 
 		[[nodiscard]]
-		bool isPresentSupported(const Surface &surface) const noexcept;
+		std::unique_ptr<Graphics::Surface> createSurface(const HINSTANCE hinstance, const HWND hwnd);
 
 	private:
-		const PhysicalDevice &__physicalDevice;
+		const Graphics::PhysicalDevice &__physicalDevice;
 
 		uint32_t __queueFamilyIndex{ };
-		std::unique_ptr<LogicalDevice> __pLogicalDevice;
-		std::unique_ptr<PipelineCache> __pPipelineCache;
+		std::unique_ptr<Graphics::LogicalDevice> __pLogicalDevice;
+		std::unique_ptr<Graphics::PipelineCache> __pPipelineCache;
 
 		void __resolveQueueFamilyIndex();
 		void __createLogicalDevice();
@@ -46,28 +40,35 @@ namespace Graphics
 
 module: private;
 
-namespace Graphics
+namespace Engine
 {
-	Engine::Engine(const CreateInfo &createInfo) :
-		__physicalDevice{ *(createInfo.pPhysicalDevice) }
+	RenderingEngine::RenderingEngine(const Graphics::PhysicalDevice &physicalDevice) :
+		__physicalDevice{ physicalDevice }
 	{
 		__resolveQueueFamilyIndex();
 		__createLogicalDevice();
 		__createPipelineCache();
 	}
 
-	Engine::~Engine() noexcept
+	RenderingEngine::~RenderingEngine() noexcept
 	{
 		__pPipelineCache = nullptr;
 		__pLogicalDevice = nullptr;
 	}
 
-	bool Engine::isPresentSupported(const Surface &surface) const noexcept
+	std::unique_ptr<Graphics::Surface> RenderingEngine::createSurface(const HINSTANCE hinstance, const HWND hwnd)
 	{
-		return __physicalDevice.isPresentSupported(__queueFamilyIndex, surface);
+		const VkWin32SurfaceCreateInfoKHR createInfo
+		{
+			.sType			{ VkStructureType::VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR },
+			.hinstance		{ hinstance },
+			.hwnd			{ hwnd }
+		};
+
+		return __pLogicalDevice->createSurface(createInfo);
 	}
 
-	void Engine::__resolveQueueFamilyIndex()
+	void RenderingEngine::__resolveQueueFamilyIndex()
 	{
 		std::optional<uint32_t> familyIndex;
 
@@ -92,7 +93,7 @@ namespace Graphics
 		__queueFamilyIndex = familyIndex.value();
 	}
 
-	void Engine::__createLogicalDevice()
+	void RenderingEngine::__createLogicalDevice()
 	{
 		const auto &prop10				{ __physicalDevice.get10Props() };
 		const auto &prop11				{ __physicalDevice.get11Props() };
@@ -167,7 +168,7 @@ namespace Graphics
 		__pLogicalDevice = __physicalDevice.createLogicalDevice(__queueFamilyIndex, features, extensions);
 	}
 
-	void Engine::__createPipelineCache()
+	void RenderingEngine::__createPipelineCache()
 	{
 		const VkPipelineCacheCreateInfo createInfo
 		{

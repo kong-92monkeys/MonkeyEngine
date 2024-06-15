@@ -2,24 +2,24 @@
 
 #include "../Vulkan/Vulkan.h"
 
-export module ntmonkeys.com.Graphics.Core;
+export module ntmonkeys.com.Engine.Core;
 
 import ntmonkeys.com.Lib.Unique;
 import ntmonkeys.com.Lib.Version;
 import ntmonkeys.com.Lib.Logger;
 import ntmonkeys.com.VK.VulkanLoader;
 import ntmonkeys.com.VK.VulkanProc;
-import ntmonkeys.com.Graphics.ConversionUtil;
+import ntmonkeys.com.Engine.ConversionUtil;
 import ntmonkeys.com.Graphics.RenderContext;
 import ntmonkeys.com.Graphics.PhysicalDevice;
 import ntmonkeys.com.Graphics.DebugMessenger;
-import ntmonkeys.com.Graphics.Surface;
+import ntmonkeys.com.Engine.RenderingEngine;
 import <stdexcept>;
 import <unordered_map>;
 import <memory>;
 import <array>;
 
-namespace Graphics
+namespace Engine
 {
 	export class Core : public Lib::Unique
 	{
@@ -42,10 +42,7 @@ namespace Graphics
 		virtual ~Core() noexcept;
 
 		[[nodiscard]]
-		constexpr const std::vector<PhysicalDevice> &getPhysicalDevices() const noexcept;
-
-		[[nodiscard]]
-		std::unique_ptr<Surface> createSurface(const VkWin32SurfaceCreateInfoKHR &createInfo);
+		std::unique_ptr<RenderingEngine> createEngine();
 
 	private:
 		std::unique_ptr<VK::VulkanLoader> __pVulkanLoader;
@@ -60,8 +57,8 @@ namespace Graphics
 
 		VkDebugUtilsMessengerCreateInfoEXT __debugMessengerCreateInfo{ };
 
-		std::unique_ptr<RenderContext> __pRenderContext;
-		std::unique_ptr<DebugMessenger> __pDebugMessenger;
+		std::unique_ptr<Graphics::RenderContext> __pRenderContext;
+		std::unique_ptr<Graphics::DebugMessenger> __pDebugMessenger;
 
 		void __createVulkanLoader(const std::string &libName);
 		void __resolveInstanceVersion();
@@ -81,16 +78,11 @@ namespace Graphics
 			const VkDebugUtilsMessengerCallbackDataEXT *const pCallbackData,
 			void *const pUserData) noexcept;
 	};
-
-	constexpr const std::vector<PhysicalDevice> &Core::getPhysicalDevices() const noexcept
-	{
-		return __pRenderContext->getPhysicalDevices();
-	}
 }
 
 module: private;
 
-namespace Graphics
+namespace Engine
 {
 	Core::Core(const CreateInfo &createInfo) :
 		__instanceVer{ createInfo.instanceVersion }
@@ -119,9 +111,10 @@ namespace Graphics
 		__pRenderContext = nullptr;
 	}
 
-	std::unique_ptr<Surface> Core::createSurface(const VkWin32SurfaceCreateInfoKHR &createInfo)
+	std::unique_ptr<RenderingEngine> Core::createEngine()
 	{
-		return __pRenderContext->createSurface(createInfo);
+		const auto &devices{ __pRenderContext->getPhysicalDevices() };
+		return std::make_unique<RenderingEngine>(devices.front());
 	}
 
 	void Core::__createVulkanLoader(const std::string &libName)
@@ -267,7 +260,7 @@ namespace Graphics
 		createInfo.enabledExtensionCount	= static_cast<uint32_t>(extensions.size());
 		createInfo.ppEnabledExtensionNames	= extensions.data();
 
-		__pRenderContext = std::make_unique<RenderContext>(__pVulkanLoader->getGlobalProc(), createInfo);
+		__pRenderContext = std::make_unique<Graphics::RenderContext>(__pVulkanLoader->getGlobalProc(), createInfo);
 	}
 
 	void Core::__createDebugMessenger()

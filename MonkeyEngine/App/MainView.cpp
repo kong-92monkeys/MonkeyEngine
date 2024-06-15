@@ -11,7 +11,6 @@
 #define new DEBUG_NEW
 #endif
 
-import ntmonkeys.com.Graphics.Core;
 import ntmonkeys.com.Lib.Logger;
 
 IMPLEMENT_DYNCREATE(CMainView, CWnd)
@@ -73,22 +72,17 @@ int CMainView::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 int CMainView::__createSurface(const HINSTANCE hInstance)
 {
-	auto &core		{ theApp.getCore() };
-	auto &engine	{ theApp.getEngine() };
+	auto &engine{ theApp.getEngine() };
 
-	const VkWin32SurfaceCreateInfoKHR createInfo
+	try
 	{
-		.sType			{ VkStructureType::VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR },
-		.hinstance		{ hInstance },
-		.hwnd			{ GetSafeHwnd() }
-	};
-
-	__pSurface = core.createSurface(createInfo);
-	
-	if (engine.isPresentSupported(*__pSurface))
+		__pSurface = engine.createSurface(hInstance, GetSafeHwnd());
 		return 0;
-
-	return -1;
+	}
+	catch (...)
+	{
+		return -1;
+	}
 }
 
 void CMainView::OnDestroy()

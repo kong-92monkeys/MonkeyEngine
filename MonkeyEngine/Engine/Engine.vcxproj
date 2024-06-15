@@ -18,28 +18,11 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="DebugMessenger.ixx" />
-    <ClCompile Include="LogicalDevice.ixx" />
-    <ClCompile Include="PhysicalDevice.ixx" />
-    <ClCompile Include="PipelineCache.ixx" />
-    <ClCompile Include="Queue.ixx" />
-    <ClCompile Include="RenderContext.ixx" />
-    <ClCompile Include="Surface.ixx" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Library\Library.vcxproj">
-      <Project>{b07a68cb-1c8b-490b-8900-411b4c3a9deb}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\Vulkan\Vulkan.vcxproj">
-      <Project>{44d48842-8f63-46c0-8d5e-b5d74b7b5a28}</Project>
-    </ProjectReference>
-  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{e70909a6-9dd0-44bf-bf5e-fc842554e0f4}</ProjectGuid>
-    <RootNamespace>Graphics</RootNamespace>
+    <ProjectGuid>{f1eea86e-325c-4670-93c7-42ebb5f904a3}</ProjectGuid>
+    <RootNamespace>Engine</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -90,14 +73,10 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <IncludePath>$(SolutionDir)ThirdParty\inc;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)ThirdParty\lib;$(LibraryPath)</LibraryPath>
-    <ReferencePath>$(ReferencePath)</ReferencePath>
-    <ExecutablePath>$(ExecutablePath)</ExecutablePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IncludePath>$(SolutionDir)ThirdParty\inc;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)ThirdParty\lib;$(LibraryPath)</LibraryPath>
-    <ReferencePath>$(ReferencePath)</ReferencePath>
-    <ExecutablePath>$(ExecutablePath)</ExecutablePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -145,7 +124,6 @@
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <BuildStlModules />
     </ClCompile>
     <Link>
       <SubSystem>
@@ -167,7 +145,6 @@
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <BuildStlModules />
     </ClCompile>
     <Link>
       <SubSystem>
@@ -177,6 +154,22 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="ConversionUtil.ixx" />
+    <ClCompile Include="Core.ixx" />
+    <ClCompile Include="RenderingEngine.ixx" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Graphics\Graphics.vcxproj">
+      <Project>{e70909a6-9dd0-44bf-bf5e-fc842554e0f4}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\Library\Library.vcxproj">
+      <Project>{b07a68cb-1c8b-490b-8900-411b4c3a9deb}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\Vulkan\Vulkan.vcxproj">
+      <Project>{44d48842-8f63-46c0-8d5e-b5d74b7b5a28}</Project>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

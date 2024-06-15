@@ -25,7 +25,10 @@ namespace Graphics
 	export class PhysicalDevice
 	{
 	public:
-		PhysicalDevice(const VK::InstanceProc &proc, const VkPhysicalDevice handle) noexcept;
+		PhysicalDevice(
+			const VK::InstanceProc &proc,
+			const VkInstance hInstance,
+			const VkPhysicalDevice hPhysicalDevice) noexcept;
 
 		[[nodiscard]]
 		constexpr const VkPhysicalDeviceProperties &get10Props() const noexcept;
@@ -67,9 +70,6 @@ namespace Graphics
 		bool isWin32PresentSupported(const uint32_t queueFamilyIndex) const noexcept;
 
 		[[nodiscard]]
-		bool isPresentSupported(const uint32_t queueFamilyIndex, const Surface &surface) const noexcept;
-
-		[[nodiscard]]
 		std::unique_ptr<LogicalDevice> createLogicalDevice(
 			const uint32_t queueFamilyIndex,
 			const VkPhysicalDeviceFeatures2 &features,
@@ -77,7 +77,8 @@ namespace Graphics
 
 	private:
 		const VK::InstanceProc &__proc;
-		const VkPhysicalDevice __handle;
+		const VkInstance __hInstance;
+		const VkPhysicalDevice __hPhysicalDevice;
 
 		VkPhysicalDeviceProperties2 __props{ };
 		VkPhysicalDeviceVulkan11Properties __11props{ };
@@ -169,8 +170,13 @@ module: private;
 
 namespace Graphics
 {
-	PhysicalDevice::PhysicalDevice(const VK::InstanceProc &proc, const VkPhysicalDevice handle) noexcept :
-		__proc{ proc }, __handle{ handle }
+	PhysicalDevice::PhysicalDevice(
+		const VK::InstanceProc &proc,
+		const VkInstance hInstance,
+		const VkPhysicalDevice hPhysicalDevice) noexcept :
+		__proc				{ proc },
+		__hInstance			{ hInstance },
+		__hPhysicalDevice	{ hPhysicalDevice }
 	{
 		__resolveProps();
 		__resolveFeatures();
@@ -180,15 +186,7 @@ namespace Graphics
 
 	bool PhysicalDevice::isWin32PresentSupported(const uint32_t queueFamilyIndex) const noexcept
 	{
-		return __proc.vkGetPhysicalDeviceWin32PresentationSupportKHR(__handle, queueFamilyIndex);
-	}
-
-	bool PhysicalDevice::isPresentSupported(const uint32_t queueFamilyIndex, const Surface &surface) const noexcept
-	{
-		VkBool32 supported{ };
-		__proc.vkGetPhysicalDeviceSurfaceSupportKHR(__handle, queueFamilyIndex, surface.__handle, &supported);
-
-		return supported;
+		return __proc.vkGetPhysicalDeviceWin32PresentationSupportKHR(__hPhysicalDevice, queueFamilyIndex);
 	}
 
 	std::unique_ptr<LogicalDevice> PhysicalDevice::createLogicalDevice(
@@ -196,7 +194,7 @@ namespace Graphics
 		const VkPhysicalDeviceFeatures2 &features,
 		const std::vector<const char *> &extensions) const
 	{
-		return std::make_unique<LogicalDevice>(__proc, __handle, queueFamilyIndex, features, extensions);
+		return std::make_unique<LogicalDevice>(__proc, __hInstance, __hPhysicalDevice, queueFamilyIndex, features, extensions);
 	}
 
 	void PhysicalDevice::__resolveProps() noexcept
@@ -216,7 +214,7 @@ namespace Graphics
 		__robustness2Props.sType = VkStructureType::VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ROBUSTNESS_2_PROPERTIES_EXT;
 		__robustness2Props.pNext = nullptr;
 
-		__proc.vkGetPhysicalDeviceProperties2(__handle, &__props);
+		__proc.vkGetPhysicalDeviceProperties2(__hPhysicalDevice, &__props);
 	}
 
 	void PhysicalDevice::__resolveFeatures() noexcept
@@ -236,16 +234,16 @@ namespace Graphics
 		__robustness2Features.sType = VkStructureType::VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ROBUSTNESS_2_FEATURES_EXT;
 		__robustness2Features.pNext = nullptr;
 
-		__proc.vkGetPhysicalDeviceFeatures2(__handle, &__features);
+		__proc.vkGetPhysicalDeviceFeatures2(__hPhysicalDevice, &__features);
 	}
 
 	void PhysicalDevice::__resolveExtensions() noexcept
 	{
 		uint32_t extensionCount{ };
-		__proc.vkEnumerateDeviceExtensionProperties(__handle, nullptr, &extensionCount, nullptr);
+		__proc.vkEnumerateDeviceExtensionProperties(__hPhysicalDevice, nullptr, &extensionCount, nullptr);
 
 		__extensions.resize(extensionCount);
-		__proc.vkEnumerateDeviceExtensionProperties(__handle, nullptr, &extensionCount, __extensions.data());
+		__proc.vkEnumerateDeviceExtensionProperties(__hPhysicalDevice, nullptr, &extensionCount, __extensions.data());
 
 		for (const auto &extension : __extensions)
 			__extensionMap[extension.extensionName] = &extension;
@@ -254,7 +252,7 @@ namespace Graphics
 	void PhysicalDevice::__resolveQueueFamilyInfos() noexcept
 	{
 		uint32_t familyCount{ };
-		__proc.vkGetPhysicalDeviceQueueFamilyProperties2(__handle, &familyCount, nullptr);
+		__proc.vkGetPhysicalDeviceQueueFamilyProperties2(__hPhysicalDevice, &familyCount, nullptr);
 
 		__queueFamilyProps.resize(familyCount);
 		__queueFamilyGlobalPriorityProps.resize(familyCount);
@@ -276,6 +274,6 @@ namespace Graphics
 			infos.pGlobalPriorityProps = &globalPriorityProps;
 		}
 
-		__proc.vkGetPhysicalDeviceQueueFamilyProperties2(__handle, &familyCount, __queueFamilyProps.data());
+		__proc.vkGetPhysicalDeviceQueueFamilyProperties2(__hPhysicalDevice, &familyCount, __queueFamilyProps.data());
 	}
 }

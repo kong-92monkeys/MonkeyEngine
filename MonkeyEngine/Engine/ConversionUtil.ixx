@@ -1,13 +1,12 @@
 module;
 
-#include <cstdint>
 #include "../Vulkan/Vulkan.h"
 
-export module ntmonkeys.com.Graphics.ConversionUtil;
+export module ntmonkeys.com.Engine.ConversionUtil;
 
 import ntmonkeys.com.Lib.Version;
 
-namespace Graphics
+namespace Engine
 {
 	export namespace ConversionUtil
 	{

@@ -8,6 +8,7 @@ import ntmonkeys.com.Lib.Unique;
 import ntmonkeys.com.VK.VulkanProc;
 import ntmonkeys.com.Graphics.Queue;
 import ntmonkeys.com.Graphics.PipelineCache;
+import ntmonkeys.com.Graphics.Surface;
 import <vector>;
 import <memory>;
 import <stdexcept>;
@@ -19,6 +20,7 @@ namespace Graphics
 	public:
 		LogicalDevice(
 			const VK::InstanceProc &instanceProc,
+			const VkInstance hInstance,
 			const VkPhysicalDevice hPhysicalDevice,
 			const uint32_t queueFamilyIndex,
 			const VkPhysicalDeviceFeatures2 &features,
@@ -32,8 +34,12 @@ namespace Graphics
 		[[nodiscard]]
 		std::unique_ptr<PipelineCache> createPipelineCache(const VkPipelineCacheCreateInfo &createInfo);
 
+		[[nodiscard]]
+		std::unique_ptr<Surface> createSurface(const VkWin32SurfaceCreateInfoKHR &createInfo);
+
 	private:
 		const VK::InstanceProc &__instanceProc;
+		const VkInstance __hInstance;
 		const VkPhysicalDevice __hPhysicalDevice;
 		const uint32_t __queueFamilyIndex;
 
@@ -59,11 +65,13 @@ namespace Graphics
 {
 	LogicalDevice::LogicalDevice(
 		const VK::InstanceProc &instanceProc,
+		const VkInstance hInstance,
 		const VkPhysicalDevice hPhysicalDevice,
 		const uint32_t queueFamilyIndex,
 		const VkPhysicalDeviceFeatures2 &features,
 		const std::vector<const char *> &extensions) noexcept :
 		__instanceProc		{ instanceProc },
+		__hInstance			{ hInstance },
 		__hPhysicalDevice	{ hPhysicalDevice },
 		__queueFamilyIndex	{ queueFamilyIndex }
 	{
@@ -80,6 +88,11 @@ namespace Graphics
 	std::unique_ptr<PipelineCache> LogicalDevice::createPipelineCache(const VkPipelineCacheCreateInfo &createInfo)
 	{
 		return std::make_unique<PipelineCache>(__proc, __handle, createInfo);
+	}
+
+	std::unique_ptr<Surface> LogicalDevice::createSurface(const VkWin32SurfaceCreateInfoKHR &createInfo)
+	{
+		return std::make_unique<Surface>(__instanceProc, __hInstance, __hPhysicalDevice, __queueFamilyIndex, createInfo);
 	}
 
 	void LogicalDevice::__create(const VkPhysicalDeviceFeatures2 &features, const std::vector<const char *> &extensions)

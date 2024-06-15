@@ -239,6 +239,9 @@
     <Image Include="res\App.ico" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Engine\Engine.vcxproj">
+      <Project>{f1eea86e-325c-4670-93c7-42ebb5f904a3}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\Graphics\Graphics.vcxproj">
       <Project>{e70909a6-9dd0-44bf-bf5e-fc842554e0f4}</Project>
     </ProjectReference>

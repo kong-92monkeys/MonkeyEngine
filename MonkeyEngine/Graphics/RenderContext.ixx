@@ -30,9 +30,6 @@ namespace Graphics
 		[[nodiscard]]
 		std::unique_ptr<DebugMessenger> createDebugMessenger(const VkDebugUtilsMessengerCreateInfoEXT &createInfo);
 
-		[[nodiscard]]
-		std::unique_ptr<Surface> createSurface(const VkWin32SurfaceCreateInfoKHR &createInfo);
-
 	private:
 		const VK::GlobalProc &__globalProc;
 		
@@ -74,11 +71,6 @@ namespace Graphics
 	std::unique_ptr<DebugMessenger> RenderContext::createDebugMessenger(const VkDebugUtilsMessengerCreateInfoEXT &createInfo)
 	{
 		return std::make_unique<DebugMessenger>(__proc, __handle, createInfo);
-	}
-
-	std::unique_ptr<Surface> RenderContext::createSurface(const VkWin32SurfaceCreateInfoKHR &createInfo)
-	{
-		return std::make_unique<Surface>(__proc, __handle, createInfo);
 	}
 
 	void RenderContext::__create(const VkInstanceCreateInfo &createInfo)
@@ -159,6 +151,6 @@ namespace Graphics
 		__proc.vkEnumeratePhysicalDevices(__handle, &deviceCount, deviceHandles.data());
 
 		for (const auto handle : deviceHandles)
-			__physicalDevices.emplace_back(__proc, handle);
+			__physicalDevices.emplace_back(__proc, __handle, handle);
 	}
 }

@@ -1,39 +1,12 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="ConversionUtil.ixx">
-      <Filter>Util</Filter>
-    </ClCompile>
-    <ClCompile Include="LogicalDevice.ixx">
-      <Filter>Foundation</Filter>
-    </ClCompile>
-    <ClCompile Include="PhysicalDevice.ixx">
-      <Filter>Foundation</Filter>
-    </ClCompile>
-    <ClCompile Include="Queue.ixx">
-      <Filter>Foundation</Filter>
-    </ClCompile>
-    <ClCompile Include="PipelineCache.ixx">
-      <Filter>Foundation</Filter>
-    </ClCompile>
-    <ClCompile Include="Surface.ixx">
-      <Filter>Foundation</Filter>
-    </ClCompile>
-    <ClCompile Include="RenderContext.ixx">
-      <Filter>Foundation</Filter>
-    </ClCompile>
-    <ClCompile Include="Core.ixx" />
-    <ClCompile Include="Engine.ixx" />
-    <ClCompile Include="DebugMessenger.ixx">
-      <Filter>Foundation</Filter>
-    </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <Filter Include="Foundation">
-      <UniqueIdentifier>{ded6826e-4b9a-4415-8fe5-73cb48470677}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Util">
-      <UniqueIdentifier>{b3e94550-67b8-4a8e-b284-686d947dd121}</UniqueIdentifier>
-    </Filter>
+    <ClCompile Include="DebugMessenger.ixx" />
+    <ClCompile Include="LogicalDevice.ixx" />
+    <ClCompile Include="PhysicalDevice.ixx" />
+    <ClCompile Include="PipelineCache.ixx" />
+    <ClCompile Include="Queue.ixx" />
+    <ClCompile Include="RenderContext.ixx" />
+    <ClCompile Include="Surface.ixx" />
   </ItemGroup>
 </Project>

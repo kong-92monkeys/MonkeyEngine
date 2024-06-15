@@ -20,7 +20,6 @@ BEGIN_MESSAGE_MAP(CApp, CWinApp)
 END_MESSAGE_MAP()
 
 import ntmonkeys.com.Lib.Logger;
-import ntmonkeys.com.VK.VulkanLoader;
 
 // CApp construction
 
@@ -85,8 +84,8 @@ BOOL CApp::InitInstance()
 int CApp::ExitInstance()
 {
 	//TODO: handle additional resources you may have added
-	__pGraphicsEngine = nullptr;
-	__pGraphicsCore = nullptr;
+	__pRenderingEngine = nullptr;
+	__pCore = nullptr;
 
 	return CWinApp::ExitInstance();
 }
@@ -94,14 +93,14 @@ int CApp::ExitInstance()
 void CApp::__onInitBeforeMainFrame()
 {
 	__createGraphicsCore();
-	__createGraphicsEngine();
+	__createRenderingEngine();
 }
 
 void CApp::__createGraphicsCore()
 {
 	try
 	{
-		const Graphics::Core::CreateInfo createInfo
+		const Engine::Core::CreateInfo createInfo
 		{
 			.vulkanLoaderLibName	{ "vulkan_loader_dedicated-1.dll" },
 
@@ -114,7 +113,7 @@ void CApp::__createGraphicsCore()
 			.instanceVersion		{ 1U, 4U, 0U, 0U }
 		};
 
-		__pGraphicsCore = std::make_unique<Graphics::Core>(createInfo);
+		__pCore = std::make_unique<Engine::Core>(createInfo);
 	}
 	catch (const std::runtime_error &e)
 	{
@@ -128,18 +127,11 @@ void CApp::__createGraphicsCore()
 	Lib::Logger::log(Lib::Logger::Severity::INFO, "Graphics core created.");
 }
 
-void CApp::__createGraphicsEngine()
+void CApp::__createRenderingEngine()
 {
 	try
 	{
-		const auto &physicalDevice{ __pGraphicsCore->getPhysicalDevices().front() };
-
-		const Graphics::Engine::CreateInfo createInfo
-		{
-			.pPhysicalDevice{ &physicalDevice }
-		};
-
-		__pGraphicsEngine = std::make_unique<Graphics::Engine>(createInfo);
+		__pRenderingEngine = __pCore->createEngine();
 	}
 	catch (const std::runtime_error &e)
 	{

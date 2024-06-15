@@ -10,8 +10,8 @@
 #include "resource.h"       // main symbols
 import <memory>;
 import ntmonkeys.com.Lib.Event;
-import ntmonkeys.com.Graphics.Core;
-import ntmonkeys.com.Graphics.Engine;
+import ntmonkeys.com.Engine.Core;
+import ntmonkeys.com.Engine.RenderingEngine;
 
 // CApp:
 // See App.cpp for the implementation of this class
@@ -36,23 +36,20 @@ public:
 
 public:
 	[[nodiscard]]
-	constexpr Graphics::Core &getCore() noexcept;
-
-	[[nodiscard]]
-	constexpr Graphics::Engine &getEngine() noexcept;
+	constexpr Engine::RenderingEngine &getEngine() noexcept;
 
 	[[nodiscard]]
 	constexpr Lib::EventView<> &getIdleEvent() const noexcept;
 
 private:
-	std::unique_ptr<Graphics::Core> __pGraphicsCore;
-	std::unique_ptr<Graphics::Engine> __pGraphicsEngine;
+	std::unique_ptr<Engine::Core> __pCore;
+	std::unique_ptr<Engine::RenderingEngine> __pRenderingEngine;
 
 	mutable Lib::Event<> __idleEvent;
 
 	void __onInitBeforeMainFrame();
 	void __createGraphicsCore();
-	void __createGraphicsEngine();
+	void __createRenderingEngine();
 
 public:
 	virtual BOOL OnIdle(LONG lCount);
@@ -60,14 +57,9 @@ public:
 
 extern CApp theApp;
 
-constexpr Graphics::Core &CApp::getCore() noexcept
+constexpr Engine::RenderingEngine &CApp::getEngine() noexcept
 {
-	return *__pGraphicsCore;
-}
-
-constexpr Graphics::Engine &CApp::getEngine() noexcept
-{
-	return *__pGraphicsEngine;
+	return *__pRenderingEngine;
 }
 
 constexpr Lib::EventView<> &CApp::getIdleEvent() const noexcept
