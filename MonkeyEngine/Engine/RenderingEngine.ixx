@@ -8,8 +8,8 @@ import ntmonkeys.com.Lib.Unique;
 import ntmonkeys.com.Graphics.PhysicalDevice;
 import ntmonkeys.com.Graphics.LogicalDevice;
 import ntmonkeys.com.Graphics.PipelineCache;
-import ntmonkeys.com.Graphics.Surface;
-import ntmonkeys.com.Engine.ConversionUtil;
+import ntmonkeys.com.Graphics.ConversionUtil;
+import ntmonkeys.com.Engine.RenderTarget;
 import <optional>;
 import <stdexcept>;
 import <memory>;
@@ -20,11 +20,17 @@ namespace Engine
 	export class RenderingEngine : public Lib::Unique
 	{
 	public:
-		RenderingEngine(const Graphics::PhysicalDevice &physicalDevice);
+		struct CreateInfo
+		{
+		public:
+			const Graphics::PhysicalDevice *pPhysicalDevice{ };
+		};
+
+		RenderingEngine(const CreateInfo &createInfo);
 		virtual ~RenderingEngine() noexcept override;
 
 		[[nodiscard]]
-		std::unique_ptr<Graphics::Surface> createSurface(const HINSTANCE hinstance, const HWND hwnd);
+		std::unique_ptr<RenderTarget> createRenderTarget(const HINSTANCE hinstance, const HWND hwnd);
 
 	private:
 		const Graphics::PhysicalDevice &__physicalDevice;
@@ -43,8 +49,8 @@ module: private;
 
 namespace Engine
 {
-	RenderingEngine::RenderingEngine(const Graphics::PhysicalDevice &physicalDevice) :
-		__physicalDevice{ physicalDevice }
+	RenderingEngine::RenderingEngine(const CreateInfo &createInfo) :
+		__physicalDevice{ *(createInfo.pPhysicalDevice) }
 	{
 		__resolveQueueFamilyIndex();
 		__createLogicalDevice();
@@ -57,9 +63,16 @@ namespace Engine
 		__pLogicalDevice = nullptr;
 	}
 
-	std::unique_ptr<Graphics::Surface> RenderingEngine::createSurface(const HINSTANCE hinstance, const HWND hwnd)
+	std::unique_ptr<RenderTarget> RenderingEngine::createRenderTarget(const HINSTANCE hinstance, const HWND hwnd)
 	{
-		return __pLogicalDevice->createSurface(hinstance, hwnd);
+		const RenderTarget::CreateInfo createInfo
+		{
+			.pLogicalDevice	{ __pLogicalDevice.get() },
+			.hinstance		{ hinstance },
+			.hwnd			{ hwnd }
+		};
+
+		return std::make_unique<RenderTarget>(createInfo);
 	}
 
 	void RenderingEngine::__resolveQueueFamilyIndex()
@@ -103,7 +116,7 @@ namespace Engine
 
 		const auto &extensionMap		{ __physicalDevice.getExtensionMap() };
 
-		const auto deviceVersion		{ ConversionUtil::fromVulkanVersion(prop10.apiVersion) };
+		const auto deviceVersion		{ Graphics::ConversionUtil::fromVulkanVersion(prop10.apiVersion) };
 
 		const bool featureSupported
 		{
@@ -152,6 +165,7 @@ namespace Engine
 		std::vector<const char *> extensions;
 		extensions.emplace_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
 		extensions.emplace_back(VK_EXT_ROBUSTNESS_2_EXTENSION_NAME);
+		extensions.emplace_back(VK_EXT_FULL_SCREEN_EXCLUSIVE_EXTENSION_NAME);
 		//extensions.emplace_back(VK_EXT_IMAGE_COMPRESSION_CONTROL_EXTENSION_NAME);
 
 		for (const auto extension : extensions)

@@ -9,5 +9,6 @@
     <ClCompile Include="RenderContext.ixx" />
     <ClCompile Include="Surface.ixx" />
     <ClCompile Include="Swapchain.ixx" />
+    <ClCompile Include="ConversionUtil.ixx" />
   </ItemGroup>
 </Project>

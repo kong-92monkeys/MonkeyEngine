@@ -10,6 +10,7 @@ import ntmonkeys.com.Graphics.Swapchain;
 import <vector>;
 import <stdexcept>;
 import <memory>;
+import <algorithm>;
 
 namespace Graphics
 {
@@ -34,10 +35,19 @@ namespace Graphics
 		Surface(const CreateInfo &createInfo) noexcept;
 		virtual ~Surface() noexcept override;
 
+		[[nodiscard]]
+		constexpr uint32_t getWidth() const noexcept;
+
+		[[nodiscard]]
+		constexpr uint32_t getHeight() const noexcept;
+
 		void sync();
 
 		[[nodiscard]]
-		std::unique_ptr<Swapchain> createSwapchain(const VkSwapchainCreateInfoKHR &vkCreateInfo);
+		std::unique_ptr<Swapchain> createSwapchain(
+			const VkImageUsageFlags imageUsage,
+			const bool clipped,
+			std::unique_ptr<Swapchain> pOldSwapchain);
 
 	private:
 		const VK::InstanceProc &__instanceProc;
@@ -64,6 +74,7 @@ namespace Graphics
 
 		VkFormat __format{ };
 		VkColorSpaceKHR __colorSpace{ };
+		VkCompositeAlphaFlagBitsKHR __compositeAlpha{ };
 
 		void __create(const HINSTANCE hAppInstance);
 
@@ -72,15 +83,19 @@ namespace Graphics
 		void __populateQueryInfos();
 		void __resolveCapabilities();
 		void __resolveFormat();
-
-		[[nodiscard]]
-		constexpr bool __isPresentable() const noexcept;
+		void __resolveCompositeAlpha() noexcept;
 	};
 
-	constexpr bool Surface::__isPresentable() const noexcept
+	constexpr uint32_t Surface::getWidth() const noexcept
 	{
 		const auto &currentExtent{ __capabilities.surfaceCapabilities.currentExtent };
-		return (currentExtent.width && currentExtent.height);
+		return currentExtent.width;
+	}
+
+	constexpr uint32_t Surface::getHeight() const noexcept
+	{
+		const auto &currentExtent{ __capabilities.surfaceCapabilities.currentExtent };
+		return currentExtent.height;
 	}
 }
 
@@ -114,16 +129,33 @@ namespace Graphics
 		__populateQueryInfos();
 		__resolveCapabilities();
 		__resolveFormat();
+		__resolveCompositeAlpha();
 	}
 
-	std::unique_ptr<Swapchain> Surface::createSwapchain(const VkSwapchainCreateInfoKHR &vkCreateInfo)
+	std::unique_ptr<Swapchain> Surface::createSwapchain(
+		const VkImageUsageFlags imageUsage,
+		const bool clipped,
+		std::unique_ptr<Swapchain> pOldSwapchain)
 	{
+		const auto &capabilities{ __capabilities.surfaceCapabilities };
+
 		const Swapchain::CreateInfo createInfo
 		{
-			.pDeviceProc	{ &__deviceProc },
-			.hDevice		{ __hDevice },
-			.hSurface		{ __handle },
-			.vkCreateInfo	{ &vkCreateInfo }
+			.pDeviceProc		{ &__deviceProc },
+			.hDevice			{ __hDevice },
+			.hSurface			{ __handle },
+			.minImageCount		{ std::clamp(3U, capabilities.minImageCount, capabilities.maxImageCount) },
+			.imageFormat		{ __format },
+			.imageColorSpace	{ __colorSpace },
+			.imageExtent		{ capabilities.currentExtent },
+			.imageUsage			{ imageUsage },
+			.preTransform		{ capabilities.currentTransform },
+			.compositeAlpha		{ __compositeAlpha },
+			.presentMode		{ __presentMode },
+			.clipped			{ clipped ? VK_TRUE : VK_FALSE },
+			.pOldSwapchain		{ std::move(pOldSwapchain) },
+			.fullScreenMode		{ __fullscreenInfo.fullScreenExclusive },
+			.fullScreenMonitor	{ __fullscreenWin32Info.hmonitor }
 		};
 
 		return std::make_unique<Swapchain>(createInfo);
@@ -237,5 +269,22 @@ namespace Graphics
 
 		if (__format == VkFormat::VK_FORMAT_UNDEFINED)
 			throw std::runtime_error{ "Cannot resolve suitable surface format." };
+	}
+
+	void Surface::__resolveCompositeAlpha() noexcept
+	{
+		const auto &capabilities{ __capabilities.surfaceCapabilities };
+
+		if (capabilities.supportedCompositeAlpha & VkCompositeAlphaFlagBitsKHR::VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR)
+		{
+			__compositeAlpha = VkCompositeAlphaFlagBitsKHR::VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+			return;
+		}
+
+		if (capabilities.supportedCompositeAlpha & VkCompositeAlphaFlagBitsKHR::VK_COMPOSITE_ALPHA_INHERIT_BIT_KHR)
+		{
+			__compositeAlpha = VkCompositeAlphaFlagBitsKHR::VK_COMPOSITE_ALPHA_INHERIT_BIT_KHR;
+			return;
+		}
 	}
 }

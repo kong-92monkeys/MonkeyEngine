@@ -68,5 +68,6 @@ namespace VK
 
 		// Swapchain
 		PFN_vkCreateSwapchainKHR vkCreateSwapchainKHR{ };
+		PFN_vkDestroySwapchainKHR vkDestroySwapchainKHR{ };
 	};
 }

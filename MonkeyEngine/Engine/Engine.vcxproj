@@ -155,9 +155,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="ConversionUtil.ixx" />
     <ClCompile Include="Core.ixx" />
     <ClCompile Include="RenderingEngine.ixx" />
+    <ClCompile Include="RenderTarget.ixx" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Graphics\Graphics.vcxproj">

@@ -63,7 +63,7 @@ int CMainView::OnCreate(LPCREATESTRUCT lpCreateStruct)
 		return -1;
 
 	// TODO:  Add your specialized creation code here
-	if (__createSurface(lpCreateStruct->hInstance) == -1)
+	if (__createRenderTarget(lpCreateStruct->hInstance) == -1)
 		return -1;
 
 	Lib::Logger::log(Lib::Logger::Severity::INFO, "Main surface created.");
@@ -71,13 +71,13 @@ int CMainView::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	return 0;
 }
 
-int CMainView::__createSurface(const HINSTANCE hInstance)
+int CMainView::__createRenderTarget(const HINSTANCE hInstance)
 {
 	auto &engine{ theApp.getEngine() };
 
 	try
 	{
-		__pSurface = engine.createSurface(hInstance, GetSafeHwnd());
+		__pRenderTarget = engine.createRenderTarget(hInstance, GetSafeHwnd());
 		return 0;
 	}
 	catch (...)
@@ -88,7 +88,7 @@ int CMainView::__createSurface(const HINSTANCE hInstance)
 
 void CMainView::OnDestroy()
 {
-	__pSurface = nullptr;
+	__pRenderTarget = nullptr;
 	CWnd::OnDestroy();
 }
 
@@ -98,5 +98,5 @@ void CMainView::OnSize(UINT nType, int cx, int cy)
 	CWnd::OnSize(nType, cx, cy);
 
 	// TODO: Add your message handler code here
-	__pSurface->sync();
+	__pRenderTarget->sync();
 }

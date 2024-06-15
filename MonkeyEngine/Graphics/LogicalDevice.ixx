@@ -160,6 +160,7 @@ namespace Graphics
 
 		// Swapchain
 		LOAD_DEVICE_PROC(vkCreateSwapchainKHR);
+		LOAD_DEVICE_PROC(vkDestroySwapchainKHR);
 	}
 
 	void LogicalDevice::__resolveQueue()

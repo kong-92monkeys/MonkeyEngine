@@ -2,11 +2,11 @@ module;
 
 #include "../Vulkan/Vulkan.h"
 
-export module ntmonkeys.com.Engine.ConversionUtil;
+export module ntmonkeys.com.Graphics.ConversionUtil;
 
 import ntmonkeys.com.Lib.Version;
 
-namespace Engine
+namespace Graphics
 {
 	export namespace ConversionUtil
 	{

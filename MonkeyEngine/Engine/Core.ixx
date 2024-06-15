@@ -9,15 +9,14 @@ import ntmonkeys.com.Lib.Version;
 import ntmonkeys.com.Lib.Logger;
 import ntmonkeys.com.VK.VulkanLoader;
 import ntmonkeys.com.VK.VulkanProc;
-import ntmonkeys.com.Engine.ConversionUtil;
 import ntmonkeys.com.Graphics.RenderContext;
 import ntmonkeys.com.Graphics.PhysicalDevice;
 import ntmonkeys.com.Graphics.DebugMessenger;
+import ntmonkeys.com.Graphics.ConversionUtil;
 import ntmonkeys.com.Engine.RenderingEngine;
 import <stdexcept>;
 import <unordered_map>;
 import <memory>;
-import <array>;
 import <format>;
 
 namespace Engine
@@ -56,9 +55,6 @@ namespace Engine
 		std::unordered_map<std::string_view, const VkLayerProperties *> __instanceLayerMap;
 		std::unordered_map<std::string_view, const VkExtensionProperties *> __instanceExtensionMap;
 
-		VkDebugUtilsMessageSeverityFlagsEXT __debugMessageSeverity{ };
-		VkDebugUtilsMessageTypeFlagsEXT __debugMessageType{ };
-
 		std::unique_ptr<Graphics::RenderContext> __pRenderContext;
 		std::unique_ptr<Graphics::DebugMessenger> __pDebugMessenger;
 
@@ -66,7 +62,6 @@ namespace Engine
 		void __resolveInstanceVersion();
 		void __resolveInstanceLayers() noexcept;
 		void __resolveInstanceExtensions() noexcept;
-		constexpr void __populateDebugMessengerCreateInfo() noexcept;
 
 		void __createRenderContext(
 			const std::string &appName, const Lib::Version &appVersion,
@@ -94,10 +89,6 @@ namespace Engine
 		__resolveInstanceLayers();
 		__resolveInstanceExtensions();
 
-#ifndef NDEBUG
-		__populateDebugMessengerCreateInfo();
-#endif
-
 		__createRenderContext(
 			createInfo.appName, createInfo.appVersion,
 			createInfo.engineName, createInfo.engineVersion);
@@ -116,7 +107,13 @@ namespace Engine
 	std::unique_ptr<RenderingEngine> Core::createEngine()
 	{
 		const auto &devices{ __pRenderContext->getPhysicalDevices() };
-		return std::make_unique<RenderingEngine>(devices.front());
+
+		const RenderingEngine::CreateInfo createInfo
+		{
+			.pPhysicalDevice{ &(devices.front()) }
+		};
+
+		return std::make_unique<RenderingEngine>(createInfo);
 	}
 
 	void Core::__createVulkanLoader(const std::string &libName)
@@ -139,10 +136,10 @@ namespace Engine
 		else
 			globalProc.vkEnumerateInstanceVersion(&encodedVer);
 
-		const auto decodedVer{ ConversionUtil::fromVulkanVersion(encodedVer) };
+		const auto decodedVer{ Graphics::ConversionUtil::fromVulkanVersion(encodedVer) };
 		__instanceVer = ((__instanceVer < decodedVer) ? __instanceVer : decodedVer);
 
-		if (__instanceVer < ConversionUtil::fromVulkanVersion(VK_API_VERSION_1_3))
+		if (__instanceVer < Graphics::ConversionUtil::fromVulkanVersion(VK_API_VERSION_1_3))
 			throw std::runtime_error{ "The supported vulkan instance version is too low." };
 	}
 
@@ -174,81 +171,35 @@ namespace Engine
 			__instanceExtensionMap[extension.extensionName] = &extension;
 	}
 
-	constexpr void Core::__populateDebugMessengerCreateInfo() noexcept
-	{
-		__debugMessageSeverity =
-		(
-			VkDebugUtilsMessageSeverityFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT |
-			VkDebugUtilsMessageSeverityFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT
-		);
-
-		__debugMessageType =
-		(
-			VkDebugUtilsMessageTypeFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
-			VkDebugUtilsMessageTypeFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
-			VkDebugUtilsMessageTypeFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT |
-			VkDebugUtilsMessageTypeFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_TYPE_DEVICE_ADDRESS_BINDING_BIT_EXT
-		);
-	}
-
 	void Core::__createRenderContext(
 		const std::string &appName, const Lib::Version &appVersion,
 		const std::string &engineName, const Lib::Version &engineVersion)
 	{
-		const VkApplicationInfo appInfo
-		{
-			.sType				{ VkStructureType::VK_STRUCTURE_TYPE_APPLICATION_INFO },
-			.pApplicationName	{ appName.c_str() },
-			.applicationVersion	{ ConversionUtil::toVulkanVersion(appVersion) },
-			.pEngineName		{ engineName.c_str() },
-			.engineVersion		{ ConversionUtil::toVulkanVersion(engineVersion) },
-			.apiVersion			{ ConversionUtil::toVulkanVersion(__instanceVer) }
-		};
-
-		VkInstanceCreateInfo createInfo
-		{
-			.sType				{ VkStructureType::VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO },
-			.pApplicationInfo	{ &appInfo }
-		};
-
 		std::vector<const char *> layers;
 		std::vector<const char *> extensions;
+
+		Graphics::RenderContext::CreateInfo createInfo
+		{
+			.pGlobalProc		{ &(__pVulkanLoader->getGlobalProc()) },
+			.appName			{ appName },
+			.appVersion			{ appVersion },
+			.engineName			{ engineName },
+			.engineVersion		{ engineVersion },
+			.instanceVersion	{ __instanceVer },
+			.pLayers			{ &layers },
+			.pExtensions		{ &extensions }
+		};
 
 		extensions.emplace_back(VK_KHR_SURFACE_EXTENSION_NAME);
 		extensions.emplace_back(VK_KHR_WIN32_SURFACE_EXTENSION_NAME);
 		extensions.emplace_back(VK_KHR_GET_SURFACE_CAPABILITIES_2_EXTENSION_NAME);
 
 #ifndef NDEBUG
-		const VkDebugUtilsMessengerCreateInfoEXT debugMessengerCreateInfo
-		{
-			.sType				{ VkStructureType::VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT },
-			.messageSeverity	{ __debugMessageSeverity },
-			.messageType		{ __debugMessageType },
-			.pfnUserCallback	{ __vkDebugUtilsMessengerCallbackEXT }
-		};
-
-		static constexpr std::array enabledFeatures
-		{
-			// 퍼포먼스 떨어지는 코드 경고
-			VkValidationFeatureEnableEXT::VK_VALIDATION_FEATURE_ENABLE_BEST_PRACTICES_EXT,
-
-			// 메모리 해저드 경고
-			VkValidationFeatureEnableEXT::VK_VALIDATION_FEATURE_ENABLE_SYNCHRONIZATION_VALIDATION_EXT
-		};
-
-		const VkValidationFeaturesEXT validationFeatures
-		{
-			.sType							{ VkStructureType::VK_STRUCTURE_TYPE_VALIDATION_FEATURES_EXT },
-			.pNext							{ &debugMessengerCreateInfo },
-			.enabledValidationFeatureCount	{ static_cast<uint32_t>(enabledFeatures.size()) },
-			.pEnabledValidationFeatures		{ enabledFeatures.data() }
-		};
-
-		static constexpr auto vvlLayerName{ "VK_LAYER_KHRONOS_validation" };
-
-		layers.emplace_back(vvlLayerName);
+		layers.emplace_back("VK_LAYER_KHRONOS_validation");
 		extensions.emplace_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
-		createInfo.pNext = &validationFeatures;
+
+		createInfo.useVvl = true;
+		createInfo.vvlCallback = __vkDebugUtilsMessengerCallbackEXT;
 #endif
 
 		for (const auto layer : layers)
@@ -267,20 +218,12 @@ namespace Engine
 			throw std::runtime_error{ std::format("Instance extension not supported: {}", extension) };
 		}
 
-		createInfo.enabledLayerCount		= static_cast<uint32_t>(layers.size());
-		createInfo.ppEnabledLayerNames		= layers.data();
-
-		createInfo.enabledExtensionCount	= static_cast<uint32_t>(extensions.size());
-		createInfo.ppEnabledExtensionNames	= extensions.data();
-
-		__pRenderContext = std::make_unique<Graphics::RenderContext>(__pVulkanLoader->getGlobalProc(), createInfo);
+		__pRenderContext = std::make_unique<Graphics::RenderContext>(createInfo);
 	}
 
 	void Core::__createDebugMessenger()
 	{
-		__pDebugMessenger = __pRenderContext->createDebugMessenger(
-			__debugMessageSeverity, __debugMessageType,
-			__vkDebugUtilsMessengerCallbackEXT, nullptr);
+		__pDebugMessenger = __pRenderContext->createDebugMessenger(__vkDebugUtilsMessengerCallbackEXT, nullptr);
 	}
 
 	VkBool32 Core::__vkDebugUtilsMessengerCallbackEXT(

@@ -5,7 +5,7 @@
 
 #pragma once
 
-import ntmonkeys.com.Graphics.Surface;
+import ntmonkeys.com.Engine.RenderTarget;
 
 // CChildView window
 
@@ -42,8 +42,8 @@ public:
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 
 private:
-	std::unique_ptr<Graphics::Surface> __pSurface;
+	std::unique_ptr<Engine::RenderTarget> __pRenderTarget;
 
-	int __createSurface(const HINSTANCE hInstance);
+	int __createRenderTarget(const HINSTANCE hInstance);
 };
 

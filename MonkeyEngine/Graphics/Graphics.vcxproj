@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="ConversionUtil.ixx" />
     <ClCompile Include="DebugMessenger.ixx" />
     <ClCompile Include="LogicalDevice.ixx" />
     <ClCompile Include="PhysicalDevice.ixx" />
