@@ -18,13 +18,18 @@ namespace Graphics
 	export class LogicalDevice : public Lib::Unique
 	{
 	public:
-		LogicalDevice(
-			const VK::InstanceProc &instanceProc,
-			const VkInstance hInstance,
-			const VkPhysicalDevice hPhysicalDevice,
-			const uint32_t queueFamilyIndex,
-			const VkPhysicalDeviceFeatures2 &features,
-			const std::vector<const char *> &extensions) noexcept;
+		struct CreateInfo
+		{
+		public:
+			const VK::InstanceProc *pInstanceProc{ };
+			VkInstance hInstance{ };
+			VkPhysicalDevice hPhysicalDevice{ };
+			uint32_t queueFamilyIndex{ };
+			const VkPhysicalDeviceFeatures2 *pFeatures{ };
+			const std::vector<const char *> *pExtensions{ };
+		};
+
+		LogicalDevice(const CreateInfo &createInfo) noexcept;
 
 		virtual ~LogicalDevice() noexcept override;
 		
@@ -66,19 +71,13 @@ module: private;
 
 namespace Graphics
 {
-	LogicalDevice::LogicalDevice(
-		const VK::InstanceProc &instanceProc,
-		const VkInstance hInstance,
-		const VkPhysicalDevice hPhysicalDevice,
-		const uint32_t queueFamilyIndex,
-		const VkPhysicalDeviceFeatures2 &features,
-		const std::vector<const char *> &extensions) noexcept :
-		__instanceProc		{ instanceProc },
-		__hInstance			{ hInstance },
-		__hPhysicalDevice	{ hPhysicalDevice },
-		__queueFamilyIndex	{ queueFamilyIndex }
+	LogicalDevice::LogicalDevice(const CreateInfo &createInfo) noexcept :
+		__instanceProc		{ *(createInfo.pInstanceProc) },
+		__hInstance			{ createInfo.hInstance },
+		__hPhysicalDevice	{ createInfo.hPhysicalDevice },
+		__queueFamilyIndex	{ createInfo.queueFamilyIndex }
 	{
-		__create(features, extensions);
+		__create(*(createInfo.pFeatures), *(createInfo.pExtensions));
 		__loadDeviceProc();
 		__resolveQueue();
 	}

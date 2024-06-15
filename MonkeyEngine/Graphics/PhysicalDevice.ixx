@@ -206,7 +206,17 @@ namespace Graphics
 		const VkPhysicalDeviceFeatures2 &features,
 		const std::vector<const char *> &extensions) const
 	{
-		return std::make_unique<LogicalDevice>(__instanceProc, __hInstance, __hPhysicalDevice, queueFamilyIndex, features, extensions);
+		const LogicalDevice::CreateInfo createInfo
+		{
+			.pInstanceProc		{ &__instanceProc },
+			.hInstance			{ __hInstance },
+			.hPhysicalDevice	{ __hPhysicalDevice },
+			.queueFamilyIndex	{ queueFamilyIndex },
+			.pFeatures			{ &features },
+			.pExtensions		{ &extensions }
+		};
+
+		return std::make_unique<LogicalDevice>(createInfo);
 	}
 
 	void PhysicalDevice::__resolveProps() noexcept
