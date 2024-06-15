@@ -28,6 +28,7 @@ BEGIN_MESSAGE_MAP(CMainView, CWnd)
 	ON_WM_PAINT()
 	ON_WM_CREATE()
 	ON_WM_DESTROY()
+	ON_WM_SIZE()
 END_MESSAGE_MAP()
 
 
@@ -89,4 +90,13 @@ void CMainView::OnDestroy()
 {
 	__pSurface = nullptr;
 	CWnd::OnDestroy();
+}
+
+
+void CMainView::OnSize(UINT nType, int cx, int cy)
+{
+	CWnd::OnSize(nType, cx, cy);
+
+	// TODO: Add your message handler code here
+
 }

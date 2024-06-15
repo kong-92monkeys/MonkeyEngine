@@ -13,6 +13,7 @@ import ntmonkeys.com.Engine.ConversionUtil;
 import <optional>;
 import <stdexcept>;
 import <memory>;
+import <format>;
 
 namespace Engine
 {
@@ -129,12 +130,6 @@ namespace Engine
 		if (!featureSupported)
 			throw std::runtime_error{ "The device doesn't support the features." };
 
-		if (!(extensionMap.contains(VK_KHR_SWAPCHAIN_EXTENSION_NAME)))
-			throw std::runtime_error{ "The device doesn't support swapchain." };
-
-		if (!(extensionMap.contains(VK_EXT_ROBUSTNESS_2_EXTENSION_NAME)))
-			throw std::runtime_error{ "The device doesn't support robustness2." };
-
 		VkPhysicalDeviceFeatures2 features{ };
 		VkPhysicalDeviceVulkan11Features features11{ };
 		VkPhysicalDeviceVulkan12Features features12{ };
@@ -164,6 +159,15 @@ namespace Engine
 		std::vector<const char *> extensions;
 		extensions.emplace_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
 		extensions.emplace_back(VK_EXT_ROBUSTNESS_2_EXTENSION_NAME);
+		//extensions.emplace_back(VK_EXT_IMAGE_COMPRESSION_CONTROL_EXTENSION_NAME);
+
+		for (const auto extension : extensions)
+		{
+			if (extensionMap.contains(extension))
+				continue;
+
+			throw std::runtime_error{ std::format("Device extension not supported: {}", extension) };
+		}
 
 		__pLogicalDevice = __physicalDevice.createLogicalDevice(__queueFamilyIndex, features, extensions);
 	}
