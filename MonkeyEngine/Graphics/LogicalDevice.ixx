@@ -61,6 +61,9 @@ namespace Graphics
 
 module: private;
 
+#pragma warning(disable: 5103)
+#define LOAD_PROC(funcName) (__proc.##funcName = reinterpret_cast<PFN_##funcName>(__instanceProc.vkGetDeviceProcAddr(__handle, #funcName)))
+
 namespace Graphics
 {
 	LogicalDevice::LogicalDevice(
@@ -124,37 +127,19 @@ namespace Graphics
 
 	void LogicalDevice::__loadProc() noexcept
 	{
-		__proc.vkDeviceWaitIdle =
-			reinterpret_cast<PFN_vkDeviceWaitIdle>(
-				__instanceProc.vkGetDeviceProcAddr(__handle, "vkDeviceWaitIdle"));
+		// Device
+		LOAD_PROC(vkDeviceWaitIdle);
+		LOAD_PROC(vkDestroyDevice);
 
-		__proc.vkDestroyDevice =
-			reinterpret_cast<PFN_vkDestroyDevice>(
-				__instanceProc.vkGetDeviceProcAddr(__handle, "vkDestroyDevice"));
+		// Queue
+		LOAD_PROC(vkGetDeviceQueue2);
+		LOAD_PROC(vkQueueWaitIdle);
+		LOAD_PROC(vkQueueSubmit2);
+		LOAD_PROC(vkQueuePresentKHR);
 
-		__proc.vkGetDeviceQueue2 =
-			reinterpret_cast<PFN_vkGetDeviceQueue2>(
-				__instanceProc.vkGetDeviceProcAddr(__handle, "vkGetDeviceQueue2"));
-
-		__proc.vkQueueWaitIdle =
-			reinterpret_cast<PFN_vkQueueWaitIdle>(
-				__instanceProc.vkGetDeviceProcAddr(__handle, "vkQueueWaitIdle"));
-
-		__proc.vkQueueSubmit2 =
-			reinterpret_cast<PFN_vkQueueSubmit2>(
-				__instanceProc.vkGetDeviceProcAddr(__handle, "vkQueueSubmit2"));
-
-		__proc.vkQueuePresentKHR =
-			reinterpret_cast<PFN_vkQueuePresentKHR>(
-				__instanceProc.vkGetDeviceProcAddr(__handle, "vkQueuePresentKHR"));
-
-		__proc.vkCreatePipelineCache =
-			reinterpret_cast<PFN_vkCreatePipelineCache>(
-				__instanceProc.vkGetDeviceProcAddr(__handle, "vkCreatePipelineCache"));
-
-		__proc.vkDestroyPipelineCache =
-			reinterpret_cast<PFN_vkDestroyPipelineCache>(
-				__instanceProc.vkGetDeviceProcAddr(__handle, "vkDestroyPipelineCache"));
+		// Pipeline cache
+		LOAD_PROC(vkCreatePipelineCache);
+		LOAD_PROC(vkDestroyPipelineCache);
 	}
 
 	void LogicalDevice::__resolveQueue()

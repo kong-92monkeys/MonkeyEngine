@@ -32,6 +32,7 @@ namespace Graphics
 
 		void __create(const VkWin32SurfaceCreateInfoKHR &createInfo);
 		void __checkDeviceSupport();
+		void __resolveProperties() noexcept;
 	};
 }
 
@@ -52,6 +53,7 @@ namespace Graphics
 	{
 		__create(createInfo);
 		__checkDeviceSupport();
+		__resolveProperties();
 	}
 
 	Surface::~Surface() noexcept
@@ -73,5 +75,10 @@ namespace Graphics
 
 		if (!supported)
 			throw std::runtime_error{ "The device doesn't support current surface." };
+	}
+
+	void Surface::__resolveProperties() noexcept
+	{
+
 	}
 }

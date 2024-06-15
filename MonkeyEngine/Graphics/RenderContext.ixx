@@ -51,6 +51,9 @@ namespace Graphics
 
 module: private;
 
+#pragma warning(disable: 5103)
+#define LOAD_PROC(funcName) (__proc.##funcName = reinterpret_cast<PFN_##funcName>(__globalProc.vkGetInstanceProcAddr(__handle, #funcName)))
+
 namespace Graphics
 {
 	RenderContext::RenderContext(
@@ -78,66 +81,35 @@ namespace Graphics
 		__globalProc.vkCreateInstance(&createInfo, nullptr, &__handle);
 		if (!__handle)
 			throw std::runtime_error{ "Cannot create RenderContext." };
-
 	}
 
 	void RenderContext::__loadProc() noexcept
 	{
-		__proc.vkDestroyInstance =
-			reinterpret_cast<PFN_vkDestroyInstance>(
-				__globalProc.vkGetInstanceProcAddr(__handle, "vkDestroyInstance"));
+		// Instance
+		LOAD_PROC(vkDestroyInstance);
+		LOAD_PROC(vkCreateDebugUtilsMessengerEXT);
+		LOAD_PROC(vkDestroyDebugUtilsMessengerEXT);
+		LOAD_PROC(vkEnumeratePhysicalDevices);
 
-		__proc.vkCreateDebugUtilsMessengerEXT =
-			reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>(
-				__globalProc.vkGetInstanceProcAddr(__handle, "vkCreateDebugUtilsMessengerEXT"));
+		// Physical device
+		LOAD_PROC(vkGetPhysicalDeviceProperties2);
+		LOAD_PROC(vkGetPhysicalDeviceFeatures2);
+		LOAD_PROC(vkGetPhysicalDeviceFormatProperties2);
+		LOAD_PROC(vkEnumerateDeviceExtensionProperties);
+		LOAD_PROC(vkGetPhysicalDeviceQueueFamilyProperties2);
+		LOAD_PROC(vkGetPhysicalDeviceSurfaceSupportKHR);
+		LOAD_PROC(vkGetPhysicalDeviceWin32PresentationSupportKHR);
+		LOAD_PROC(vkGetPhysicalDeviceSurfaceCapabilities2KHR);
+		LOAD_PROC(vkGetPhysicalDeviceSurfaceFormats2KHR);
+		LOAD_PROC(vkGetPhysicalDeviceSurfacePresentModes2EXT);
 
-		__proc.vkDestroyDebugUtilsMessengerEXT =
-			reinterpret_cast<PFN_vkDestroyDebugUtilsMessengerEXT>(
-				__globalProc.vkGetInstanceProcAddr(__handle, "vkDestroyDebugUtilsMessengerEXT"));
+		// Surface
+		LOAD_PROC(vkCreateWin32SurfaceKHR);
+		LOAD_PROC(vkDestroySurfaceKHR);
 
-		__proc.vkEnumeratePhysicalDevices =
-			reinterpret_cast<PFN_vkEnumeratePhysicalDevices>(
-				__globalProc.vkGetInstanceProcAddr(__handle, "vkEnumeratePhysicalDevices"));
-
-		__proc.vkGetPhysicalDeviceProperties2 =
-			reinterpret_cast<PFN_vkGetPhysicalDeviceProperties2>(
-				__globalProc.vkGetInstanceProcAddr(__handle, "vkGetPhysicalDeviceProperties2"));
-
-		__proc.vkGetPhysicalDeviceFeatures2 =
-			reinterpret_cast<PFN_vkGetPhysicalDeviceFeatures2>(
-				__globalProc.vkGetInstanceProcAddr(__handle, "vkGetPhysicalDeviceFeatures2"));
-
-		__proc.vkEnumerateDeviceExtensionProperties =
-			reinterpret_cast<PFN_vkEnumerateDeviceExtensionProperties>(
-				__globalProc.vkGetInstanceProcAddr(__handle, "vkEnumerateDeviceExtensionProperties"));
-
-		__proc.vkGetPhysicalDeviceQueueFamilyProperties2 =
-			reinterpret_cast<PFN_vkGetPhysicalDeviceQueueFamilyProperties2>(
-				__globalProc.vkGetInstanceProcAddr(__handle, "vkGetPhysicalDeviceQueueFamilyProperties2"));
-
-		__proc.vkGetPhysicalDeviceSurfaceSupportKHR =
-			reinterpret_cast<PFN_vkGetPhysicalDeviceSurfaceSupportKHR>(
-				__globalProc.vkGetInstanceProcAddr(__handle, "vkGetPhysicalDeviceSurfaceSupportKHR"));
-		
-		__proc.vkGetPhysicalDeviceWin32PresentationSupportKHR =
-			reinterpret_cast<PFN_vkGetPhysicalDeviceWin32PresentationSupportKHR>(
-				__globalProc.vkGetInstanceProcAddr(__handle, "vkGetPhysicalDeviceWin32PresentationSupportKHR"));
-
-		__proc.vkCreateWin32SurfaceKHR =
-			reinterpret_cast<PFN_vkCreateWin32SurfaceKHR>(
-				__globalProc.vkGetInstanceProcAddr(__handle, "vkCreateWin32SurfaceKHR"));
-
-		__proc.vkDestroySurfaceKHR =
-			reinterpret_cast<PFN_vkDestroySurfaceKHR>(
-				__globalProc.vkGetInstanceProcAddr(__handle, "vkDestroySurfaceKHR"));
-
-		__proc.vkCreateDevice =
-			reinterpret_cast<PFN_vkCreateDevice>(
-				__globalProc.vkGetInstanceProcAddr(__handle, "vkCreateDevice"));
-
-		__proc.vkGetDeviceProcAddr =
-			reinterpret_cast<PFN_vkGetDeviceProcAddr>(
-				__globalProc.vkGetInstanceProcAddr(__handle, "vkGetDeviceProcAddr"));
+		// Device
+		LOAD_PROC(vkCreateDevice);
+		LOAD_PROC(vkGetDeviceProcAddr);
 	}
 
 	void RenderContext::__resolvePhysicalDevices() noexcept
