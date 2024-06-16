@@ -113,6 +113,7 @@ namespace Engine
 		const auto &feature12			{ __physicalDevice.get12Features() };
 		const auto &feature13			{ __physicalDevice.get13Features() };
 		const auto &featureRobustness	{ __physicalDevice.getRobustness2Features() };
+		const auto &descBufferFeatures	{ __physicalDevice.getDescriptorBufferFeatures() };
 
 		const auto &extensionMap		{ __physicalDevice.getExtensionMap() };
 
@@ -165,6 +166,7 @@ namespace Engine
 		std::vector<const char *> extensions;
 		extensions.emplace_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
 		extensions.emplace_back(VK_EXT_ROBUSTNESS_2_EXTENSION_NAME);
+		extensions.emplace_back(VK_EXT_DESCRIPTOR_BUFFER_EXTENSION_NAME);
 		extensions.emplace_back(VK_EXT_FULL_SCREEN_EXCLUSIVE_EXTENSION_NAME);
 		//extensions.emplace_back(VK_EXT_IMAGE_COMPRESSION_CONTROL_EXTENSION_NAME);
 

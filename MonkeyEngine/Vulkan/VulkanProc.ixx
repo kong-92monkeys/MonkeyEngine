@@ -62,6 +62,10 @@ namespace VK
 		PFN_vkQueueSubmit2 vkQueueSubmit2{ };
 		PFN_vkQueuePresentKHR vkQueuePresentKHR{ };
 
+		// Pipeline
+		PFN_vkCreateGraphicsPipelines vkCreateGraphicsPipelines{ };
+		PFN_vkDestroyPipeline vkDestroyPipeline{ };
+
 		// Pipeline cache
 		PFN_vkCreatePipelineCache vkCreatePipelineCache{ };
 		PFN_vkDestroyPipelineCache vkDestroyPipelineCache{ };

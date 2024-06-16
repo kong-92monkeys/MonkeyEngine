@@ -67,6 +67,9 @@ namespace Graphics
 		constexpr const VkPhysicalDeviceRobustness2FeaturesEXT &getRobustness2Features() const noexcept;
 
 		[[nodiscard]]
+		constexpr const VkPhysicalDeviceDescriptorBufferFeaturesEXT &getDescriptorBufferFeatures() const noexcept;
+
+		[[nodiscard]]
 		constexpr const std::unordered_map<std::string_view, const VkExtensionProperties *> &getExtensionMap() const noexcept;
 
 		[[nodiscard]]
@@ -94,12 +97,14 @@ namespace Graphics
 		VkPhysicalDeviceVulkan12Properties __12props{ };
 		VkPhysicalDeviceVulkan13Properties __13props{ };
 		VkPhysicalDeviceRobustness2PropertiesEXT __robustness2Props{ };
+		VkPhysicalDeviceDescriptorBufferPropertiesEXT __descriptorBufferProps{ };
 
 		VkPhysicalDeviceFeatures2 __features{ };
 		VkPhysicalDeviceVulkan11Features __11features{ };
 		VkPhysicalDeviceVulkan12Features __12features{ };
 		VkPhysicalDeviceVulkan13Features __13features{ };
 		VkPhysicalDeviceRobustness2FeaturesEXT __robustness2Features{ };
+		VkPhysicalDeviceDescriptorBufferFeaturesEXT __descriptorBufferFeatures{ };
 
 		std::vector<VkExtensionProperties> __extensions;
 		std::unordered_map<std::string_view, const VkExtensionProperties *> __extensionMap;
@@ -164,6 +169,11 @@ namespace Graphics
 	constexpr const VkPhysicalDeviceRobustness2FeaturesEXT &PhysicalDevice::getRobustness2Features() const noexcept
 	{
 		return __robustness2Features;
+	}
+
+	constexpr const VkPhysicalDeviceDescriptorBufferFeaturesEXT &PhysicalDevice::getDescriptorBufferFeatures() const noexcept
+	{
+		return __descriptorBufferFeatures;
 	}
 
 	constexpr const std::unordered_map<std::string_view, const VkExtensionProperties *> &PhysicalDevice::getExtensionMap() const noexcept
@@ -236,7 +246,10 @@ namespace Graphics
 		__13props.pNext = &__robustness2Props;
 
 		__robustness2Props.sType = VkStructureType::VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ROBUSTNESS_2_PROPERTIES_EXT;
-		__robustness2Props.pNext = nullptr;
+		__robustness2Props.pNext = &__descriptorBufferProps;
+
+		__descriptorBufferProps.sType = VkStructureType::VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_BUFFER_PROPERTIES_EXT;
+		__descriptorBufferProps.pNext = nullptr;
 
 		__instanceProc.vkGetPhysicalDeviceProperties2(__hPhysicalDevice, &__props);
 	}
@@ -256,7 +269,10 @@ namespace Graphics
 		__13features.pNext = &__robustness2Features;
 
 		__robustness2Features.sType = VkStructureType::VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ROBUSTNESS_2_FEATURES_EXT;
-		__robustness2Features.pNext = nullptr;
+		__robustness2Features.pNext = &__descriptorBufferFeatures;
+
+		__descriptorBufferFeatures.sType = VkStructureType::VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_BUFFER_FEATURES_EXT;
+		__descriptorBufferFeatures.pNext = nullptr;
 
 		__instanceProc.vkGetPhysicalDeviceFeatures2(__hPhysicalDevice, &__features);
 	}

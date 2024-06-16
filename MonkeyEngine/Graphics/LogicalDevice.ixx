@@ -153,6 +153,10 @@ namespace Graphics
 		LOAD_DEVICE_PROC(vkQueueSubmit2);
 		LOAD_DEVICE_PROC(vkQueuePresentKHR);
 
+		// Pipeline
+		LOAD_DEVICE_PROC(vkCreateGraphicsPipelines);
+		LOAD_DEVICE_PROC(vkDestroyPipeline);
+
 		// Pipeline cache
 		LOAD_DEVICE_PROC(vkCreatePipelineCache);
 		LOAD_DEVICE_PROC(vkDestroyPipelineCache);

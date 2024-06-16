@@ -58,6 +58,6 @@ namespace Graphics
 
 		__deviceProc.vkCreatePipelineCache(__hDevice, &createInfo, nullptr, &__handle);
 		if (!__handle)
-			throw std::runtime_error{ "Cannot create a VkPipelineCache." };
+			throw std::runtime_error{ "Cannot create a PipelineCache." };
 	}
 }
