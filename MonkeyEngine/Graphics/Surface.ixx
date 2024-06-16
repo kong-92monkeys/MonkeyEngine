@@ -32,7 +32,7 @@ namespace Graphics
 			HWND hwnd{ };
 		};
 
-		Surface(const CreateInfo &createInfo) noexcept;
+		explicit Surface(const CreateInfo &createInfo) noexcept;
 		virtual ~Surface() noexcept override;
 
 		[[nodiscard]]

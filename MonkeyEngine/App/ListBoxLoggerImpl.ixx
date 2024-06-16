@@ -13,7 +13,7 @@ import <string>;
 export class ListBoxLoggerImpl : public Lib::Logger::Impl
 {
 public:
-	ListBoxLoggerImpl(CListBox &listBox) noexcept;
+	explicit ListBoxLoggerImpl(CListBox &listBox) noexcept;
 
 	virtual void log(std::string message) noexcept override;
 

@@ -23,7 +23,7 @@ namespace Engine
 			HWND hwnd{ };
 		};
 
-		RenderTarget(const CreateInfo &createInfo);
+		explicit RenderTarget(const CreateInfo &createInfo);
 		virtual ~RenderTarget() noexcept override;
 
 		void sync();

@@ -15,7 +15,7 @@ namespace VK
 	export class VulkanLoader : public Lib::Unique
 	{
 	public:
-		VulkanLoader(const std::string_view &libName) noexcept;
+		explicit VulkanLoader(const std::string_view &libName) noexcept;
 		virtual ~VulkanLoader() noexcept;
 
 		[[nodiscard]]

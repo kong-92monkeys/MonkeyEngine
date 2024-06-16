@@ -40,8 +40,7 @@ namespace Graphics
 			std::vector<const char *> *pExtensions{ };
 		};
 
-		RenderContext(const CreateInfo &createInfo) noexcept;
-
+		explicit RenderContext(const CreateInfo &createInfo) noexcept;
 		virtual ~RenderContext() noexcept override;
 
 		[[nodiscard]]
@@ -62,7 +61,7 @@ namespace Graphics
 
 		void __create(const CreateInfo &createInfo);
 		void __loadInstanceProc() noexcept;
-		void __resolvePhysicalDevices() noexcept;
+		void __enumeratePhysicalDevices() noexcept;
 	};
 
 	constexpr const std::vector<PhysicalDevice> &RenderContext::getPhysicalDevices() const noexcept
@@ -83,7 +82,7 @@ namespace Graphics
 	{
 		__create(createInfo);
 		__loadInstanceProc();
-		__resolvePhysicalDevices();
+		__enumeratePhysicalDevices();
 	}
 
 	RenderContext::~RenderContext() noexcept
@@ -196,7 +195,7 @@ namespace Graphics
 		LOAD_INSTANCE_PROC(vkGetDeviceProcAddr);
 	}
 
-	void RenderContext::__resolvePhysicalDevices() noexcept
+	void RenderContext::__enumeratePhysicalDevices() noexcept
 	{
 		std::vector<VkPhysicalDevice> deviceHandles;
 
@@ -208,7 +207,7 @@ namespace Graphics
 
 		for (const auto deviceHandle : deviceHandles)
 		{
-			const PhysicalDevice::CreateInfo createInfo
+			const PhysicalDevice::MakeInfo createInfo
 			{
 				.pInstanceProc		{ &__instanceProc },
 				.hInstance			{ __handle },

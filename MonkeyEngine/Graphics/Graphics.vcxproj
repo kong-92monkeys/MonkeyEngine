@@ -21,6 +21,8 @@
   <ItemGroup>
     <ClCompile Include="ConversionUtil.ixx" />
     <ClCompile Include="DebugMessenger.ixx" />
+    <ClCompile Include="Image.ixx" />
+    <ClCompile Include="ImageView.ixx" />
     <ClCompile Include="LogicalDevice.ixx" />
     <ClCompile Include="PhysicalDevice.ixx" />
     <ClCompile Include="PipelineCache.ixx" />

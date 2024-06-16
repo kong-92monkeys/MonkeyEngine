@@ -38,7 +38,7 @@ namespace Engine
 			Lib::Version instanceVersion{ 1U, 0U, 0U, 0U };
 		};
 
-		Core(const CreateInfo &createInfo);
+		explicit Core(const CreateInfo &createInfo);
 		virtual ~Core() noexcept;
 
 		[[nodiscard]]

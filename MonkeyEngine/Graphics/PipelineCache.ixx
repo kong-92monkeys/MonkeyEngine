@@ -20,8 +20,7 @@ namespace Graphics
 			VkDevice hDevice{ };
 		};
 
-		PipelineCache(const CreateInfo &createInfo) noexcept;
-
+		explicit PipelineCache(const CreateInfo &createInfo) noexcept;
 		virtual ~PipelineCache() noexcept override;
 
 	private:

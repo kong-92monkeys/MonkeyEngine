@@ -39,7 +39,7 @@ namespace Graphics
 			VkDebugUtilsMessageTypeFlagBitsEXT::VK_DEBUG_UTILS_MESSAGE_TYPE_DEVICE_ADDRESS_BINDING_BIT_EXT
 		};
 
-		DebugMessenger(const CreateInfo &createInfo) noexcept;
+		explicit DebugMessenger(const CreateInfo &createInfo) noexcept;
 
 		virtual ~DebugMessenger() noexcept override;
 

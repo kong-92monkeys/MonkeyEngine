@@ -10,5 +10,7 @@
     <ClCompile Include="Surface.ixx" />
     <ClCompile Include="Swapchain.ixx" />
     <ClCompile Include="ConversionUtil.ixx" />
+    <ClCompile Include="Image.ixx" />
+    <ClCompile Include="ImageView.ixx" />
   </ItemGroup>
 </Project>

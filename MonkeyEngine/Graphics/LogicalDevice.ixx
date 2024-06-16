@@ -29,8 +29,7 @@ namespace Graphics
 			const std::vector<const char *> *pExtensions{ };
 		};
 
-		LogicalDevice(const CreateInfo &createInfo) noexcept;
-
+		explicit LogicalDevice(const CreateInfo &createInfo) noexcept;
 		virtual ~LogicalDevice() noexcept override;
 		
 		[[nodiscard]]
@@ -161,6 +160,10 @@ namespace Graphics
 		// Swapchain
 		LOAD_DEVICE_PROC(vkCreateSwapchainKHR);
 		LOAD_DEVICE_PROC(vkDestroySwapchainKHR);
+		LOAD_DEVICE_PROC(vkGetSwapchainImagesKHR);
+
+		LOAD_DEVICE_PROC(vkCreateImageView);
+		LOAD_DEVICE_PROC(vkDestroyImageView);
 	}
 
 	void LogicalDevice::__resolveQueue()

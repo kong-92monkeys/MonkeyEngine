@@ -26,7 +26,7 @@ namespace Engine
 			const Graphics::PhysicalDevice *pPhysicalDevice{ };
 		};
 
-		RenderingEngine(const CreateInfo &createInfo);
+		explicit RenderingEngine(const CreateInfo &createInfo);
 		virtual ~RenderingEngine() noexcept override;
 
 		[[nodiscard]]
