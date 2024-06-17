@@ -62,13 +62,21 @@ namespace VK
 		PFN_vkQueueSubmit2 vkQueueSubmit2{ };
 		PFN_vkQueuePresentKHR vkQueuePresentKHR{ };
 
-		// Pipeline
-		PFN_vkCreateGraphicsPipelines vkCreateGraphicsPipelines{ };
-		PFN_vkDestroyPipeline vkDestroyPipeline{ };
+		// Descriptor set layout
+		PFN_vkCreateDescriptorSetLayout vkCreateDescriptorSetLayout{ };
+		PFN_vkDestroyDescriptorSetLayout vkDestroyDescriptorSetLayout{ };
+
+		// Pipeline layout
+		PFN_vkCreatePipelineLayout vkCreatePipelineLayout{ };
+		PFN_vkDestroyPipelineLayout vkDestroyPipelineLayout{ };
 
 		// Pipeline cache
 		PFN_vkCreatePipelineCache vkCreatePipelineCache{ };
 		PFN_vkDestroyPipelineCache vkDestroyPipelineCache{ };
+
+		// Pipeline
+		PFN_vkCreateGraphicsPipelines vkCreateGraphicsPipelines{ };
+		PFN_vkDestroyPipeline vkDestroyPipeline{ };
 
 		// Swapchain
 		PFN_vkCreateSwapchainKHR vkCreateSwapchainKHR{ };

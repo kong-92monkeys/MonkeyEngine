@@ -108,9 +108,7 @@ void CApp::__createGraphicsCore()
 			.appVersion				{ 0U, 0U, 1U, 0U },
 			
 			.engineName				{ "MonkeyEngine" },
-			.engineVersion			{ 0U, 0U, 1U, 0U },
-
-			.instanceVersion		{ 1U, 4U, 0U, 0U }
+			.engineVersion			{ 0U, 0U, 1U, 0U }
 		};
 
 		__pCore = std::make_unique<Engine::Core>(createInfo);

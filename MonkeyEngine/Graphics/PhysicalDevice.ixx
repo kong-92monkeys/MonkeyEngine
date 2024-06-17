@@ -4,15 +4,16 @@ module;
 
 export module ntmonkeys.com.Graphics.PhysicalDevice;
 
+import ntmonkeys.com.VK.VulkanProc;
+import ntmonkeys.com.Graphics.LogicalDevice;
+import ntmonkeys.com.Graphics.Surface;
 import <vector>;
 import <unordered_map>;
 import <string_view>;
 import <memory>;
 import <stdexcept>;
 import <array>;
-import ntmonkeys.com.VK.VulkanProc;
-import ntmonkeys.com.Graphics.LogicalDevice;
-import ntmonkeys.com.Graphics.Surface;
+import <optional>;
 
 namespace Graphics
 {
@@ -30,62 +31,14 @@ namespace Graphics
 		{
 		public:
 			const VK::InstanceProc *pInstanceProc{ };
-			VkInstance hInstance{ };
+			VkInstance hVulkanInstance{ };
 			VkPhysicalDevice hPhysicalDevice{ };
 		};
 
 		explicit PhysicalDevice(const MakeInfo &makeInfo) noexcept;
 
 		[[nodiscard]]
-		constexpr const VkPhysicalDeviceProperties &get10Props() const noexcept;
-
-		[[nodiscard]]
-		constexpr const VkPhysicalDeviceVulkan11Properties &get11Props() const noexcept;
-
-		[[nodiscard]]
-		constexpr const VkPhysicalDeviceVulkan12Properties &get12Props() const noexcept;
-
-		[[nodiscard]]
-		constexpr const VkPhysicalDeviceVulkan13Properties &get13Props() const noexcept;
-
-		[[nodiscard]]
-		constexpr const VkPhysicalDeviceRobustness2PropertiesEXT &getRobustness2Props() const noexcept;
-
-		[[nodiscard]]
-		constexpr const VkPhysicalDeviceFeatures &get10Features() const noexcept;
-
-		[[nodiscard]]
-		constexpr const VkPhysicalDeviceVulkan11Features &get11Features() const noexcept;
-
-		[[nodiscard]]
-		constexpr const VkPhysicalDeviceVulkan12Features &get12Features() const noexcept;
-
-		[[nodiscard]]
-		constexpr const VkPhysicalDeviceVulkan13Features &get13Features() const noexcept;
-
-		[[nodiscard]]
-		constexpr const VkPhysicalDeviceRobustness2FeaturesEXT &getRobustness2Features() const noexcept;
-
-		[[nodiscard]]
-		constexpr const VkPhysicalDeviceDescriptorBufferFeaturesEXT &getDescriptorBufferFeatures() const noexcept;
-
-		[[nodiscard]]
-		constexpr const std::unordered_map<std::string_view, const VkExtensionProperties *> &getExtensionMap() const noexcept;
-
-		[[nodiscard]]
-		constexpr const std::unordered_map<VkFormat, VkFormatProperties3> &getFormatPropertiesMap() const noexcept;
-
-		[[nodiscard]]
-		constexpr const std::vector<QueueFamilyInfo> &getQueueFamilyInfos() const noexcept;
-
-		[[nodiscard]]
-		bool isWin32PresentSupported(const uint32_t queueFamilyIndex) const noexcept;
-
-		[[nodiscard]]
-		std::unique_ptr<LogicalDevice> createLogicalDevice(
-			const uint32_t queueFamilyIndex,
-			const VkPhysicalDeviceFeatures2 &features,
-			const std::vector<const char *> &extensions) const;
+		std::unique_ptr<LogicalDevice> createLogicalDevice() const;
 
 	private:
 		const VK::InstanceProc &__instanceProc;
@@ -93,16 +46,16 @@ namespace Graphics
 		const VkPhysicalDevice __hPhysicalDevice;
 
 		VkPhysicalDeviceProperties2 __props{ };
-		VkPhysicalDeviceVulkan11Properties __11props{ };
-		VkPhysicalDeviceVulkan12Properties __12props{ };
-		VkPhysicalDeviceVulkan13Properties __13props{ };
+		VkPhysicalDeviceVulkan11Properties __11Props{ };
+		VkPhysicalDeviceVulkan12Properties __12Props{ };
+		VkPhysicalDeviceVulkan13Properties __13Props{ };
 		VkPhysicalDeviceRobustness2PropertiesEXT __robustness2Props{ };
 		VkPhysicalDeviceDescriptorBufferPropertiesEXT __descriptorBufferProps{ };
 
 		VkPhysicalDeviceFeatures2 __features{ };
-		VkPhysicalDeviceVulkan11Features __11features{ };
-		VkPhysicalDeviceVulkan12Features __12features{ };
-		VkPhysicalDeviceVulkan13Features __13features{ };
+		VkPhysicalDeviceVulkan11Features __11Features{ };
+		VkPhysicalDeviceVulkan12Features __12Features{ };
+		VkPhysicalDeviceVulkan13Features __13Features{ };
 		VkPhysicalDeviceRobustness2FeaturesEXT __robustness2Features{ };
 		VkPhysicalDeviceDescriptorBufferFeaturesEXT __descriptorBufferFeatures{ };
 
@@ -114,82 +67,15 @@ namespace Graphics
 		std::vector<VkQueueFamilyGlobalPriorityPropertiesKHR> __queueFamilyGlobalPriorityProps;
 		std::vector<QueueFamilyInfo> __queueFamilyInfos;
 
+		std::optional<uint32_t> __queueFamilyIndex;
+
 		void __resolveProps() noexcept;
 		void __resolveFeatures() noexcept;
 		void __resolveExtensions() noexcept;
 		void __resolveFormatProps() noexcept;
 		void __resolveQueueFamilyInfos() noexcept;
+		void __resolveQueueFamilyIndex() noexcept;
 	};
-
-	constexpr const VkPhysicalDeviceProperties &PhysicalDevice::get10Props() const noexcept
-	{
-		return __props.properties;
-	}
-
-	constexpr const VkPhysicalDeviceVulkan11Properties &PhysicalDevice::get11Props() const noexcept
-	{
-		return __11props;
-	}
-
-	constexpr const VkPhysicalDeviceVulkan12Properties &PhysicalDevice::get12Props() const noexcept
-	{
-		return __12props;
-	}
-
-	constexpr const VkPhysicalDeviceVulkan13Properties &PhysicalDevice::get13Props() const noexcept
-	{
-		return __13props;
-	}
-
-	constexpr const VkPhysicalDeviceRobustness2PropertiesEXT &PhysicalDevice::getRobustness2Props() const noexcept
-	{
-		return __robustness2Props;
-	}
-
-	constexpr const VkPhysicalDeviceFeatures &PhysicalDevice::get10Features() const noexcept
-	{
-		return __features.features;
-	}
-
-	constexpr const VkPhysicalDeviceVulkan11Features &PhysicalDevice::get11Features() const noexcept
-	{
-		return __11features;
-	}
-
-	constexpr const VkPhysicalDeviceVulkan12Features &PhysicalDevice::get12Features() const noexcept
-	{
-		return __12features;
-	}
-
-	constexpr const VkPhysicalDeviceVulkan13Features &PhysicalDevice::get13Features() const noexcept
-	{
-		return __13features;
-	}
-
-	constexpr const VkPhysicalDeviceRobustness2FeaturesEXT &PhysicalDevice::getRobustness2Features() const noexcept
-	{
-		return __robustness2Features;
-	}
-
-	constexpr const VkPhysicalDeviceDescriptorBufferFeaturesEXT &PhysicalDevice::getDescriptorBufferFeatures() const noexcept
-	{
-		return __descriptorBufferFeatures;
-	}
-
-	constexpr const std::unordered_map<std::string_view, const VkExtensionProperties *> &PhysicalDevice::getExtensionMap() const noexcept
-	{
-		return __extensionMap;
-	}
-
-	constexpr const std::unordered_map<VkFormat, VkFormatProperties3> &PhysicalDevice::getFormatPropertiesMap() const noexcept
-	{
-		return __formatPropMap;
-	}
-
-	constexpr const std::vector<QueueFamilyInfo> &PhysicalDevice::getQueueFamilyInfos() const noexcept 
-	{
-		return __queueFamilyInfos;
-	}
 }
 
 module: private;
@@ -198,7 +84,7 @@ namespace Graphics
 {
 	PhysicalDevice::PhysicalDevice(const MakeInfo &makeInfo) noexcept :
 		__instanceProc		{ *(makeInfo.pInstanceProc) },
-		__hInstance			{ makeInfo.hInstance },
+		__hInstance			{ makeInfo.hVulkanInstance },
 		__hPhysicalDevice	{ makeInfo.hPhysicalDevice }
 	{
 		__resolveProps();
@@ -206,26 +92,38 @@ namespace Graphics
 		__resolveExtensions();
 		__resolveFormatProps();
 		__resolveQueueFamilyInfos();
+		__resolveQueueFamilyIndex();
 	}
 
-	bool PhysicalDevice::isWin32PresentSupported(const uint32_t queueFamilyIndex) const noexcept
+	/*bool PhysicalDevice::isWin32PresentSupported() const noexcept
 	{
-		return __instanceProc.vkGetPhysicalDeviceWin32PresentationSupportKHR(__hPhysicalDevice, queueFamilyIndex);
-	}
+		return __instanceProc.vkGetPhysicalDeviceWin32PresentationSupportKHR(__hPhysicalDevice, __queueFamilyIndex);
+	}*/
 
-	std::unique_ptr<LogicalDevice> PhysicalDevice::createLogicalDevice(
-		const uint32_t queueFamilyIndex,
-		const VkPhysicalDeviceFeatures2 &features,
-		const std::vector<const char *> &extensions) const
+	std::unique_ptr<LogicalDevice> PhysicalDevice::createLogicalDevice() const
 	{
 		const LogicalDevice::CreateInfo createInfo
 		{
-			.pInstanceProc		{ &__instanceProc },
-			.hInstance			{ __hInstance },
-			.hPhysicalDevice	{ __hPhysicalDevice },
-			.queueFamilyIndex	{ queueFamilyIndex },
-			.pFeatures			{ &features },
-			.pExtensions		{ &extensions }
+			.pInstanceProc				{ &__instanceProc },
+			.hInstance					{ __hInstance },
+			.hPhysicalDevice			{ __hPhysicalDevice },
+			.queueFamilyIndex			{ __queueFamilyIndex.value() },
+
+			.p10Props					{ &(__props.properties) },
+			.p11Props					{ &__11Props },
+			.p12Props					{ &__12Props },
+			.p13Props					{ &__13Props },
+			.pRobustness2Props			{ &__robustness2Props },
+			.pDescriptorBufferProps		{ &__descriptorBufferProps },
+
+			.p10Features				{ &(__features.features) },
+			.p11Features				{ &__11Features },
+			.p12Features				{ &__12Features },
+			.p13Features				{ &__13Features },
+			.pRobustness2Features		{ &__robustness2Features },
+			.pDescriptorBufferFeatures	{ &__descriptorBufferFeatures },
+
+			.pExtensionMap				{ &__extensionMap }
 		};
 
 		return std::make_unique<LogicalDevice>(createInfo);
@@ -234,16 +132,16 @@ namespace Graphics
 	void PhysicalDevice::__resolveProps() noexcept
 	{
 		__props.sType = VkStructureType::VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2;
-		__props.pNext = &__11props;
+		__props.pNext = &__11Props;
 
-		__11props.sType = VkStructureType::VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_PROPERTIES;
-		__11props.pNext = &__12props;
+		__11Props.sType = VkStructureType::VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_PROPERTIES;
+		__11Props.pNext = &__12Props;
 
-		__12props.sType = VkStructureType::VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_PROPERTIES;
-		__12props.pNext = &__13props;
+		__12Props.sType = VkStructureType::VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_PROPERTIES;
+		__12Props.pNext = &__13Props;
 
-		__13props.sType = VkStructureType::VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_PROPERTIES;
-		__13props.pNext = &__robustness2Props;
+		__13Props.sType = VkStructureType::VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_PROPERTIES;
+		__13Props.pNext = &__robustness2Props;
 
 		__robustness2Props.sType = VkStructureType::VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ROBUSTNESS_2_PROPERTIES_EXT;
 		__robustness2Props.pNext = &__descriptorBufferProps;
@@ -257,16 +155,16 @@ namespace Graphics
 	void PhysicalDevice::__resolveFeatures() noexcept
 	{
 		__features.sType = VkStructureType::VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
-		__features.pNext = &__11features;
+		__features.pNext = &__11Features;
 
-		__11features.sType = VkStructureType::VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES;
-		__11features.pNext = &__12features;
+		__11Features.sType = VkStructureType::VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES;
+		__11Features.pNext = &__12Features;
 
-		__12features.sType = VkStructureType::VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
-		__12features.pNext = &__13features;
+		__12Features.sType = VkStructureType::VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
+		__12Features.pNext = &__13Features;
 
-		__13features.sType = VkStructureType::VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
-		__13features.pNext = &__robustness2Features;
+		__13Features.sType = VkStructureType::VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
+		__13Features.pNext = &__robustness2Features;
 
 		__robustness2Features.sType = VkStructureType::VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ROBUSTNESS_2_FEATURES_EXT;
 		__robustness2Features.pNext = &__descriptorBufferFeatures;
@@ -341,5 +239,21 @@ namespace Graphics
 		}
 
 		__instanceProc.vkGetPhysicalDeviceQueueFamilyProperties2(__hPhysicalDevice, &familyCount, __queueFamilyProps.data());
+	}
+
+	void PhysicalDevice::__resolveQueueFamilyIndex() noexcept
+	{
+		const uint32_t familyCount{ static_cast<uint32_t>(__queueFamilyInfos.size()) };
+		for (uint32_t iter{ }; iter < familyCount; ++iter)
+		{
+			const auto &familyInfo{ __queueFamilyInfos[iter] };
+
+			const bool hasGraphicsFlag{ static_cast<bool>(familyInfo.pProps->queueFlags & VkQueueFlagBits::VK_QUEUE_GRAPHICS_BIT) };
+			if (!hasGraphicsFlag)
+				continue;
+
+			__queueFamilyIndex = iter;
+			break;
+		}
 	}
 }

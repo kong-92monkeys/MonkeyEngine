@@ -33,7 +33,7 @@ namespace Graphics
 
 		VkQueue __handle{ };
 
-		void __resolve(const VkDevice hDevice);
+		void __retrieve(const VkDevice hDevice);
 	};
 }
 
@@ -46,7 +46,7 @@ namespace Graphics
 		__familyIndex	{ createInfo.familyIndex },
 		__queueIndex	{ createInfo.queueIndex }
 	{
-		__resolve(createInfo.hDevice);
+		__retrieve(createInfo.hDevice);
 	}
 
 	VkResult Queue::waitIdle() noexcept
@@ -54,7 +54,7 @@ namespace Graphics
 		return __deviceProc.vkQueueWaitIdle(__handle);
 	}
 
-	void Queue::__resolve(const VkDevice hDevice)
+	void Queue::__retrieve(const VkDevice hDevice)
 	{
 		const VkDeviceQueueInfo2 queueInfo
 		{
@@ -66,6 +66,6 @@ namespace Graphics
 		__deviceProc.vkGetDeviceQueue2(hDevice, &queueInfo, &__handle);
 
 		if (!__handle)
-			throw std::runtime_error{ "Cannot resolve a queue." };
+			throw std::runtime_error{ "Cannot retrieve a queue." };
 	}
 }
