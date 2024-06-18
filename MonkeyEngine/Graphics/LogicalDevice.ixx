@@ -8,7 +8,6 @@ import ntmonkeys.com.Lib.Unique;
 import ntmonkeys.com.VK.VulkanProc;
 import ntmonkeys.com.Graphics.ConversionUtil;
 import ntmonkeys.com.Graphics.Queue;
-import ntmonkeys.com.Graphics.PipelineCache;
 import ntmonkeys.com.Graphics.Surface;
 import <vector>;
 import <memory>;
@@ -53,9 +52,6 @@ namespace Graphics
 		constexpr Queue &getQueue() noexcept;
 
 		[[nodiscard]]
-		std::unique_ptr<PipelineCache> createPipelineCache();
-
-		[[nodiscard]]
 		std::unique_ptr<Surface> createSurface(const HINSTANCE hAppInstance, const HWND hwnd);
 
 	private:
@@ -68,10 +64,12 @@ namespace Graphics
 		VK::DeviceProc __deviceProc;
 
 		std::unique_ptr<Queue> __pQueue;
+		VkPipelineCache __hPipelineCache{ };
 
 		void __createDevice(const CreateInfo &createInfo);
 		void __loadDeviceProc() noexcept;
 		void __retrieveQueue();
+		void __createPipelineCache();
 	};
 
 	constexpr Queue &LogicalDevice::getQueue() noexcept
@@ -96,22 +94,13 @@ namespace Graphics
 		__createDevice(createInfo);
 		__loadDeviceProc();
 		__retrieveQueue();
+		__createPipelineCache();
 	}
 
 	LogicalDevice::~LogicalDevice() noexcept
 	{
+		__deviceProc.vkDestroyPipelineCache(__handle, __hPipelineCache, nullptr);
 		__deviceProc.vkDestroyDevice(__handle, nullptr);
-	}
-
-	std::unique_ptr<PipelineCache> LogicalDevice::createPipelineCache()
-	{
-		const PipelineCache::CreateInfo createInfo
-		{
-			.pDeviceProc	{ &__deviceProc },
-			.hDevice		{ __handle }
-		};
-
-		return std::make_unique<PipelineCache>(createInfo);
 	}
 
 	std::unique_ptr<Surface> LogicalDevice::createSurface(const HINSTANCE hAppInstance, const HWND hwnd)
@@ -142,6 +131,7 @@ namespace Graphics
 			createInfo.p10Features->samplerAnisotropy &&
 			createInfo.p12Features->imagelessFramebuffer &&
 			createInfo.p12Features->timelineSemaphore &&
+			createInfo.p13Features->pipelineCreationCacheControl &&
 			createInfo.p13Features->synchronization2 &&
 			createInfo.pRobustness2Features->nullDescriptor &&
 			createInfo.pDescriptorBufferFeatures->descriptorBuffer
@@ -173,6 +163,7 @@ namespace Graphics
 		features12.pNext = &features13;
 
 		features13.sType = VkStructureType::VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
+		features13.pipelineCreationCacheControl = VK_TRUE;
 		features13.synchronization2 = VK_TRUE;
 		features13.pNext = &featuresRobustness;
 
@@ -273,5 +264,18 @@ namespace Graphics
 		};
 
 		__pQueue = std::make_unique<Queue>(createInfo);
+	}
+
+	void LogicalDevice::__createPipelineCache()
+	{
+		const VkPipelineCacheCreateInfo createInfo
+		{
+			.sType{ VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO },
+			.flags{ VkPipelineCacheCreateFlagBits::VK_PIPELINE_CACHE_CREATE_EXTERNALLY_SYNCHRONIZED_BIT }
+		};
+
+		__deviceProc.vkCreatePipelineCache(__handle, &createInfo, nullptr, &__hPipelineCache);
+		if (!__hPipelineCache)
+			throw std::runtime_error{ "Cannot create a pipeline cache." };
 	}
 }

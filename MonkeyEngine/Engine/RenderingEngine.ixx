@@ -1,13 +1,13 @@
 module;
 
 #include "../Vulkan/Vulkan.h"
+#include <shaderc/shaderc.hpp>
 
 export module ntmonkeys.com.Engine.RenderingEngine;
 
 import ntmonkeys.com.Lib.Unique;
 import ntmonkeys.com.Graphics.PhysicalDevice;
 import ntmonkeys.com.Graphics.LogicalDevice;
-import ntmonkeys.com.Graphics.PipelineCache;
 import ntmonkeys.com.Graphics.ConversionUtil;
 import ntmonkeys.com.Engine.RenderTarget;
 import <optional>;
@@ -36,7 +36,6 @@ namespace Engine
 		const Graphics::PhysicalDevice &__physicalDevice;
 
 		std::unique_ptr<Graphics::LogicalDevice> __pLogicalDevice;
-		std::unique_ptr<Graphics::PipelineCache> __pPipelineCache;
 	};
 }
 
@@ -48,12 +47,10 @@ namespace Engine
 		__physicalDevice{ *(createInfo.pPhysicalDevice) }
 	{
 		__pLogicalDevice = __physicalDevice.createLogicalDevice();
-		__pPipelineCache = __pLogicalDevice->createPipelineCache();
 	}
 
 	RenderingEngine::~RenderingEngine() noexcept
 	{
-		__pPipelineCache = nullptr;
 		__pLogicalDevice = nullptr;
 	}
 

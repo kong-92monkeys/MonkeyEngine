@@ -3,7 +3,6 @@
   <ItemGroup>
     <ClCompile Include="LogicalDevice.ixx" />
     <ClCompile Include="PhysicalDevice.ixx" />
-    <ClCompile Include="PipelineCache.ixx" />
     <ClCompile Include="Queue.ixx" />
     <ClCompile Include="RenderContext.ixx" />
     <ClCompile Include="Surface.ixx" />

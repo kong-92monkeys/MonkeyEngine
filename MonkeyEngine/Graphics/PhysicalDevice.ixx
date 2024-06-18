@@ -95,11 +95,6 @@ namespace Graphics
 		__resolveQueueFamilyIndex();
 	}
 
-	/*bool PhysicalDevice::isWin32PresentSupported() const noexcept
-	{
-		return __instanceProc.vkGetPhysicalDeviceWin32PresentationSupportKHR(__hPhysicalDevice, __queueFamilyIndex);
-	}*/
-
 	std::unique_ptr<LogicalDevice> PhysicalDevice::createLogicalDevice() const
 	{
 		const LogicalDevice::CreateInfo createInfo
