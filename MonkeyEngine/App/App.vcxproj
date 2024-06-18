@@ -234,6 +234,8 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="res\App.rc2" />
+    <None Include="triangle.frag" />
+    <None Include="triangle.vert" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\App.ico" />

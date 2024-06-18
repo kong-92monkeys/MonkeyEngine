@@ -41,6 +41,7 @@ namespace Graphics
 			const VkPhysicalDeviceVulkan13Features *p13Features{ };
 			const VkPhysicalDeviceRobustness2FeaturesEXT *pRobustness2Features{ };
 			const VkPhysicalDeviceDescriptorBufferFeaturesEXT *pDescriptorBufferFeatures{ };
+			const VkPhysicalDeviceVariablePointersFeatures *pVariablePointersFeatures{ };
 
 			const std::unordered_map<std::string_view, const VkExtensionProperties *> *pExtensionMap;
 		};
@@ -129,6 +130,8 @@ namespace Graphics
 		const bool featureSupported
 		{
 			createInfo.p10Features->samplerAnisotropy &&
+			createInfo.p11Features->variablePointers &&
+			createInfo.p11Features->variablePointersStorageBuffer &&
 			createInfo.p12Features->imagelessFramebuffer &&
 			createInfo.p12Features->timelineSemaphore &&
 			createInfo.p13Features->pipelineCreationCacheControl &&
@@ -155,6 +158,8 @@ namespace Graphics
 		features.pNext = &features11;
 
 		features11.sType = VkStructureType::VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES;
+		features11.variablePointers = VK_TRUE;
+		features11.variablePointersStorageBuffer = VK_TRUE;
 		features11.pNext = &features12;
 
 		features12.sType = VkStructureType::VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
