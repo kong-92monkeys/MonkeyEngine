@@ -9,6 +9,7 @@ import ntmonkeys.com.VK.VulkanProc;
 import ntmonkeys.com.Graphics.ConversionUtil;
 import ntmonkeys.com.Graphics.Queue;
 import ntmonkeys.com.Graphics.Surface;
+import ntmonkeys.com.Graphics.Shader;
 import <vector>;
 import <memory>;
 import <stdexcept>;
@@ -54,6 +55,9 @@ namespace Graphics
 
 		[[nodiscard]]
 		std::unique_ptr<Surface> createSurface(const HINSTANCE hAppInstance, const HWND hwnd);
+
+		[[nodiscard]]
+		std::unique_ptr<Shader> createShader(const std::vector<uint32_t> &code);
 
 	private:
 		const VK::InstanceProc &__instanceProc;
@@ -119,6 +123,18 @@ namespace Graphics
 		};
 
 		return std::make_unique<Surface>(createInfo);
+	}
+
+	std::unique_ptr<Shader> LogicalDevice::createShader(const std::vector<uint32_t> &code)
+	{
+		const Shader::CreateInfo createInfo
+		{
+			.pDeviceProc	{ &__deviceProc },
+			.hDevice		{ __handle },
+			.pCode			{ &code }
+		};
+
+		return std::make_unique<Shader>(createInfo);
 	}
 
 	void LogicalDevice::__createDevice(const CreateInfo &createInfo)
@@ -236,6 +252,10 @@ namespace Graphics
 		// Descriptor set layout
 		LOAD_DEVICE_PROC(vkCreateDescriptorSetLayout);
 		LOAD_DEVICE_PROC(vkDestroyDescriptorSetLayout);
+
+		// Shader module;
+		LOAD_DEVICE_PROC(vkCreateShaderModule);
+		LOAD_DEVICE_PROC(vkDestroyShaderModule);
 
 		// Pipeline layout
 		LOAD_DEVICE_PROC(vkCreatePipelineLayout);

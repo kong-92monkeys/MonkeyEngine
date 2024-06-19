@@ -10,5 +10,6 @@
     <ClCompile Include="ConversionUtil.ixx" />
     <ClCompile Include="Image.ixx" />
     <ClCompile Include="ImageView.ixx" />
+    <ClCompile Include="Shader.ixx" />
   </ItemGroup>
 </Project>

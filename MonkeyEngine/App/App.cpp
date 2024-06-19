@@ -84,6 +84,7 @@ BOOL CApp::InitInstance()
 int CApp::ExitInstance()
 {
 	//TODO: handle additional resources you may have added
+	__pRenderer = nullptr;
 	__pRenderingEngine = nullptr;
 	__pCore = nullptr;
 
@@ -94,6 +95,11 @@ void CApp::__onInitBeforeMainFrame()
 {
 	__createGraphicsCore();
 	__createRenderingEngine();
+
+	Engine::Renderer::ShaderInfoMap shaderInfoMap;
+	shaderInfoMap[VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT] = "triangle.vert";
+
+	__pRenderer = __pRenderingEngine->createRenderer(shaderInfoMap);
 }
 
 void CApp::__createGraphicsCore()

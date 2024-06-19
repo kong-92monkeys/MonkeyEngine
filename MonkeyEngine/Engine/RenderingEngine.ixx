@@ -10,6 +10,7 @@ import ntmonkeys.com.Graphics.PhysicalDevice;
 import ntmonkeys.com.Graphics.LogicalDevice;
 import ntmonkeys.com.Graphics.ConversionUtil;
 import ntmonkeys.com.Engine.RenderTarget;
+import ntmonkeys.com.Engine.Renderer;
 import <optional>;
 import <stdexcept>;
 import <memory>;
@@ -31,6 +32,9 @@ namespace Engine
 
 		[[nodiscard]]
 		std::unique_ptr<RenderTarget> createRenderTarget(const HINSTANCE hinstance, const HWND hwnd);
+
+		[[nodiscard]]
+		std::unique_ptr<Renderer> createRenderer(const Renderer::ShaderInfoMap &shaderInfoMap);
 
 	private:
 		const Graphics::PhysicalDevice &__physicalDevice;
@@ -64,5 +68,16 @@ namespace Engine
 		};
 
 		return std::make_unique<RenderTarget>(createInfo);
+	}
+
+	std::unique_ptr<Renderer> RenderingEngine::createRenderer(const Renderer::ShaderInfoMap &shaderInfoMap)
+	{
+		const Renderer::CreateInfo createInfo
+		{
+			.pLogicalDevice	{ __pLogicalDevice.get() },
+			.pShaderInfoMap	{ &shaderInfoMap }
+		};
+
+		return std::make_unique<Renderer>(createInfo);
 	}
 }

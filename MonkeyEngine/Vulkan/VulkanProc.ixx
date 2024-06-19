@@ -66,6 +66,10 @@ namespace VK
 		PFN_vkCreateDescriptorSetLayout vkCreateDescriptorSetLayout{ };
 		PFN_vkDestroyDescriptorSetLayout vkDestroyDescriptorSetLayout{ };
 
+		// Shader module
+		PFN_vkCreateShaderModule vkCreateShaderModule{ };
+		PFN_vkDestroyShaderModule vkDestroyShaderModule{ };
+
 		// Pipeline layout
 		PFN_vkCreatePipelineLayout vkCreatePipelineLayout{ };
 		PFN_vkDestroyPipelineLayout vkDestroyPipelineLayout{ };

@@ -162,8 +162,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Core.ixx" />
+    <ClCompile Include="Renderer.ixx" />
     <ClCompile Include="RenderingEngine.ixx" />
     <ClCompile Include="RenderTarget.ixx" />
+    <ClCompile Include="ShaderIncluder.ixx" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Graphics\Graphics.vcxproj">

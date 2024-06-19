@@ -12,6 +12,7 @@ import <memory>;
 import ntmonkeys.com.Lib.Event;
 import ntmonkeys.com.Engine.Core;
 import ntmonkeys.com.Engine.RenderingEngine;
+import ntmonkeys.com.Engine.Renderer;
 
 // CApp:
 // See App.cpp for the implementation of this class
@@ -44,6 +45,7 @@ public:
 private:
 	std::unique_ptr<Engine::Core> __pCore;
 	std::unique_ptr<Engine::RenderingEngine> __pRenderingEngine;
+	std::unique_ptr<Engine::Renderer> __pRenderer;
 
 	mutable Lib::Event<> __idleEvent;
 

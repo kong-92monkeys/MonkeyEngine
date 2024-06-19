@@ -4,5 +4,14 @@
     <ClCompile Include="Core.ixx" />
     <ClCompile Include="RenderingEngine.ixx" />
     <ClCompile Include="RenderTarget.ixx" />
+    <ClCompile Include="Renderer.ixx" />
+    <ClCompile Include="ShaderIncluder.ixx">
+      <Filter>Util</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Util">
+      <UniqueIdentifier>{994ccf50-472b-47ab-a793-b3d34451c5b9}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
 </Project>
