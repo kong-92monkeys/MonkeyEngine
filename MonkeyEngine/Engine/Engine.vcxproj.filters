@@ -8,6 +8,7 @@
     <ClCompile Include="ShaderIncluder.ixx">
       <Filter>Util</Filter>
     </ClCompile>
+    <ClCompile Include="AssetManager.ixx" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Util">

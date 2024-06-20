@@ -84,22 +84,27 @@ BOOL CApp::InitInstance()
 int CApp::ExitInstance()
 {
 	//TODO: handle additional resources you may have added
-	__pRenderer = nullptr;
+	__pTriangleRenderer = nullptr;
 	__pRenderingEngine = nullptr;
 	__pCore = nullptr;
+	__pAssetManager = nullptr;
 
 	return CWinApp::ExitInstance();
 }
 
 void CApp::__onInitBeforeMainFrame()
 {
+	__pAssetManager = std::make_unique<Engine::AssetManager>();
+	__pAssetManager->setRootPath("Assets");
+
 	__createGraphicsCore();
 	__createRenderingEngine();
 
 	Engine::Renderer::ShaderInfoMap shaderInfoMap;
-	shaderInfoMap[VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT] = "triangle.vert";
+	shaderInfoMap[VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT] = "Shaders/triangle.vert";
+	shaderInfoMap[VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT] = "Shaders/triangle.frag";
 
-	__pRenderer = __pRenderingEngine->createRenderer(shaderInfoMap);
+	__pTriangleRenderer = __pRenderingEngine->createRenderer(shaderInfoMap);
 }
 
 void CApp::__createGraphicsCore()
@@ -108,6 +113,7 @@ void CApp::__createGraphicsCore()
 	{
 		const Engine::Core::CreateInfo createInfo
 		{
+			.pAssetManager			{ __pAssetManager.get() },
 			.vulkanLoaderLibName	{ "vulkan_loader_dedicated-1.dll" },
 
 			.appName				{ "MonkeyEngineDemo" },

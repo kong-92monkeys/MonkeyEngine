@@ -161,6 +161,7 @@
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="AssetManager.ixx" />
     <ClCompile Include="Core.ixx" />
     <ClCompile Include="Renderer.ixx" />
     <ClCompile Include="RenderingEngine.ixx" />

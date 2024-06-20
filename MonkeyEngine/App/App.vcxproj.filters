@@ -27,7 +27,10 @@
     <Filter Include="Logger">
       <UniqueIdentifier>{27c53a19-aa10-4f38-bd6a-cd30f56e2130}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Shaders">
+    <Filter Include="Assets">
+      <UniqueIdentifier>{1b447c5c-a0bc-49d6-b7b3-96c7cc85126f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Assets\Shaders">
       <UniqueIdentifier>{91d57ade-e457-4619-8beb-1fe10fdc5133}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -86,11 +89,11 @@
     <None Include="res\App.rc2">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="triangle.vert">
-      <Filter>Shaders</Filter>
+    <None Include="Assets\Shaders\triangle.frag">
+      <Filter>Assets\Shaders</Filter>
     </None>
-    <None Include="triangle.frag">
-      <Filter>Shaders</Filter>
+    <None Include="Assets\Shaders\triangle.vert">
+      <Filter>Assets\Shaders</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

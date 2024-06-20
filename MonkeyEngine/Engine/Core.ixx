@@ -8,6 +8,7 @@ import ntmonkeys.com.Lib.Unique;
 import ntmonkeys.com.Lib.Logger;
 import ntmonkeys.com.Lib.Version;
 import ntmonkeys.com.Graphics.RenderContext;
+import ntmonkeys.com.Engine.AssetManager;
 import ntmonkeys.com.Engine.RenderingEngine;
 import <memory>;
 import <string>;
@@ -20,6 +21,7 @@ namespace Engine
 		struct CreateInfo
 		{
 		public:
+			const AssetManager *pAssetManager{ };
 			std::string vulkanLoaderLibName;
 
 			std::string appName;
@@ -36,6 +38,7 @@ namespace Engine
 		std::unique_ptr<RenderingEngine> createEngine();
 
 	private:
+		const AssetManager &__assetManager;
 		std::unique_ptr<Graphics::RenderContext> __pRenderContext;
 
 		void __createRenderContext(const CreateInfo &createInfo);
@@ -52,7 +55,8 @@ module: private;
 
 namespace Engine
 {
-	Core::Core(const CreateInfo &createInfo)
+	Core::Core(const CreateInfo &createInfo) :
+		__assetManager{ *(createInfo.pAssetManager) }
 	{
 		__createRenderContext(createInfo);
 	}
@@ -68,7 +72,8 @@ namespace Engine
 
         const RenderingEngine::CreateInfo createInfo
         {
-            .pPhysicalDevice{ &(devices.front()) }
+            .pPhysicalDevice	{ &(devices.front()) },
+			.pAssetManager		{ &__assetManager }
         };
 
         return std::make_unique<RenderingEngine>(createInfo);

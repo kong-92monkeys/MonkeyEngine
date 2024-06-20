@@ -233,9 +233,9 @@
     <ResourceCompile Include="App.rc" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Assets\Shaders\triangle.frag" />
+    <None Include="Assets\Shaders\triangle.vert" />
     <None Include="res\App.rc2" />
-    <None Include="triangle.frag" />
-    <None Include="triangle.vert" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\App.ico" />

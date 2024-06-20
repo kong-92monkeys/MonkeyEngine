@@ -8,6 +8,7 @@ export module ntmonkeys.com.Engine.Renderer;
 import ntmonkeys.com.Lib.Unique;
 import ntmonkeys.com.Graphics.LogicalDevice;
 import ntmonkeys.com.Graphics.Shader;
+import ntmonkeys.com.Engine.AssetManager;
 import ntmonkeys.com.Engine.ShaderIncluder;
 import <unordered_map>;
 import <vector>;
@@ -29,7 +30,8 @@ namespace Engine
 		{
 		public:
 			Graphics::LogicalDevice *pLogicalDevice{ };
-			const ShaderInfoMap *pShaderInfoMap;
+			const AssetManager *pAssetManager{ };
+			const ShaderInfoMap *pShaderInfoMap{ };
 		};
 
 		explicit Renderer(const CreateInfo &createInfo);
@@ -37,13 +39,14 @@ namespace Engine
 
 	private:
 		Graphics::LogicalDevice &__logicalDevice;
+		const AssetManager &__assetManager;
 
 		std::unordered_map<VkShaderStageFlagBits, std::unique_ptr<Graphics::Shader>> __shaderMap;
 
 		void __createShaders(const ShaderInfoMap &shaderInfoMap);
 
 		[[nodiscard]]
-		static std::vector<uint32_t> __readShaderFile(const std::string &filePath);
+		std::vector<uint32_t> __readShaderFile(const std::string &assetPath);
 
 		[[nodiscard]]
 		static shaderc::CompileOptions __makeCopileOptions() noexcept;
@@ -55,7 +58,8 @@ module: private;
 namespace Engine
 {
 	Renderer::Renderer(const CreateInfo &createInfo) :
-		__logicalDevice{ *(createInfo.pLogicalDevice) }
+		__logicalDevice		{ *(createInfo.pLogicalDevice) },
+		__assetManager		{ *(createInfo.pAssetManager) }
 	{
 		__createShaders(*(createInfo.pShaderInfoMap));
 	}
@@ -74,31 +78,22 @@ namespace Engine
 		}
 	}
 
-	std::vector<uint32_t> Renderer::__readShaderFile(const std::string &filePath)
+	std::vector<uint32_t> Renderer::__readShaderFile(const std::string &assetPath)
 	{
-		std::ifstream fin{ filePath };
-		if (!fin)
-			throw std::runtime_error{ std::format("Cannot open file: {}", filePath) };
-
-		std::ostringstream oss;
-		oss << fin.rdbuf();
-
-		const auto source{ oss.str() };
+		const auto source{ __assetManager.readString(assetPath) };
 		auto compileOptions{ __makeCopileOptions() };
 		
-		compileOptions.AddMacroDefinition("GL_KHR_variable_pointers");
-
 		shaderc::Compiler compiler;
 		const auto result
 		{
 			compiler.CompileGlslToSpv(
 				source, shaderc_shader_kind::shaderc_glsl_infer_from_source,
-				filePath.c_str(), compileOptions)
+				assetPath.c_str(), compileOptions)
 		};
 
 		if (result.GetCompilationStatus() != shaderc_compilation_status::shaderc_compilation_status_success)
 		{
-			const auto what{ std::format(R"(Error occurred while compiling "{}". msg: "{}")", filePath, result.GetErrorMessage()) };
+			const auto what{ std::format(R"(Error occurred while compiling "{}". msg: "{}")", assetPath, result.GetErrorMessage()) };
 			throw std::runtime_error{ what };
 		}
 

@@ -9,6 +9,7 @@ import ntmonkeys.com.Lib.Unique;
 import ntmonkeys.com.Graphics.PhysicalDevice;
 import ntmonkeys.com.Graphics.LogicalDevice;
 import ntmonkeys.com.Graphics.ConversionUtil;
+import ntmonkeys.com.Engine.AssetManager;
 import ntmonkeys.com.Engine.RenderTarget;
 import ntmonkeys.com.Engine.Renderer;
 import <optional>;
@@ -25,6 +26,7 @@ namespace Engine
 		{
 		public:
 			const Graphics::PhysicalDevice *pPhysicalDevice{ };
+			const AssetManager *pAssetManager{ };
 		};
 
 		explicit RenderingEngine(const CreateInfo &createInfo);
@@ -38,6 +40,7 @@ namespace Engine
 
 	private:
 		const Graphics::PhysicalDevice &__physicalDevice;
+		const AssetManager &__assetManager;
 
 		std::unique_ptr<Graphics::LogicalDevice> __pLogicalDevice;
 	};
@@ -48,7 +51,8 @@ module: private;
 namespace Engine
 {
 	RenderingEngine::RenderingEngine(const CreateInfo &createInfo) :
-		__physicalDevice{ *(createInfo.pPhysicalDevice) }
+		__physicalDevice	{ *(createInfo.pPhysicalDevice) },
+		__assetManager		{ *(createInfo.pAssetManager) }
 	{
 		__pLogicalDevice = __physicalDevice.createLogicalDevice();
 	}
@@ -75,6 +79,7 @@ namespace Engine
 		const Renderer::CreateInfo createInfo
 		{
 			.pLogicalDevice	{ __pLogicalDevice.get() },
+			.pAssetManager	{ &__assetManager },
 			.pShaderInfoMap	{ &shaderInfoMap }
 		};
 
