@@ -8,6 +8,7 @@ export module ntmonkeys.com.Engine.Renderer;
 import ntmonkeys.com.Lib.Unique;
 import ntmonkeys.com.Graphics.LogicalDevice;
 import ntmonkeys.com.Graphics.Shader;
+import ntmonkeys.com.Graphics.PipelineLayout;
 import ntmonkeys.com.Engine.AssetManager;
 import ntmonkeys.com.Engine.ShaderIncluder;
 import <unordered_map>;
@@ -26,61 +27,116 @@ namespace Engine
 	public:
 		using ShaderInfoMap = std::unordered_map<VkShaderStageFlagBits, std::string>;
 
-		struct CreateInfo
+		struct InitInfo
 		{
 		public:
 			Graphics::LogicalDevice *pLogicalDevice{ };
 			const AssetManager *pAssetManager{ };
-			const ShaderInfoMap *pShaderInfoMap{ };
 		};
 
-		explicit Renderer(const CreateInfo &createInfo);
+		Renderer() = default;
 		virtual ~Renderer() noexcept override;
 
-	private:
-		Graphics::LogicalDevice &__logicalDevice;
-		const AssetManager &__assetManager;
+		void init(const InitInfo &initInfo);
 
-		std::unordered_map<VkShaderStageFlagBits, std::unique_ptr<Graphics::Shader>> __shaderMap;
-
-		void __createShaders(const ShaderInfoMap &shaderInfoMap);
+	protected:
+		[[nodiscard]]
+		constexpr Graphics::LogicalDevice &_getLogicalDevice() const noexcept;
 
 		[[nodiscard]]
-		std::vector<uint32_t> __readShaderFile(const std::string &assetPath);
+		constexpr const AssetManager &_getAssetManager() const noexcept;
+
+		[[nodiscard]]
+		virtual std::pair<uint32_t, const VkDescriptorSetLayout *> _getDescriptorSetLayouts() const noexcept;
+
+		[[nodiscard]]
+		virtual std::pair<uint32_t, const VkPushConstantRange *> _getPushConstantRanges() const noexcept;
+
+		[[nodiscard]]
+		virtual const ShaderInfoMap &_getShaderInfoMap() const noexcept = 0;
+
+		virtual void _onInit() = 0;
+
+	private:
+		Graphics::LogicalDevice *__pLogicalDevice{ };
+		const AssetManager *__pAssetManager{ };
+
+		std::unique_ptr<Graphics::PipelineLayout> __pPipelineLayout;
+		std::unordered_map<VkShaderStageFlagBits, std::unique_ptr<Graphics::Shader>> __shaderMap;
+
+		void __createPipelineLayout();
+		void __createShaders();
+
+		[[nodiscard]]
+		std::vector<uint32_t> __readShaderFile(const std::string &assetPath) const;
 
 		[[nodiscard]]
 		static shaderc::CompileOptions __makeCopileOptions() noexcept;
 	};
+
+	constexpr Graphics::LogicalDevice &Renderer::_getLogicalDevice() const noexcept
+	{
+		return *__pLogicalDevice;
+	}
+
+	constexpr const AssetManager &Renderer::_getAssetManager() const noexcept
+	{
+		return *__pAssetManager;
+	}
 }
 
 module: private;
 
 namespace Engine
 {
-	Renderer::Renderer(const CreateInfo &createInfo) :
-		__logicalDevice		{ *(createInfo.pLogicalDevice) },
-		__assetManager		{ *(createInfo.pAssetManager) }
-	{
-		__createShaders(*(createInfo.pShaderInfoMap));
-	}
-
 	Renderer::~Renderer() noexcept
 	{
 		__shaderMap.clear();
+		__pPipelineLayout = nullptr;
 	}
 
-	void Renderer::__createShaders(const ShaderInfoMap &shaderInfoMap)
+	void Renderer::init(const InitInfo &initInfo)
 	{
-		for (const auto &[stage, filePath] : shaderInfoMap)
+		__pLogicalDevice	= initInfo.pLogicalDevice;
+		__pAssetManager		= initInfo.pAssetManager;
+
+		_onInit();
+
+		__createPipelineLayout();
+		__createShaders();
+	}
+
+	std::pair<uint32_t, const VkDescriptorSetLayout *> Renderer::_getDescriptorSetLayouts() const noexcept
+	{
+		return { 0U, nullptr };
+	}
+
+	std::pair<uint32_t, const VkPushConstantRange *> Renderer::_getPushConstantRanges() const noexcept
+	{
+		return { 0U, nullptr };
+	}
+
+	void Renderer::__createPipelineLayout()
+	{
+		const auto [setLayoutCount, pSetLayouts]					{ _getDescriptorSetLayouts() };
+		const auto [pushConstantRangeCount, pPushConstantRanges]	{ _getPushConstantRanges() };
+
+		__pPipelineLayout = __pLogicalDevice->createPipelineLayout(
+			setLayoutCount, pSetLayouts, pushConstantRangeCount, pPushConstantRanges);
+	}
+
+	void Renderer::__createShaders()
+	{
+		for (const auto &[stage, filePath] : _getShaderInfoMap())
 		{
 			const auto code{ __readShaderFile(filePath) };
-			__shaderMap[stage] = __logicalDevice.createShader(code);
+			__shaderMap[stage] = __pLogicalDevice->createShader(code.size() * sizeof(uint32_t), code.data());
 		}
 	}
 
-	std::vector<uint32_t> Renderer::__readShaderFile(const std::string &assetPath)
+	std::vector<uint32_t> Renderer::__readShaderFile(const std::string &assetPath) const
 	{
-		const auto source{ __assetManager.readString(assetPath) };
+		const auto source{ __pAssetManager->readString(assetPath) };
 		auto compileOptions{ __makeCopileOptions() };
 		
 		shaderc::Compiler compiler;

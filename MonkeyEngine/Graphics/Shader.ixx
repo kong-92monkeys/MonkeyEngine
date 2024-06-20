@@ -19,7 +19,8 @@ namespace Graphics
 		public:
 			const VK::DeviceProc *pDeviceProc{ };
 			VkDevice hDevice{ };
-			const std::vector<uint32_t> *pCode;
+			size_t codeSize{ };
+			const uint32_t *pCode{ };
 		};
 
 		explicit Shader(const CreateInfo &createInfo) noexcept;
@@ -56,8 +57,8 @@ namespace Graphics
 		const VkShaderModuleCreateInfo vkCreateInfo
 		{
 			.sType		{ VkStructureType::VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO },
-			.codeSize	{ createInfo.pCode->size() * sizeof(uint32_t) },
-			.pCode		{ createInfo.pCode->data() }
+			.codeSize	{ createInfo.codeSize },
+			.pCode		{ createInfo.pCode }
 		};
 
 		__deviceProc.vkCreateShaderModule(__hDevice, &vkCreateInfo, nullptr, &__handle);

@@ -10,6 +10,8 @@ import ntmonkeys.com.Graphics.ConversionUtil;
 import ntmonkeys.com.Graphics.Queue;
 import ntmonkeys.com.Graphics.Surface;
 import ntmonkeys.com.Graphics.Shader;
+import ntmonkeys.com.Graphics.DescriptorSetLayout;
+import ntmonkeys.com.Graphics.PipelineLayout;
 import <vector>;
 import <memory>;
 import <stdexcept>;
@@ -57,7 +59,18 @@ namespace Graphics
 		std::unique_ptr<Surface> createSurface(const HINSTANCE hAppInstance, const HWND hwnd);
 
 		[[nodiscard]]
-		std::unique_ptr<Shader> createShader(const std::vector<uint32_t> &code);
+		std::unique_ptr<Shader> createShader(const size_t codeSize, const uint32_t *const pCode);
+
+		[[nodiscard]]
+		std::unique_ptr<DescriptorSetLayout> createDescriptorSetLayout(
+			const uint32_t bindingCount, const VkDescriptorSetLayoutBinding *const pBindings);
+
+		[[nodiscard]]
+		std::unique_ptr<PipelineLayout> createPipelineLayout(
+			const uint32_t setLayoutCount,
+			const VkDescriptorSetLayout *const pSetLayouts,
+			const uint32_t pushConstantRangeCount,
+			const VkPushConstantRange *const pPushConstantRanges);
 
 	private:
 		const VK::InstanceProc &__instanceProc;
@@ -125,16 +138,50 @@ namespace Graphics
 		return std::make_unique<Surface>(createInfo);
 	}
 
-	std::unique_ptr<Shader> LogicalDevice::createShader(const std::vector<uint32_t> &code)
+	std::unique_ptr<Shader> LogicalDevice::createShader(const size_t codeSize, const uint32_t *const pCode)
 	{
 		const Shader::CreateInfo createInfo
 		{
 			.pDeviceProc	{ &__deviceProc },
 			.hDevice		{ __handle },
-			.pCode			{ &code }
+			.codeSize		{ codeSize },
+			.pCode			{ pCode }
 		};
 
 		return std::make_unique<Shader>(createInfo);
+	}
+
+	std::unique_ptr<DescriptorSetLayout> LogicalDevice::createDescriptorSetLayout(
+		const uint32_t bindingCount, const VkDescriptorSetLayoutBinding *const pBindings)
+	{
+		const DescriptorSetLayout::CreateInfo createInfo
+		{
+			.pDeviceProc	{ &__deviceProc },
+			.hDevice		{ __handle },
+			.bindingCount	{ bindingCount },
+			.pBindings		{ pBindings }
+		};
+
+		return std::make_unique<DescriptorSetLayout>(createInfo);
+	}
+
+	std::unique_ptr<PipelineLayout> LogicalDevice::createPipelineLayout(
+		const uint32_t setLayoutCount,
+		const VkDescriptorSetLayout *const pSetLayouts,
+		const uint32_t pushConstantRangeCount,
+		const VkPushConstantRange *const pPushConstantRanges)
+	{
+		const PipelineLayout::CreateInfo createInfo
+		{
+			.pDeviceProc				{ &__deviceProc },
+			.hDevice					{ __handle },
+			.setLayoutCount				{ setLayoutCount },
+			.pSetLayouts				{ pSetLayouts },
+			.pushConstantRangeCount		{ pushConstantRangeCount },
+			.pPushConstantRanges		{ pPushConstantRanges }
+		};
+
+		return std::make_unique<PipelineLayout>(createInfo);
 	}
 
 	void LogicalDevice::__createDevice(const CreateInfo &createInfo)

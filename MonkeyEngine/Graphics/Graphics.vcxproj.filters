@@ -11,5 +11,7 @@
     <ClCompile Include="Image.ixx" />
     <ClCompile Include="ImageView.ixx" />
     <ClCompile Include="Shader.ixx" />
+    <ClCompile Include="DescriptorSetLayout.ixx" />
+    <ClCompile Include="PipelineLayout.ixx" />
   </ItemGroup>
 </Project>

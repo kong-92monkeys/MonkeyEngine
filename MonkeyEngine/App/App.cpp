@@ -99,12 +99,7 @@ void CApp::__onInitBeforeMainFrame()
 
 	__createGraphicsCore();
 	__createRenderingEngine();
-
-	Engine::Renderer::ShaderInfoMap shaderInfoMap;
-	shaderInfoMap[VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT] = "Shaders/triangle.vert";
-	shaderInfoMap[VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT] = "Shaders/triangle.frag";
-
-	__pTriangleRenderer = __pRenderingEngine->createRenderer(shaderInfoMap);
+	__pTriangleRenderer = __pRenderingEngine->createRenderer<Frameworks::TriangleRenderer>();
 }
 
 void CApp::__createGraphicsCore()

@@ -16,6 +16,7 @@ import <optional>;
 import <stdexcept>;
 import <memory>;
 import <format>;
+import <concepts>;
 
 namespace Engine
 {
@@ -35,8 +36,9 @@ namespace Engine
 		[[nodiscard]]
 		std::unique_ptr<RenderTarget> createRenderTarget(const HINSTANCE hinstance, const HWND hwnd);
 
+		template <std::derived_from<Renderer> $Renderer>
 		[[nodiscard]]
-		std::unique_ptr<Renderer> createRenderer(const Renderer::ShaderInfoMap &shaderInfoMap);
+		std::unique_ptr<$Renderer> createRenderer();
 
 	private:
 		const Graphics::PhysicalDevice &__physicalDevice;
@@ -44,6 +46,20 @@ namespace Engine
 
 		std::unique_ptr<Graphics::LogicalDevice> __pLogicalDevice;
 	};
+
+	template <std::derived_from<Renderer> $Renderer>
+	std::unique_ptr<$Renderer> RenderingEngine::createRenderer()
+	{
+		const Renderer::InitInfo initInfo
+		{
+			.pLogicalDevice	{ __pLogicalDevice.get() },
+			.pAssetManager	{ &__assetManager }
+		};
+
+		auto retVal{ std::make_unique<$Renderer>() };
+		retVal->init(initInfo);
+		return retVal;
+	}
 }
 
 module: private;
@@ -72,17 +88,5 @@ namespace Engine
 		};
 
 		return std::make_unique<RenderTarget>(createInfo);
-	}
-
-	std::unique_ptr<Renderer> RenderingEngine::createRenderer(const Renderer::ShaderInfoMap &shaderInfoMap)
-	{
-		const Renderer::CreateInfo createInfo
-		{
-			.pLogicalDevice	{ __pLogicalDevice.get() },
-			.pAssetManager	{ &__assetManager },
-			.pShaderInfoMap	{ &shaderInfoMap }
-		};
-
-		return std::make_unique<Renderer>(createInfo);
 	}
 }

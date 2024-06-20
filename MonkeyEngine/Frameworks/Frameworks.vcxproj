@@ -19,20 +19,15 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="ConversionUtil.ixx" />
-    <ClCompile Include="DescriptorSetLayout.ixx" />
-    <ClCompile Include="Image.ixx" />
-    <ClCompile Include="ImageView.ixx" />
-    <ClCompile Include="LogicalDevice.ixx" />
-    <ClCompile Include="PhysicalDevice.ixx" />
-    <ClCompile Include="PipelineLayout.ixx" />
-    <ClCompile Include="Queue.ixx" />
-    <ClCompile Include="RenderContext.ixx" />
-    <ClCompile Include="Shader.ixx" />
-    <ClCompile Include="Surface.ixx" />
-    <ClCompile Include="Swapchain.ixx" />
+    <ClCompile Include="TriangleRenderer.ixx" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Engine\Engine.vcxproj">
+      <Project>{f1eea86e-325c-4670-93c7-42ebb5f904a3}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\Graphics\Graphics.vcxproj">
+      <Project>{e70909a6-9dd0-44bf-bf5e-fc842554e0f4}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\Library\Library.vcxproj">
       <Project>{b07a68cb-1c8b-490b-8900-411b4c3a9deb}</Project>
     </ProjectReference>
@@ -43,8 +38,8 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{e70909a6-9dd0-44bf-bf5e-fc842554e0f4}</ProjectGuid>
-    <RootNamespace>Graphics</RootNamespace>
+    <ProjectGuid>{b90a41d3-20f8-449c-b029-b47439cfa8a1}</ProjectGuid>
+    <RootNamespace>Frameworks</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -95,14 +90,10 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <IncludePath>$(SolutionDir)ThirdParty\inc;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)ThirdParty\lib;$(LibraryPath)</LibraryPath>
-    <ReferencePath>$(ReferencePath)</ReferencePath>
-    <ExecutablePath>$(ExecutablePath)</ExecutablePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IncludePath>$(SolutionDir)ThirdParty\inc;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)ThirdParty\lib;$(LibraryPath)</LibraryPath>
-    <ReferencePath>$(ReferencePath)</ReferencePath>
-    <ExecutablePath>$(ExecutablePath)</ExecutablePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -150,7 +141,6 @@
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <BuildStlModules />
     </ClCompile>
     <Link>
       <SubSystem>
@@ -172,7 +162,6 @@
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <BuildStlModules />
     </ClCompile>
     <Link>
       <SubSystem>
