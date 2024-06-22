@@ -13,6 +13,8 @@ import ntmonkeys.com.Lib.Event;
 import ntmonkeys.com.Engine.AssetManager;
 import ntmonkeys.com.Engine.Core;
 import ntmonkeys.com.Engine.RenderingEngine;
+import ntmonkeys.com.Frameworks.RenderPassFactory;
+import ntmonkeys.com.Frameworks.RendererFactory;
 import ntmonkeys.com.Frameworks.TriangleRenderer;
 
 // CApp:
@@ -46,8 +48,9 @@ public:
 private:
 	std::unique_ptr<Engine::AssetManager> __pAssetManager;
 	std::unique_ptr<Engine::Core> __pCore;
-
 	std::unique_ptr<Engine::RenderingEngine> __pRenderingEngine;
+	std::unique_ptr<Frameworks::RenderPassFactory> __pRenderPassFactory;
+	std::unique_ptr<Frameworks::RendererFactory> __pRendererFactory;
 	std::unique_ptr<Frameworks::TriangleRenderer> __pTriangleRenderer;
 
 	mutable Lib::Event<> __idleEvent;

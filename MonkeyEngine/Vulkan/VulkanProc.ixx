@@ -70,6 +70,10 @@ namespace VK
 		PFN_vkCreateShaderModule vkCreateShaderModule{ };
 		PFN_vkDestroyShaderModule vkDestroyShaderModule{ };
 
+		// Render pass
+		PFN_vkCreateRenderPass2 vkCreateRenderPass2{ };
+		PFN_vkDestroyRenderPass vkDestroyRenderPass{ };
+
 		// Pipeline layout
 		PFN_vkCreatePipelineLayout vkCreatePipelineLayout{ };
 		PFN_vkDestroyPipelineLayout vkDestroyPipelineLayout{ };

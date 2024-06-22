@@ -9,6 +9,7 @@ import ntmonkeys.com.Lib.Unique;
 import ntmonkeys.com.Graphics.LogicalDevice;
 import ntmonkeys.com.Graphics.Shader;
 import ntmonkeys.com.Graphics.PipelineLayout;
+import ntmonkeys.com.Graphics.RenderPass;
 import ntmonkeys.com.Engine.AssetManager;
 import ntmonkeys.com.Engine.ShaderIncluder;
 import <unordered_map>;
@@ -27,7 +28,7 @@ namespace Engine
 	public:
 		using ShaderInfoMap = std::unordered_map<VkShaderStageFlagBits, std::string>;
 
-		struct InitInfo
+		struct DependencyInfo
 		{
 		public:
 			Graphics::LogicalDevice *pLogicalDevice{ };
@@ -37,7 +38,8 @@ namespace Engine
 		Renderer() = default;
 		virtual ~Renderer() noexcept override;
 
-		void init(const InitInfo &initInfo);
+		constexpr void injectDependencies(const DependencyInfo &info) noexcept;
+		void init();
 
 	protected:
 		[[nodiscard]]
@@ -55,7 +57,8 @@ namespace Engine
 		[[nodiscard]]
 		virtual const ShaderInfoMap &_getShaderInfoMap() const noexcept = 0;
 
-		virtual void _onInit() = 0;
+		[[nodiscard]]
+		virtual const Graphics::RenderPass &_getRenderPass() const noexcept = 0;
 
 	private:
 		Graphics::LogicalDevice *__pLogicalDevice{ };
@@ -73,6 +76,12 @@ namespace Engine
 		[[nodiscard]]
 		static shaderc::CompileOptions __makeCopileOptions() noexcept;
 	};
+
+	constexpr void Renderer::injectDependencies(const DependencyInfo &info) noexcept
+	{
+		__pLogicalDevice = info.pLogicalDevice;
+		__pAssetManager = info.pAssetManager;
+	}
 
 	constexpr Graphics::LogicalDevice &Renderer::_getLogicalDevice() const noexcept
 	{
@@ -95,13 +104,8 @@ namespace Engine
 		__pPipelineLayout = nullptr;
 	}
 
-	void Renderer::init(const InitInfo &initInfo)
+	void Renderer::init()
 	{
-		__pLogicalDevice	= initInfo.pLogicalDevice;
-		__pAssetManager		= initInfo.pAssetManager;
-
-		_onInit();
-
 		__createPipelineLayout();
 		__createShaders();
 	}

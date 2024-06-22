@@ -8,6 +8,7 @@ export module ntmonkeys.com.Engine.RenderingEngine;
 import ntmonkeys.com.Lib.Unique;
 import ntmonkeys.com.Graphics.PhysicalDevice;
 import ntmonkeys.com.Graphics.LogicalDevice;
+import ntmonkeys.com.Graphics.RenderPass;
 import ntmonkeys.com.Graphics.ConversionUtil;
 import ntmonkeys.com.Engine.AssetManager;
 import ntmonkeys.com.Engine.RenderTarget;
@@ -36,9 +37,15 @@ namespace Engine
 		[[nodiscard]]
 		std::unique_ptr<RenderTarget> createRenderTarget(const HINSTANCE hinstance, const HWND hwnd);
 
-		template <std::derived_from<Renderer> $Renderer>
 		[[nodiscard]]
-		std::unique_ptr<$Renderer> createRenderer();
+		std::unique_ptr<Graphics::RenderPass> createRenderPass(
+			const uint32_t attachmentCount, const VkAttachmentDescription2 *const pAttachments,
+			const uint32_t subpassCount, const VkSubpassDescription2 *const pSubpasses,
+			const uint32_t dependencyCount, const VkSubpassDependency2 *const pDependencies);
+
+		template <std::derived_from<Renderer> $Renderer, typename ...$Args>
+		[[nodiscard]]
+		std::unique_ptr<$Renderer> createRenderer($Args &&...args);
 
 	private:
 		const Graphics::PhysicalDevice &__physicalDevice;
@@ -47,17 +54,17 @@ namespace Engine
 		std::unique_ptr<Graphics::LogicalDevice> __pLogicalDevice;
 	};
 
-	template <std::derived_from<Renderer> $Renderer>
-	std::unique_ptr<$Renderer> RenderingEngine::createRenderer()
+	template <std::derived_from<Renderer> $Renderer, typename ...$Args>
+	std::unique_ptr<$Renderer> RenderingEngine::createRenderer($Args &&...args)
 	{
-		const Renderer::InitInfo initInfo
+		const Renderer::DependencyInfo dependencyInfo
 		{
 			.pLogicalDevice	{ __pLogicalDevice.get() },
 			.pAssetManager	{ &__assetManager }
 		};
 
-		auto retVal{ std::make_unique<$Renderer>() };
-		retVal->init(initInfo);
+		auto retVal{ std::make_unique<$Renderer>(std::forward<$Args>(args)...) };
+		retVal->injectDependencies(dependencyInfo);
 		return retVal;
 	}
 }
@@ -88,5 +95,16 @@ namespace Engine
 		};
 
 		return std::make_unique<RenderTarget>(createInfo);
+	}
+
+	std::unique_ptr<Graphics::RenderPass> RenderingEngine::createRenderPass(
+		const uint32_t attachmentCount, const VkAttachmentDescription2 *const pAttachments,
+		const uint32_t subpassCount, const VkSubpassDescription2 *const pSubpasses,
+		const uint32_t dependencyCount, const VkSubpassDependency2 *const pDependencies)
+	{
+		return __pLogicalDevice->createRenderPass(
+			attachmentCount, pAttachments,
+			subpassCount, pSubpasses,
+			dependencyCount, pDependencies);
 	}
 }

@@ -4,24 +4,26 @@ module;
 
 export module ntmonkeys.com.Frameworks.TriangleRenderer;
 
-import ntmonkeys.com.Engine.Renderer;
+import ntmonkeys.com.Frameworks.FrameworkRenderer;
+import ntmonkeys.com.Frameworks.RenderPassFactory;
 
 namespace Frameworks
 {
-	export class TriangleRenderer : public Engine::Renderer
+	export class TriangleRenderer : public FrameworkRenderer
 	{
 	public:
-		TriangleRenderer() = default;
+		TriangleRenderer() noexcept;
 		virtual ~TriangleRenderer() noexcept override = default;
 
 	protected:
-		virtual void _onInit() override;
+		[[nodiscard]]
+		virtual const Engine::Renderer::ShaderInfoMap &_getShaderInfoMap() const noexcept override;
 
 		[[nodiscard]]
-		virtual const ShaderInfoMap &_getShaderInfoMap() const noexcept override;
+		virtual const Graphics::RenderPass &_getRenderPass() const noexcept override;
 
 	private:
-		ShaderInfoMap __shaderInfoMap;
+		Engine::Renderer::ShaderInfoMap __shaderInfoMap;
 
 		void __populateShaderInfoMap() noexcept;
 	};
@@ -31,7 +33,7 @@ module: private;
 
 namespace Frameworks
 {
-	void TriangleRenderer::_onInit()
+	TriangleRenderer::TriangleRenderer() noexcept
 	{
 		__populateShaderInfoMap();
 	}
@@ -39,6 +41,11 @@ namespace Frameworks
 	const Engine::Renderer::ShaderInfoMap &TriangleRenderer::_getShaderInfoMap() const noexcept
 	{
 		return __shaderInfoMap;
+	}
+
+	const Graphics::RenderPass &TriangleRenderer::_getRenderPass() const noexcept
+	{
+		return _getRenderPassFactory().getInstance(RenderPassType::COLOR);
 	}
 
 	void TriangleRenderer::__populateShaderInfoMap() noexcept

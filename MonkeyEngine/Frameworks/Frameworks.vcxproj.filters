@@ -1,13 +1,23 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Renderers">
+    <Filter Include="Renderer">
       <UniqueIdentifier>{bed11dc8-c97e-4352-8dc1-0cfb2a5e5b78}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Renderer\Impl">
+      <UniqueIdentifier>{270fc59f-02ed-4bc5-860b-f5bb5f5c7cbc}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="RenderPassFactory.ixx" />
+    <ClCompile Include="FrameworkRenderer.ixx">
+      <Filter>Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="RendererFactory.ixx">
+      <Filter>Renderer</Filter>
+    </ClCompile>
     <ClCompile Include="TriangleRenderer.ixx">
-      <Filter>Renderers</Filter>
+      <Filter>Renderer\Impl</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

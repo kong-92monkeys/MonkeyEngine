@@ -28,6 +28,7 @@
     <ClCompile Include="PipelineLayout.ixx" />
     <ClCompile Include="Queue.ixx" />
     <ClCompile Include="RenderContext.ixx" />
+    <ClCompile Include="RenderPass.ixx" />
     <ClCompile Include="Shader.ixx" />
     <ClCompile Include="Surface.ixx" />
     <ClCompile Include="Swapchain.ixx" />

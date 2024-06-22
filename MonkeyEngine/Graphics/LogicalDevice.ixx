@@ -12,6 +12,7 @@ import ntmonkeys.com.Graphics.Surface;
 import ntmonkeys.com.Graphics.Shader;
 import ntmonkeys.com.Graphics.DescriptorSetLayout;
 import ntmonkeys.com.Graphics.PipelineLayout;
+import ntmonkeys.com.Graphics.RenderPass;
 import <vector>;
 import <memory>;
 import <stdexcept>;
@@ -67,10 +68,14 @@ namespace Graphics
 
 		[[nodiscard]]
 		std::unique_ptr<PipelineLayout> createPipelineLayout(
-			const uint32_t setLayoutCount,
-			const VkDescriptorSetLayout *const pSetLayouts,
-			const uint32_t pushConstantRangeCount,
-			const VkPushConstantRange *const pPushConstantRanges);
+			const uint32_t setLayoutCount, const VkDescriptorSetLayout *const pSetLayouts,
+			const uint32_t pushConstantRangeCount, const VkPushConstantRange *const pPushConstantRanges);
+
+		[[nodiscard]]
+		std::unique_ptr<RenderPass> createRenderPass(
+			const uint32_t attachmentCount, const VkAttachmentDescription2 *const pAttachments,
+			const uint32_t subpassCount, const VkSubpassDescription2 *const pSubpasses,
+			const uint32_t dependencyCount, const VkSubpassDependency2 *const pDependencies);
 
 	private:
 		const VK::InstanceProc &__instanceProc;
@@ -182,6 +187,26 @@ namespace Graphics
 		};
 
 		return std::make_unique<PipelineLayout>(createInfo);
+	}
+
+	std::unique_ptr<RenderPass> LogicalDevice::createRenderPass(
+		const uint32_t attachmentCount, const VkAttachmentDescription2 *const pAttachments,
+		const uint32_t subpassCount, const VkSubpassDescription2 *const pSubpasses,
+		const uint32_t dependencyCount, const VkSubpassDependency2 *const pDependencies)
+	{
+		const RenderPass::CreateInfo createInfo
+		{
+			.pDeviceProc		{ &__deviceProc },
+			.hDevice			{ __handle },
+			.attachmentCount	{ attachmentCount },
+			.pAttachments		{ pAttachments },
+			.subpassCount		{ subpassCount },
+			.pSubpasses			{ pSubpasses },
+			.dependencyCount	{ dependencyCount },
+			.pDependencies		{ pDependencies }
+		};
+
+		return std::make_unique<RenderPass>(createInfo);
 	}
 
 	void LogicalDevice::__createDevice(const CreateInfo &createInfo)
@@ -303,6 +328,10 @@ namespace Graphics
 		// Shader module;
 		LOAD_DEVICE_PROC(vkCreateShaderModule);
 		LOAD_DEVICE_PROC(vkDestroyShaderModule);
+
+		// Render pass
+		LOAD_DEVICE_PROC(vkCreateRenderPass2);
+		LOAD_DEVICE_PROC(vkDestroyRenderPass);
 
 		// Pipeline layout
 		LOAD_DEVICE_PROC(vkCreatePipelineLayout);

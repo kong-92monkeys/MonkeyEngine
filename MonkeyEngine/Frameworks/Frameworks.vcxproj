@@ -19,6 +19,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="FrameworkRenderer.ixx" />
+    <ClCompile Include="RendererFactory.ixx" />
+    <ClCompile Include="RenderPassFactory.ixx" />
     <ClCompile Include="TriangleRenderer.ixx" />
   </ItemGroup>
   <ItemGroup>
