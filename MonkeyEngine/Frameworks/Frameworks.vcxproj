@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="FramebufferFactory.ixx" />
     <ClCompile Include="FrameworkRenderer.ixx" />
     <ClCompile Include="RendererFactory.ixx" />
     <ClCompile Include="RenderPassFactory.ixx" />

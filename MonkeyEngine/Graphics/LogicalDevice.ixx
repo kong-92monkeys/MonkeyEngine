@@ -14,6 +14,7 @@ import ntmonkeys.com.Graphics.DescriptorSetLayout;
 import ntmonkeys.com.Graphics.PipelineLayout;
 import ntmonkeys.com.Graphics.RenderPass;
 import ntmonkeys.com.Graphics.Pipeline;
+import ntmonkeys.com.Graphics.Framebuffer;
 import <vector>;
 import <memory>;
 import <stdexcept>;
@@ -99,6 +100,11 @@ namespace Graphics
 
 		[[nodiscard]]
 		std::unique_ptr<Pipeline> createPipeline(const GraphicsPipelineCreateInfo &createInfo);
+
+		[[nodiscard]]
+		std::unique_ptr<Framebuffer> createFramebuffer(
+			const RenderPass &renderPass, const uint32_t width, const uint32_t height,
+			const uint32_t attachmentCount, const Framebuffer::AttachmentInfo *const pAttachments);
 
 	private:
 		const VK::InstanceProc &__instanceProc;
@@ -258,6 +264,24 @@ namespace Graphics
 		return std::make_unique<Pipeline>(innerCreateInfo);
 	}
 
+	std::unique_ptr<Framebuffer> LogicalDevice::createFramebuffer(
+		const RenderPass &renderPass, const uint32_t width, const uint32_t height,
+		const uint32_t attachmentCount, const Framebuffer::AttachmentInfo *const pAttachments)
+	{
+		const Framebuffer::CreateInfo createInfo
+		{
+			.pDeviceProc		{ &__deviceProc },
+			.hDevice			{ __handle },
+			.hRenderPass		{ renderPass.__handle },
+			.width				{ width },
+			.height				{ height },
+			.attachmentCount	{ attachmentCount },
+			.pAttachments		{ pAttachments }
+		}; 
+
+		return std::make_unique<Framebuffer>(createInfo);
+	}
+
 	void LogicalDevice::__createDevice(const CreateInfo &createInfo)
 	{
 		const auto deviceVersion{ Graphics::ConversionUtil::fromVulkanVersion(createInfo.p10Props->apiVersion) };
@@ -399,8 +423,13 @@ namespace Graphics
 		LOAD_DEVICE_PROC(vkDestroySwapchainKHR);
 		LOAD_DEVICE_PROC(vkGetSwapchainImagesKHR);
 
+		// Image view
 		LOAD_DEVICE_PROC(vkCreateImageView);
 		LOAD_DEVICE_PROC(vkDestroyImageView);
+
+		// Framebuffer
+		LOAD_DEVICE_PROC(vkCreateFramebuffer);
+		LOAD_DEVICE_PROC(vkDestroyFramebuffer);
 	}
 
 	void LogicalDevice::__retrieveQueue()

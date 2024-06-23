@@ -41,6 +41,8 @@ namespace Engine
 		Graphics::LogicalDevice &__logicalDevice;
 		std::unique_ptr<Graphics::Surface> __pSurface;
 		std::unique_ptr<Graphics::Swapchain> __pSwapchain;
+
+		void __validateSwapchainDependencies();
 	};
 
 	constexpr uint32_t RenderTarget::getWidth() const noexcept
@@ -67,9 +69,7 @@ namespace Engine
 		__logicalDevice{ *(createInfo.pLogicalDevice) }
 	{
 		__pSurface = __logicalDevice.createSurface(createInfo.hinstance, createInfo.hwnd);
-
-		if (isPresentable())
-			__pSwapchain = __pSurface->createSwapchain(VkImageUsageFlagBits::VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, true, nullptr);
+		__validateSwapchainDependencies();
 	}
 
 	RenderTarget::~RenderTarget() noexcept
@@ -81,10 +81,16 @@ namespace Engine
 	void RenderTarget::sync()
 	{
 		__pSurface->sync();
+		__validateSwapchainDependencies();
+	}
 
+	void RenderTarget::__validateSwapchainDependencies()
+	{
 		auto pOldSwapchain{ std::move(__pSwapchain) };
 
-		if (isPresentable())
-			__pSwapchain = __pSurface->createSwapchain(VkImageUsageFlagBits::VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, true, std::move(pOldSwapchain));
+		if (!(isPresentable()))
+			return;
+
+		__pSwapchain = __pSurface->createSwapchain(VkImageUsageFlagBits::VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, true, std::move(pOldSwapchain));
 	}
 }

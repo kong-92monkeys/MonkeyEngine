@@ -86,6 +86,7 @@ int CApp::ExitInstance()
 	//TODO: handle additional resources you may have added
 	__pTriangleRenderer = nullptr;
 	__pRendererFactory = nullptr;
+	__pFramebufferFactory = nullptr;
 	__pRenderPassFactory = nullptr;
 	__pRenderingEngine = nullptr;
 	__pCore = nullptr;
@@ -103,9 +104,13 @@ void CApp::__onInitBeforeMainFrame()
 	__createRenderingEngine();
 
 	__pRenderPassFactory = std::make_unique<Frameworks::RenderPassFactory>(*__pRenderingEngine);
+	__pFramebufferFactory = std::make_unique<Frameworks::FramebufferFactory>(*__pRenderingEngine, *__pRenderPassFactory);
 	__pRendererFactory = std::make_unique<Frameworks::RendererFactory>(*__pRenderingEngine, *__pRenderPassFactory);
 
 	__pTriangleRenderer = __pRendererFactory->createRenderer<Frameworks::TriangleRenderer>();
+
+	__pFramebufferFactory->invalidate(400, 300);
+	auto &a = __pFramebufferFactory->getInstance(Frameworks::RenderPassType::COLOR);
 }
 
 void CApp::__createGraphicsCore()

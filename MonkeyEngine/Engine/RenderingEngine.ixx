@@ -9,6 +9,7 @@ import ntmonkeys.com.Lib.Unique;
 import ntmonkeys.com.Graphics.PhysicalDevice;
 import ntmonkeys.com.Graphics.LogicalDevice;
 import ntmonkeys.com.Graphics.RenderPass;
+import ntmonkeys.com.Graphics.Framebuffer;
 import ntmonkeys.com.Graphics.ConversionUtil;
 import ntmonkeys.com.Engine.AssetManager;
 import ntmonkeys.com.Engine.RenderTarget;
@@ -42,6 +43,11 @@ namespace Engine
 			const uint32_t attachmentCount, const VkAttachmentDescription2 *const pAttachments,
 			const uint32_t subpassCount, const VkSubpassDescription2 *const pSubpasses,
 			const uint32_t dependencyCount, const VkSubpassDependency2 *const pDependencies);
+
+		[[nodiscard]]
+		std::unique_ptr<Graphics::Framebuffer> createFramebuffer(
+			const Graphics::RenderPass &renderPass, const uint32_t width, const uint32_t height,
+			const uint32_t attachmentCount, const Graphics::Framebuffer::AttachmentInfo *const pAttachments);
 
 		template <std::derived_from<Renderer> $Renderer, typename ...$Args>
 		[[nodiscard]]
@@ -106,5 +112,12 @@ namespace Engine
 			attachmentCount, pAttachments,
 			subpassCount, pSubpasses,
 			dependencyCount, pDependencies);
+	}
+
+	std::unique_ptr<Graphics::Framebuffer> RenderingEngine::createFramebuffer(
+		const Graphics::RenderPass &renderPass, const uint32_t width, const uint32_t height,
+		const uint32_t attachmentCount, const Graphics::Framebuffer::AttachmentInfo *const pAttachments)
+	{
+		return __pLogicalDevice->createFramebuffer(renderPass, width, height, attachmentCount, pAttachments);
 	}
 }

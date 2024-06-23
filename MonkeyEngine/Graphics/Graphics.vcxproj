@@ -21,6 +21,7 @@
   <ItemGroup>
     <ClCompile Include="ConversionUtil.ixx" />
     <ClCompile Include="DescriptorSetLayout.ixx" />
+    <ClCompile Include="Framebuffer.ixx" />
     <ClCompile Include="Image.ixx" />
     <ClCompile Include="ImageView.ixx" />
     <ClCompile Include="LogicalDevice.ixx" />

@@ -94,5 +94,9 @@ namespace VK
 		// ImageView
 		PFN_vkCreateImageView vkCreateImageView{ };
 		PFN_vkDestroyImageView vkDestroyImageView{ };
+
+		// Framebuffer
+		PFN_vkCreateFramebuffer vkCreateFramebuffer{ };
+		PFN_vkDestroyFramebuffer vkDestroyFramebuffer{ };
 	};
 }

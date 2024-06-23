@@ -26,17 +26,12 @@ namespace Frameworks
 		[[nodiscard]]
 		const Graphics::RenderPass &getInstance(const RenderPassType type) const noexcept;
 
-		[[nodiscard]]
-		const Graphics::RenderPass &getCustomInstance(const uint32_t typeId) const noexcept;
-		void registerCustomInstance(const uint32_t typeId, std::unique_ptr<Graphics::RenderPass> pInstance) noexcept;
-
 	protected:
 		Engine::RenderingEngine &__engine;
 
 		std::unordered_map<RenderPassType, std::unique_ptr<Graphics::RenderPass>> __instanceMap;
-		std::unordered_map<uint32_t, std::unique_ptr<Graphics::RenderPass>> __customInstanceMap;
 
-		void __registerInstance_color();
+		void __createInstance_color();
 	};
 }
 
@@ -46,7 +41,7 @@ namespace Frameworks
 {
 	RenderPassFactory::RenderPassFactory(Engine::RenderingEngine &engine) : __engine{ engine }
 	{
-		__registerInstance_color();
+		__createInstance_color();
 	}
 
 	const Graphics::RenderPass &RenderPassFactory::getInstance(const RenderPassType type) const noexcept
@@ -54,17 +49,7 @@ namespace Frameworks
 		return *(__instanceMap.at(type));
 	}
 
-	const Graphics::RenderPass &RenderPassFactory::getCustomInstance(const uint32_t typeId) const noexcept
-	{
-		return *(__customInstanceMap.at(typeId));
-	}
-
-	void RenderPassFactory::registerCustomInstance(const uint32_t typeId, std::unique_ptr<Graphics::RenderPass> pInstance) noexcept
-	{
-		__customInstanceMap[typeId] = std::move(pInstance);
-	}
-
-	void RenderPassFactory::__registerInstance_color()
+	void RenderPassFactory::__createInstance_color()
 	{
 		const VkAttachmentDescription2 attachmentDesc
 		{

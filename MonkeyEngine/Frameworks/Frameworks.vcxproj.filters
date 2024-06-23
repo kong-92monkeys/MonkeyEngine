@@ -13,11 +13,10 @@
     <ClCompile Include="FrameworkRenderer.ixx">
       <Filter>Renderer</Filter>
     </ClCompile>
-    <ClCompile Include="RendererFactory.ixx">
-      <Filter>Renderer</Filter>
-    </ClCompile>
     <ClCompile Include="TriangleRenderer.ixx">
       <Filter>Renderer\Impl</Filter>
     </ClCompile>
+    <ClCompile Include="RendererFactory.ixx" />
+    <ClCompile Include="FramebufferFactory.ixx" />
   </ItemGroup>
 </Project>
