@@ -14,6 +14,8 @@ namespace Graphics
 	export class RenderPass : public Lib::Unique
 	{
 	public:
+		friend class LogicalDevice;
+
 		struct CreateInfo
 		{
 		public:

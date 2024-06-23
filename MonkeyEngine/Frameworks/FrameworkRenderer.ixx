@@ -4,6 +4,7 @@ module;
 
 export module ntmonkeys.com.Frameworks.FrameworkRenderer;
 
+import ntmonkeys.com.Graphics.RenderPass;
 import ntmonkeys.com.Engine.Renderer;
 import ntmonkeys.com.Frameworks.RenderPassFactory;
 
@@ -25,7 +26,7 @@ namespace Frameworks
 
 	protected:
 		[[nodiscard]]
-		constexpr const RenderPassFactory &_getRenderPassFactory() const noexcept;
+		const Graphics::RenderPass &_getRenderPass(const RenderPassType type) const noexcept;
 
 	private:
 		const RenderPassFactory *__pRenderPassFactory{ };
@@ -35,16 +36,14 @@ namespace Frameworks
 	{
 		__pRenderPassFactory = info.pRenderPassFactory;
 	}
-
-	constexpr const RenderPassFactory &FrameworkRenderer::_getRenderPassFactory() const noexcept
-	{
-		return *__pRenderPassFactory;
-	}
 }
 
 module: private;
 
 namespace Frameworks
 {
-	
+	const Graphics::RenderPass &FrameworkRenderer::_getRenderPass(const RenderPassType type) const noexcept
+	{
+		return __pRenderPassFactory->getInstance(type);
+	}
 }

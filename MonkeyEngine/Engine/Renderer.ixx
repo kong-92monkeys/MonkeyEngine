@@ -8,8 +8,10 @@ export module ntmonkeys.com.Engine.Renderer;
 import ntmonkeys.com.Lib.Unique;
 import ntmonkeys.com.Graphics.LogicalDevice;
 import ntmonkeys.com.Graphics.Shader;
+import ntmonkeys.com.Graphics.DescriptorSetLayout;
 import ntmonkeys.com.Graphics.PipelineLayout;
 import ntmonkeys.com.Graphics.RenderPass;
+import ntmonkeys.com.Graphics.Pipeline;
 import ntmonkeys.com.Engine.AssetManager;
 import ntmonkeys.com.Engine.ShaderIncluder;
 import <unordered_map>;
@@ -26,8 +28,6 @@ namespace Engine
 	export class Renderer : public Lib::Unique
 	{
 	public:
-		using ShaderInfoMap = std::unordered_map<VkShaderStageFlagBits, std::string>;
-
 		struct DependencyInfo
 		{
 		public:
@@ -36,39 +36,33 @@ namespace Engine
 		};
 
 		Renderer() = default;
-		virtual ~Renderer() noexcept override;
+		virtual ~Renderer() noexcept override = default;
 
 		constexpr void injectDependencies(const DependencyInfo &info) noexcept;
-		void init();
+		virtual void init() = 0;
 
 	protected:
 		[[nodiscard]]
-		constexpr Graphics::LogicalDevice &_getLogicalDevice() const noexcept;
+		std::unique_ptr<Graphics::DescriptorSetLayout> _createDescriptorSetLayout(
+			const uint32_t bindingCount, const VkDescriptorSetLayoutBinding *const pBindings);
 
 		[[nodiscard]]
-		constexpr const AssetManager &_getAssetManager() const noexcept;
+		std::unique_ptr<Graphics::PipelineLayout> _createPipelineLayout(
+			const uint32_t setLayoutCount, const VkDescriptorSetLayout *const pSetLayouts,
+			const uint32_t pushConstantRangeCount, const VkPushConstantRange *const pPushConstantRanges);
 
 		[[nodiscard]]
-		virtual std::pair<uint32_t, const VkDescriptorSetLayout *> _getDescriptorSetLayouts() const noexcept;
+		std::unique_ptr<Graphics::Shader> _createShader(const std::string &assetPath) const;
 
 		[[nodiscard]]
-		virtual std::pair<uint32_t, const VkPushConstantRange *> _getPushConstantRanges() const noexcept;
+		std::unique_ptr<Graphics::Pipeline> _createPipeline(const Graphics::LogicalDevice::GraphicsPipelineCreateInfo &createInfo) const;
 
 		[[nodiscard]]
-		virtual const ShaderInfoMap &_getShaderInfoMap() const noexcept = 0;
-
-		[[nodiscard]]
-		virtual const Graphics::RenderPass &_getRenderPass() const noexcept = 0;
+		virtual const Graphics::Pipeline &_getPipeline() const noexcept = 0;
 
 	private:
 		Graphics::LogicalDevice *__pLogicalDevice{ };
 		const AssetManager *__pAssetManager{ };
-
-		std::unique_ptr<Graphics::PipelineLayout> __pPipelineLayout;
-		std::unordered_map<VkShaderStageFlagBits, std::unique_ptr<Graphics::Shader>> __shaderMap;
-
-		void __createPipelineLayout();
-		void __createShaders();
 
 		[[nodiscard]]
 		std::vector<uint32_t> __readShaderFile(const std::string &assetPath) const;
@@ -82,60 +76,34 @@ namespace Engine
 		__pLogicalDevice = info.pLogicalDevice;
 		__pAssetManager = info.pAssetManager;
 	}
-
-	constexpr Graphics::LogicalDevice &Renderer::_getLogicalDevice() const noexcept
-	{
-		return *__pLogicalDevice;
-	}
-
-	constexpr const AssetManager &Renderer::_getAssetManager() const noexcept
-	{
-		return *__pAssetManager;
-	}
 }
 
 module: private;
 
 namespace Engine
 {
-	Renderer::~Renderer() noexcept
+	std::unique_ptr<Graphics::DescriptorSetLayout> Renderer::_createDescriptorSetLayout(
+		const uint32_t bindingCount, const VkDescriptorSetLayoutBinding *const pBindings)
 	{
-		__shaderMap.clear();
-		__pPipelineLayout = nullptr;
+		return __pLogicalDevice->createDescriptorSetLayout(bindingCount, pBindings);
 	}
 
-	void Renderer::init()
+	std::unique_ptr<Graphics::PipelineLayout> Renderer::_createPipelineLayout(
+		const uint32_t setLayoutCount, const VkDescriptorSetLayout *const pSetLayouts,
+		const uint32_t pushConstantRangeCount, const VkPushConstantRange *const pPushConstantRanges)
 	{
-		__createPipelineLayout();
-		__createShaders();
+		return __pLogicalDevice->createPipelineLayout(setLayoutCount, pSetLayouts, pushConstantRangeCount, pPushConstantRanges);
 	}
 
-	std::pair<uint32_t, const VkDescriptorSetLayout *> Renderer::_getDescriptorSetLayouts() const noexcept
+	std::unique_ptr<Graphics::Shader> Renderer::_createShader(const std::string &assetPath) const
 	{
-		return { 0U, nullptr };
+		const auto code{ __readShaderFile(assetPath) };
+		return __pLogicalDevice->createShader(code.size() * sizeof(uint32_t), code.data());
 	}
 
-	std::pair<uint32_t, const VkPushConstantRange *> Renderer::_getPushConstantRanges() const noexcept
+	std::unique_ptr<Graphics::Pipeline> Renderer::_createPipeline(const Graphics::LogicalDevice::GraphicsPipelineCreateInfo &createInfo) const
 	{
-		return { 0U, nullptr };
-	}
-
-	void Renderer::__createPipelineLayout()
-	{
-		const auto [setLayoutCount, pSetLayouts]					{ _getDescriptorSetLayouts() };
-		const auto [pushConstantRangeCount, pPushConstantRanges]	{ _getPushConstantRanges() };
-
-		__pPipelineLayout = __pLogicalDevice->createPipelineLayout(
-			setLayoutCount, pSetLayouts, pushConstantRangeCount, pPushConstantRanges);
-	}
-
-	void Renderer::__createShaders()
-	{
-		for (const auto &[stage, filePath] : _getShaderInfoMap())
-		{
-			const auto code{ __readShaderFile(filePath) };
-			__shaderMap[stage] = __pLogicalDevice->createShader(code.size() * sizeof(uint32_t), code.data());
-		}
+		return __pLogicalDevice->createPipeline(createInfo);
 	}
 
 	std::vector<uint32_t> Renderer::__readShaderFile(const std::string &assetPath) const

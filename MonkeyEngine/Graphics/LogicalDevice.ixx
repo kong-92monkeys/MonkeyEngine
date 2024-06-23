@@ -13,6 +13,7 @@ import ntmonkeys.com.Graphics.Shader;
 import ntmonkeys.com.Graphics.DescriptorSetLayout;
 import ntmonkeys.com.Graphics.PipelineLayout;
 import ntmonkeys.com.Graphics.RenderPass;
+import ntmonkeys.com.Graphics.Pipeline;
 import <vector>;
 import <memory>;
 import <stdexcept>;
@@ -50,6 +51,25 @@ namespace Graphics
 			const std::unordered_map<std::string_view, const VkExtensionProperties *> *pExtensionMap;
 		};
 
+		struct GraphicsPipelineCreateInfo
+		{
+		public:
+			const PipelineLayout *pPipelineLayout{ };
+			const RenderPass *pRenderPass{ };
+			uint32_t subpassIndex{ };
+			uint32_t stageCount{ };
+			const VkPipelineShaderStageCreateInfo *pStages{ };
+			const VkPipelineVertexInputStateCreateInfo *pVertexInputState{ };
+			const VkPipelineInputAssemblyStateCreateInfo *pInputAssemblyState{ };
+			const VkPipelineTessellationStateCreateInfo *pTessellationState{ };
+			const VkPipelineViewportStateCreateInfo *pViewportState{ };
+			const VkPipelineRasterizationStateCreateInfo *pRasterizationState{ };
+			const VkPipelineMultisampleStateCreateInfo *pMultisampleState{ };
+			const VkPipelineDepthStencilStateCreateInfo *pDepthStencilState{ };
+			const VkPipelineColorBlendStateCreateInfo *pColorBlendState{ };
+			const VkPipelineDynamicStateCreateInfo *pDynamicState{ };
+		};
+
 		explicit LogicalDevice(const CreateInfo &createInfo) noexcept;
 		virtual ~LogicalDevice() noexcept override;
 		
@@ -76,6 +96,9 @@ namespace Graphics
 			const uint32_t attachmentCount, const VkAttachmentDescription2 *const pAttachments,
 			const uint32_t subpassCount, const VkSubpassDescription2 *const pSubpasses,
 			const uint32_t dependencyCount, const VkSubpassDependency2 *const pDependencies);
+
+		[[nodiscard]]
+		std::unique_ptr<Pipeline> createPipeline(const GraphicsPipelineCreateInfo &createInfo);
 
 	private:
 		const VK::InstanceProc &__instanceProc;
@@ -207,6 +230,32 @@ namespace Graphics
 		};
 
 		return std::make_unique<RenderPass>(createInfo);
+	}
+
+	std::unique_ptr<Pipeline> LogicalDevice::createPipeline(const GraphicsPipelineCreateInfo &createInfo)
+	{
+		const Pipeline::GraphicsCreateInfo innerCreateInfo
+		{
+			.pDeviceProc			{ &__deviceProc },
+			.hDevice				{ __handle },
+			.hPipelineCache			{ __hPipelineCache },
+			.hPipelineLayout		{ createInfo.pPipelineLayout->__handle },
+			.hRenderPass			{ createInfo.pRenderPass->__handle },
+			.subpassIndex			{ createInfo.subpassIndex },
+			.stageCount				{ createInfo.stageCount },
+			.pStages				{ createInfo.pStages },
+			.pVertexInputState		{ createInfo.pVertexInputState },
+			.pInputAssemblyState	{ createInfo.pInputAssemblyState },
+			.pTessellationState		{ createInfo.pTessellationState },
+			.pViewportState			{ createInfo.pViewportState },
+			.pRasterizationState	{ createInfo.pRasterizationState },
+			.pMultisampleState		{ createInfo.pMultisampleState },
+			.pDepthStencilState		{ createInfo.pDepthStencilState },
+			.pColorBlendState		{ createInfo.pColorBlendState },
+			.pDynamicState			{ createInfo.pDynamicState }
+		};
+
+		return std::make_unique<Pipeline>(innerCreateInfo);
 	}
 
 	void LogicalDevice::__createDevice(const CreateInfo &createInfo)

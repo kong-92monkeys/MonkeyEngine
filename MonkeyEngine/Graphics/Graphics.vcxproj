@@ -25,6 +25,7 @@
     <ClCompile Include="ImageView.ixx" />
     <ClCompile Include="LogicalDevice.ixx" />
     <ClCompile Include="PhysicalDevice.ixx" />
+    <ClCompile Include="Pipeline.ixx" />
     <ClCompile Include="PipelineLayout.ixx" />
     <ClCompile Include="Queue.ixx" />
     <ClCompile Include="RenderContext.ixx" />

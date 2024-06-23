@@ -14,5 +14,6 @@
     <ClCompile Include="DescriptorSetLayout.ixx" />
     <ClCompile Include="PipelineLayout.ixx" />
     <ClCompile Include="RenderPass.ixx" />
+    <ClCompile Include="Pipeline.ixx" />
   </ItemGroup>
 </Project>

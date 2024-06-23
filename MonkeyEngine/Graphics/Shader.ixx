@@ -26,6 +26,9 @@ namespace Graphics
 		explicit Shader(const CreateInfo &createInfo) noexcept;
 		virtual ~Shader() noexcept override;
 
+		[[nodiscard]]
+		constexpr VkShaderModule getHandle() noexcept;
+
 	private:
 		const VK::DeviceProc &__deviceProc;
 		const VkDevice __hDevice;
@@ -34,6 +37,11 @@ namespace Graphics
 
 		void __create(const CreateInfo &createInfo);
 	};
+
+	constexpr VkShaderModule Shader::getHandle() noexcept
+	{
+		return __handle;
+	}
 }
 
 module: private;
