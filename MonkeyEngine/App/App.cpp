@@ -85,32 +85,24 @@ int CApp::ExitInstance()
 {
 	//TODO: handle additional resources you may have added
 	__pTriangleRenderer = nullptr;
-	__pRendererFactory = nullptr;
-	__pFramebufferFactory = nullptr;
-	__pRenderPassFactory = nullptr;
+	__pRenderSystem = nullptr;
+	__pAssetManager = nullptr;
 	__pRenderingEngine = nullptr;
 	__pCore = nullptr;
-	__pAssetManager = nullptr;
 
 	return CWinApp::ExitInstance();
 }
 
 void CApp::__onInitBeforeMainFrame()
 {
-	__pAssetManager = std::make_unique<Frameworks::AssetManager>();
-	__pAssetManager->setRootPath("Assets");
-
 	__createGraphicsCore();
 	__createRenderingEngine();
 
-	__pRenderPassFactory = std::make_unique<Frameworks::RenderPassFactory>(*__pRenderingEngine);
-	__pFramebufferFactory = std::make_unique<Frameworks::FramebufferFactory>(*__pRenderingEngine, *__pRenderPassFactory);
-	__pRendererFactory = std::make_unique<Frameworks::RendererFactory>(*__pRenderingEngine, *__pAssetManager, *__pRenderPassFactory);
+	__pAssetManager = std::make_unique<Frameworks::AssetManager>();
+	__pAssetManager->setRootPath("Assets");
 
-	__pTriangleRenderer = std::unique_ptr<Frameworks::TriangleRenderer>{ __pRendererFactory->createRenderer<Frameworks::TriangleRenderer>() };
-
-	__pFramebufferFactory->invalidate(400, 300);
-	auto &a = __pFramebufferFactory->getInstance(Frameworks::RenderPassType::COLOR);
+	__pRenderSystem = std::make_unique<Frameworks::RenderSystem>(*__pRenderingEngine, *__pAssetManager);
+	__pTriangleRenderer = std::unique_ptr<Frameworks::TriangleRenderer>{ __pRenderSystem->createRenderer<Frameworks::TriangleRenderer>() };
 }
 
 void CApp::__createGraphicsCore()

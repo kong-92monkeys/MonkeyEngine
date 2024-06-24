@@ -27,5 +27,6 @@
     <ClCompile Include="ShaderIncluder.ixx">
       <Filter>Util</Filter>
     </ClCompile>
+    <ClCompile Include="RenderSystem.ixx" />
   </ItemGroup>
 </Project>

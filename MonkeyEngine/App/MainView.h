@@ -5,7 +5,7 @@
 
 #pragma once
 
-import ntmonkeys.com.Engine.RenderTarget;
+import ntmonkeys.com.Frameworks.Window;
 
 // CChildView window
 
@@ -42,9 +42,9 @@ public:
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 
 private:
-	std::unique_ptr<Engine::RenderTarget> __pRenderTarget;
+	std::unique_ptr<Frameworks::Window> __pWindow;
 
-	int __createRenderTarget(const HINSTANCE hInstance);
+	int __createWindow(const HINSTANCE hInstance);
 public:
 	afx_msg BOOL OnEraseBkgnd(CDC *pDC);
 };

@@ -13,9 +13,7 @@ import ntmonkeys.com.Lib.Event;
 import ntmonkeys.com.Engine.Core;
 import ntmonkeys.com.Engine.RenderingEngine;
 import ntmonkeys.com.Frameworks.AssetManager;
-import ntmonkeys.com.Frameworks.RenderPassFactory;
-import ntmonkeys.com.Frameworks.FramebufferFactory;
-import ntmonkeys.com.Frameworks.RendererFactory;
+import ntmonkeys.com.Frameworks.RenderSystem;
 import ntmonkeys.com.Frameworks.TriangleRenderer;
 
 // CApp:
@@ -41,7 +39,7 @@ public:
 
 public:
 	[[nodiscard]]
-	constexpr Engine::RenderingEngine &getEngine() noexcept;
+	constexpr Frameworks::RenderSystem &getRenderSystem() noexcept;
 
 	[[nodiscard]]
 	constexpr Lib::EventView<> &getIdleEvent() const noexcept;
@@ -49,11 +47,9 @@ public:
 private:
 	std::unique_ptr<Engine::Core> __pCore;
 	std::unique_ptr<Engine::RenderingEngine> __pRenderingEngine;
-
 	std::unique_ptr<Frameworks::AssetManager> __pAssetManager;
-	std::unique_ptr<Frameworks::RenderPassFactory> __pRenderPassFactory;
-	std::unique_ptr<Frameworks::FramebufferFactory> __pFramebufferFactory;
-	std::unique_ptr<Frameworks::RendererFactory> __pRendererFactory;
+
+	std::unique_ptr<Frameworks::RenderSystem> __pRenderSystem;
 	std::unique_ptr<Frameworks::TriangleRenderer> __pTriangleRenderer;
 
 	mutable Lib::Event<> __idleEvent;
@@ -68,9 +64,9 @@ public:
 
 extern CApp theApp;
 
-constexpr Engine::RenderingEngine &CApp::getEngine() noexcept
+constexpr Frameworks::RenderSystem &CApp::getRenderSystem() noexcept
 {
-	return *__pRenderingEngine;
+	return *__pRenderSystem;
 }
 
 constexpr Lib::EventView<> &CApp::getIdleEvent() const noexcept

@@ -60,7 +60,7 @@ int CMainView::OnCreate(LPCREATESTRUCT lpCreateStruct)
 		return -1;
 
 	// TODO:  Add your specialized creation code here
-	if (__createRenderTarget(lpCreateStruct->hInstance) == -1)
+	if (__createWindow(lpCreateStruct->hInstance) == -1)
 		return -1;
 
 	Lib::Logger::log(Lib::Logger::Severity::INFO, "Main surface created.");
@@ -68,13 +68,13 @@ int CMainView::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	return 0;
 }
 
-int CMainView::__createRenderTarget(const HINSTANCE hInstance)
+int CMainView::__createWindow(const HINSTANCE hInstance)
 {
-	auto &engine{ theApp.getEngine() };
+	auto &renderSystem{ theApp.getRenderSystem() };
 
 	try
 	{
-		__pRenderTarget = std::unique_ptr<Engine::RenderTarget>{ engine.createRenderTarget(hInstance, GetSafeHwnd()) };
+		__pWindow = std::unique_ptr<Frameworks::Window>{ renderSystem.createWindow(hInstance, GetSafeHwnd()) };
 		return 0;
 	}
 	catch (...)
@@ -85,7 +85,7 @@ int CMainView::__createRenderTarget(const HINSTANCE hInstance)
 
 void CMainView::OnDestroy()
 {
-	__pRenderTarget = nullptr;
+	__pWindow = nullptr;
 	CWnd::OnDestroy();
 }
 
@@ -95,7 +95,7 @@ void CMainView::OnSize(UINT nType, int cx, int cy)
 	CWnd::OnSize(nType, cx, cy);
 
 	// TODO: Add your message handler code here
-	__pRenderTarget->sync();
+	__pWindow->sync();
 }
 
 BOOL CMainView::OnEraseBkgnd(CDC *pDC)
