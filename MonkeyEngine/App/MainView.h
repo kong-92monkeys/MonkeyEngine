@@ -6,6 +6,7 @@
 #pragma once
 
 import ntmonkeys.com.Frameworks.Window;
+import ntmonkeys.com.Frameworks.Layer;
 
 // CChildView window
 
@@ -43,6 +44,7 @@ public:
 
 private:
 	std::unique_ptr<Frameworks::Window> __pWindow;
+	std::unique_ptr<Frameworks::Layer> __pLayer;
 
 	int __createWindow(const HINSTANCE hInstance);
 public:

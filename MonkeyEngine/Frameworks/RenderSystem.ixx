@@ -11,6 +11,7 @@ import ntmonkeys.com.Frameworks.Renderer;
 import ntmonkeys.com.Frameworks.RenderPassFactory;
 import ntmonkeys.com.Frameworks.RendererFactory;
 import ntmonkeys.com.Frameworks.Window;
+import ntmonkeys.com.Frameworks.Layer;
 import <memory>;
 
 namespace Frameworks
@@ -27,6 +28,11 @@ namespace Frameworks
 
 		[[nodiscard]]
 		Window *createWindow(const HINSTANCE hinstance, const HWND hwnd);
+
+		[[nodiscard]]
+		Layer *createLayer() noexcept;
+
+		void render(Window &window);
 
 	private:
 		Engine::RenderingEngine &__engine;
@@ -60,6 +66,23 @@ namespace Frameworks
 
 	Window *RenderSystem::createWindow(const HINSTANCE hinstance, const HWND hwnd)
 	{
-		return new Window{ __engine, hinstance, hwnd };
+		return new Window{ __engine, *__pRenderPassFactory, hinstance, hwnd };
+	}
+
+	Layer *RenderSystem::createLayer() noexcept
+	{
+		return new Layer{ *__pRenderPassFactory };
+	}
+
+	void RenderSystem::render(Window &window)
+	{
+		auto &commandExecutor{ __engine.getCommandExecutor() };
+
+		auto pExecution{ commandExecutor.makeExecution() };
+
+		// TODO: logic...
+		window.draw(*pExecution);
+
+		commandExecutor.execute(std::move(pExecution));
 	}
 }

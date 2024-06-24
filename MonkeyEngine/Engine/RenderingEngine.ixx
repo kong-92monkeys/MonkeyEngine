@@ -73,7 +73,6 @@ namespace Engine
 		std::unique_ptr<CommandExecutor> __pCommandExecutor;
 	};
 
-	[[nodiscard]]
 	constexpr CommandExecutor &RenderingEngine::getCommandExecutor() noexcept
 	{
 		return *__pCommandExecutor;

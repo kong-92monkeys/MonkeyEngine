@@ -52,6 +52,9 @@ BOOL CMainView::PreCreateWindow(CREATESTRUCT& cs)
 void CMainView::OnPaint() 
 {
 	ValidateRect(nullptr);
+
+	auto &renderSystem{ theApp.getRenderSystem() };
+	renderSystem.render(*__pWindow);
 }
 
 int CMainView::OnCreate(LPCREATESTRUCT lpCreateStruct)
@@ -63,7 +66,7 @@ int CMainView::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	if (__createWindow(lpCreateStruct->hInstance) == -1)
 		return -1;
 
-	Lib::Logger::log(Lib::Logger::Severity::INFO, "Main surface created.");
+	Lib::Logger::log(Lib::Logger::Severity::INFO, "Main window created.");
 
 	return 0;
 }
@@ -75,6 +78,8 @@ int CMainView::__createWindow(const HINSTANCE hInstance)
 	try
 	{
 		__pWindow = std::unique_ptr<Frameworks::Window>{ renderSystem.createWindow(hInstance, GetSafeHwnd()) };
+		__pLayer = std::unique_ptr<Frameworks::Layer>{ renderSystem.createLayer() };
+		__pWindow->addLayer(*__pLayer);
 		return 0;
 	}
 	catch (...)
@@ -85,6 +90,8 @@ int CMainView::__createWindow(const HINSTANCE hInstance)
 
 void CMainView::OnDestroy()
 {
+	__pWindow->removeLayer(*__pLayer);
+	__pLayer = nullptr;
 	__pWindow = nullptr;
 	CWnd::OnDestroy();
 }
