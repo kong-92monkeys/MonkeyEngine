@@ -44,10 +44,10 @@ namespace Graphics
 		void sync();
 
 		[[nodiscard]]
-		std::unique_ptr<Swapchain> createSwapchain(
+		Swapchain *createSwapchain(
 			const VkImageUsageFlags imageUsage,
 			const bool clipped,
-			std::unique_ptr<Swapchain> pOldSwapchain);
+			Swapchain *const pOldSwapchain);
 
 	private:
 		const VK::InstanceProc &__instanceProc;
@@ -132,10 +132,10 @@ namespace Graphics
 		__resolveCompositeAlpha();
 	}
 
-	std::unique_ptr<Swapchain> Surface::createSwapchain(
+	Swapchain *Surface::createSwapchain(
 		const VkImageUsageFlags imageUsage,
 		const bool clipped,
-		std::unique_ptr<Swapchain> pOldSwapchain)
+		Swapchain *const pOldSwapchain)
 	{
 		const auto &capabilities{ __capabilities.surfaceCapabilities };
 
@@ -158,7 +158,7 @@ namespace Graphics
 			.fullScreenMonitor	{ __fullscreenWin32Info.hmonitor }
 		};
 
-		return std::make_unique<Swapchain>(createInfo);
+		return new Swapchain{ createInfo };
 	}
 
 	void Surface::__create(const HINSTANCE hAppInstance)

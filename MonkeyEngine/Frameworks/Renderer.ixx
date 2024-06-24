@@ -3,43 +3,47 @@ module;
 #include "../Vulkan/Vulkan.h"
 #include <shaderc/shaderc.hpp>
 
-export module ntmonkeys.com.Engine.Renderer;
-
+export module ntmonkeys.com.Frameworks.Renderer;
 import ntmonkeys.com.Lib.Unique;
 import ntmonkeys.com.Graphics.LogicalDevice;
+import ntmonkeys.com.Graphics.RenderPass;
+import ntmonkeys.com.Graphics.CommandBuffer;
 import ntmonkeys.com.Graphics.Shader;
 import ntmonkeys.com.Graphics.DescriptorSetLayout;
 import ntmonkeys.com.Graphics.PipelineLayout;
 import ntmonkeys.com.Graphics.RenderPass;
 import ntmonkeys.com.Graphics.Pipeline;
-import ntmonkeys.com.Engine.AssetManager;
-import ntmonkeys.com.Engine.ShaderIncluder;
-import <unordered_map>;
+import ntmonkeys.com.Engine.RenderingEngine;
+import ntmonkeys.com.Frameworks.AssetManager;
+import ntmonkeys.com.Frameworks.ShaderIncluder;
+import ntmonkeys.com.Frameworks.RenderPassFactory;
 import <vector>;
 import <string>;
 import <memory>;
-import <fstream>;
-import <sstream>;
 import <stdexcept>;
 import <format>;
 
-namespace Engine
+namespace Frameworks
 {
 	export class Renderer : public Lib::Unique
 	{
 	public:
-		struct DependencyInfo
+		struct InitInfo
 		{
 		public:
-			Graphics::LogicalDevice *pLogicalDevice{ };
+			Engine::RenderingEngine * pEngine{ };
 			const AssetManager *pAssetManager{ };
+			const RenderPassFactory *pRenderPassFactory{ };
 		};
 
 		Renderer() = default;
 		virtual ~Renderer() noexcept override = default;
 
-		constexpr void injectDependencies(const DependencyInfo &info) noexcept;
-		virtual void init() = 0;
+		void init(const InitInfo &info);
+
+		[[nodiscard]]
+		virtual RenderPassType getRenderPassType() const noexcept = 0;
+		virtual void bind(Graphics::CommandBuffer &commandBuffer) noexcept = 0;
 
 	protected:
 		[[nodiscard]]
@@ -55,14 +59,18 @@ namespace Engine
 		std::unique_ptr<Graphics::Shader> _createShader(const std::string &assetPath) const;
 
 		[[nodiscard]]
-		std::unique_ptr<Graphics::Pipeline> _createPipeline(const Graphics::LogicalDevice::GraphicsPipelineCreateInfo &createInfo) const;
+		std::unique_ptr<Graphics::Pipeline> _createPipeline(
+			const Graphics::LogicalDevice::GraphicsPipelineCreateInfo &createInfo) const;
 
 		[[nodiscard]]
-		virtual const Graphics::Pipeline &_getPipeline() const noexcept = 0;
+		const Graphics::RenderPass &_getRenderPass() const noexcept;
+
+		virtual void _onInit() = 0;
 
 	private:
-		Graphics::LogicalDevice *__pLogicalDevice{ };
+		Engine::RenderingEngine *__pEngine{ };
 		const AssetManager *__pAssetManager{ };
+		const RenderPassFactory *__pRenderPassFactory{ };
 
 		[[nodiscard]]
 		std::vector<uint32_t> __readShaderFile(const std::string &assetPath) const;
@@ -70,40 +78,59 @@ namespace Engine
 		[[nodiscard]]
 		static shaderc::CompileOptions __makeCopileOptions() noexcept;
 	};
-
-	constexpr void Renderer::injectDependencies(const DependencyInfo &info) noexcept
-	{
-		__pLogicalDevice = info.pLogicalDevice;
-		__pAssetManager = info.pAssetManager;
-	}
 }
 
 module: private;
 
-namespace Engine
+namespace Frameworks
 {
+	void Renderer::init(const InitInfo &info)
+	{
+		__pEngine				= info.pEngine;
+		__pAssetManager			= info.pAssetManager;
+		__pRenderPassFactory	= info.pRenderPassFactory;
+
+		_onInit();
+	}
+
 	std::unique_ptr<Graphics::DescriptorSetLayout> Renderer::_createDescriptorSetLayout(
 		const uint32_t bindingCount, const VkDescriptorSetLayoutBinding *const pBindings)
 	{
-		return __pLogicalDevice->createDescriptorSetLayout(bindingCount, pBindings);
+		return std::unique_ptr<Graphics::DescriptorSetLayout>
+		{
+			__pEngine->createDescriptorSetLayout(bindingCount, pBindings)
+		};
 	}
 
 	std::unique_ptr<Graphics::PipelineLayout> Renderer::_createPipelineLayout(
 		const uint32_t setLayoutCount, const VkDescriptorSetLayout *const pSetLayouts,
 		const uint32_t pushConstantRangeCount, const VkPushConstantRange *const pPushConstantRanges)
 	{
-		return __pLogicalDevice->createPipelineLayout(setLayoutCount, pSetLayouts, pushConstantRangeCount, pPushConstantRanges);
+		return std::unique_ptr<Graphics::PipelineLayout>
+		{
+			__pEngine->createPipelineLayout(
+				setLayoutCount, pSetLayouts,
+				pushConstantRangeCount, pPushConstantRanges)
+		};
 	}
 
 	std::unique_ptr<Graphics::Shader> Renderer::_createShader(const std::string &assetPath) const
 	{
 		const auto code{ __readShaderFile(assetPath) };
-		return __pLogicalDevice->createShader(code.size() * sizeof(uint32_t), code.data());
+		return std::unique_ptr<Graphics::Shader>
+		{
+			__pEngine->createShader(code.size() * sizeof(uint32_t), code.data())
+		};
 	}
 
 	std::unique_ptr<Graphics::Pipeline> Renderer::_createPipeline(const Graphics::LogicalDevice::GraphicsPipelineCreateInfo &createInfo) const
 	{
-		return __pLogicalDevice->createPipeline(createInfo);
+		return std::unique_ptr<Graphics::Pipeline>{ __pEngine->createPipeline(createInfo) };
+	}
+
+	const Graphics::RenderPass &Renderer::_getRenderPass() const noexcept
+	{
+		return __pRenderPassFactory->getInstance(getRenderPassType());
 	}
 
 	std::vector<uint32_t> Renderer::__readShaderFile(const std::string &assetPath) const

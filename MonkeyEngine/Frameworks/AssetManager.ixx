@@ -1,4 +1,4 @@
-export module ntmonkeys.com.Engine.AssetManager;
+export module ntmonkeys.com.Frameworks.AssetManager;
 
 import ntmonkeys.com.Lib.Unique;
 import <filesystem>;
@@ -8,7 +8,7 @@ import <memory>;
 import <format>;
 import <string_view>;
 
-namespace Engine
+namespace Frameworks
 {
 	export class AssetManager : public Lib::Unique
 	{
@@ -31,7 +31,7 @@ namespace Engine
 
 module: private;
 
-namespace Engine
+namespace Frameworks
 {
 	AssetManager::AssetManager() noexcept
 	{}

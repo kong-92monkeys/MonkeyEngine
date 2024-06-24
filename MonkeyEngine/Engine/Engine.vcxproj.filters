@@ -4,15 +4,7 @@
     <ClCompile Include="Core.ixx" />
     <ClCompile Include="RenderingEngine.ixx" />
     <ClCompile Include="RenderTarget.ixx" />
-    <ClCompile Include="Renderer.ixx" />
-    <ClCompile Include="ShaderIncluder.ixx">
-      <Filter>Util</Filter>
-    </ClCompile>
-    <ClCompile Include="AssetManager.ixx" />
-  </ItemGroup>
-  <ItemGroup>
-    <Filter Include="Util">
-      <UniqueIdentifier>{994ccf50-472b-47ab-a793-b3d34451c5b9}</UniqueIdentifier>
-    </Filter>
+    <ClCompile Include="CommandBufferCirculator.ixx" />
+    <ClCompile Include="CommandExecutor.ixx" />
   </ItemGroup>
 </Project>

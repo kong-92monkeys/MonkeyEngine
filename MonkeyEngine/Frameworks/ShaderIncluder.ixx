@@ -2,18 +2,18 @@ module;
 
 #include <shaderc/shaderc.hpp>
 
-export module ntmonkeys.com.Engine.ShaderIncluder;
+export module ntmonkeys.com.Frameworks.ShaderIncluder;
 import <fstream>;
 import <sstream>;
 import <string>;
 import <format>;
 import <filesystem>;
 
-namespace Engine
+namespace Frameworks
 {
-	export class ShaderIncluder : public shaderc::CompileOptions::IncluderInterface
-	{
-	public:
+    export class ShaderIncluder : public shaderc::CompileOptions::IncluderInterface
+    {
+    public:
         virtual shaderc_include_result *GetInclude(
             const char *const requested_source,
             const shaderc_include_type includeType,
@@ -35,12 +35,12 @@ namespace Engine
             const shaderc_include_type includeType,
             const std::string_view targetSource,
             const std::string_view requestingSource) noexcept;
-	};
+    };
 }
 
 module: private;
 
-namespace Engine
+namespace Frameworks
 {
     shaderc_include_result *ShaderIncluder::GetInclude(
         const char *const requested_source,
@@ -48,9 +48,9 @@ namespace Engine
         const char *const requesting_source,
         const size_t include_depth)
     {
-        auto *const pPlaceholder    { new IncludeResultPlaceholder };
-        auto &sourceName            { pPlaceholder->sourceName };
-        auto &content               { pPlaceholder->content };
+        auto *const pPlaceholder{ new IncludeResultPlaceholder };
+        auto &sourceName{ pPlaceholder->sourceName };
+        auto &content{ pPlaceholder->content };
 
         const auto absolutePath{ __resolveTargetAbsolutePath(includeType, requested_source, requesting_source) };
         std::ifstream fin{ absolutePath };
@@ -59,18 +59,18 @@ namespace Engine
             std::ostringstream oss;
             oss << fin.rdbuf();
 
-            sourceName  = absolutePath.string();
-            content     = oss.str();
+            sourceName = absolutePath.string();
+            content = oss.str();
         }
         else
             content = std::format("Cannot open file: {}", requested_source);
 
-        auto *const pRetVal         { new shaderc_include_result };
-        pRetVal->source_name        = pPlaceholder->sourceName.c_str();
+        auto *const pRetVal{ new shaderc_include_result };
+        pRetVal->source_name = pPlaceholder->sourceName.c_str();
         pRetVal->source_name_length = pPlaceholder->sourceName.size();
-        pRetVal->content            = pPlaceholder->content.c_str();
-        pRetVal->content_length     = pPlaceholder->content.size();
-        pRetVal->user_data          = pPlaceholder;
+        pRetVal->content = pPlaceholder->content.c_str();
+        pRetVal->content_length = pPlaceholder->content.size();
+        pRetVal->user_data = pPlaceholder;
 
         return pRetVal;
     }

@@ -97,6 +97,9 @@ namespace Frameworks
 			.dstSubpass			{ 0U }
 		};
 
-		__instanceMap[RenderPassType::COLOR] = __engine.createRenderPass(1U, &attachmentDesc, 1U, &subpass, 1U, &dependency);
+		__instanceMap[RenderPassType::COLOR] = std::unique_ptr<Graphics::RenderPass>
+		{
+			__engine.createRenderPass(1U, &attachmentDesc, 1U, &subpass, 1U, &dependency)
+		};
 	}
 }

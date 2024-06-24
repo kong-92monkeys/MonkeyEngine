@@ -90,6 +90,7 @@ namespace VK
 		PFN_vkCreateSwapchainKHR vkCreateSwapchainKHR{ };
 		PFN_vkDestroySwapchainKHR vkDestroySwapchainKHR{ };
 		PFN_vkGetSwapchainImagesKHR vkGetSwapchainImagesKHR{ };
+		PFN_vkAcquireNextImage2KHR vkAcquireNextImage2KHR{ };
 
 		// ImageView
 		PFN_vkCreateImageView vkCreateImageView{ };
@@ -98,5 +99,22 @@ namespace VK
 		// Framebuffer
 		PFN_vkCreateFramebuffer vkCreateFramebuffer{ };
 		PFN_vkDestroyFramebuffer vkDestroyFramebuffer{ };
+
+		// Command pool
+		PFN_vkCreateCommandPool vkCreateCommandPool{ };
+		PFN_vkDestroyCommandPool vkDestroyCommandPool{ };
+		PFN_vkAllocateCommandBuffers vkAllocateCommandBuffers{ };
+		PFN_vkResetCommandPool vkResetCommandPool{ };
+
+		// Command buffer
+		PFN_vkBeginCommandBuffer vkBeginCommandBuffer{ };
+		PFN_vkEndCommandBuffer vkEndCommandBuffer{ };
+		PFN_vkCmdBeginRenderPass2 vkCmdBeginRenderPass2{ };
+		PFN_vkCmdEndRenderPass2 vkCmdEndRenderPass2{ };
+		PFN_vkCmdBindPipeline vkCmdBindPipeline{ };
+		PFN_vkCmdSetViewport vkCmdSetViewport{ };
+		PFN_vkCmdSetScissor vkCmdSetScissor{ };
+		PFN_vkCmdDraw vkCmdDraw{ };
+		PFN_vkCmdDrawIndexed vkCmdDrawIndexed{ };
 	};
 }

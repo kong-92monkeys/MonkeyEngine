@@ -7,10 +7,13 @@
     <Filter Include="Renderer\Impl">
       <UniqueIdentifier>{270fc59f-02ed-4bc5-860b-f5bb5f5c7cbc}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Util">
+      <UniqueIdentifier>{e07de989-bc45-489d-b775-672dc42ddac7}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RenderPassFactory.ixx" />
-    <ClCompile Include="FrameworkRenderer.ixx">
+    <ClCompile Include="Renderer.ixx">
       <Filter>Renderer</Filter>
     </ClCompile>
     <ClCompile Include="TriangleRenderer.ixx">
@@ -18,5 +21,11 @@
     </ClCompile>
     <ClCompile Include="RendererFactory.ixx" />
     <ClCompile Include="FramebufferFactory.ixx" />
+    <ClCompile Include="Window.ixx" />
+    <ClCompile Include="Layer.ixx" />
+    <ClCompile Include="AssetManager.ixx" />
+    <ClCompile Include="ShaderIncluder.ixx">
+      <Filter>Util</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

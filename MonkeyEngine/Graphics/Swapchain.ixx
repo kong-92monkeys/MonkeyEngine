@@ -32,7 +32,7 @@ namespace Graphics
 			VkCompositeAlphaFlagBitsKHR compositeAlpha{ };
 			VkPresentModeKHR presentMode{ };
 			VkBool32 clipped{ };
-			std::unique_ptr<Swapchain> pOldSwapchain;
+			Swapchain *pOldSwapchain{ };
 			VkFullScreenExclusiveEXT fullScreenMode{ };
 			HMONITOR fullScreenMonitor{ };
 		};

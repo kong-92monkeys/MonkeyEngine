@@ -14,8 +14,6 @@ namespace Graphics
 	export class RenderPass : public Lib::Unique
 	{
 	public:
-		friend class LogicalDevice;
-
 		struct CreateInfo
 		{
 		public:
@@ -32,6 +30,9 @@ namespace Graphics
 		explicit RenderPass(const CreateInfo &createInfo) noexcept;
 		virtual ~RenderPass() noexcept override;
 
+		[[nodiscard]]
+		constexpr VkRenderPass getHandle() const noexcept;
+
 	private:
 		const VK::DeviceProc &__deviceProc;
 		const VkDevice __hDevice;
@@ -40,6 +41,11 @@ namespace Graphics
 
 		void __create(const CreateInfo &createInfo);
 	};
+
+	constexpr VkRenderPass RenderPass::getHandle() const noexcept
+	{
+		return __handle;
+	}
 }
 
 module: private;

@@ -15,6 +15,7 @@ import ntmonkeys.com.Graphics.PipelineLayout;
 import ntmonkeys.com.Graphics.RenderPass;
 import ntmonkeys.com.Graphics.Pipeline;
 import ntmonkeys.com.Graphics.Framebuffer;
+import ntmonkeys.com.Graphics.CommandPool;
 import <vector>;
 import <memory>;
 import <stdexcept>;
@@ -55,8 +56,8 @@ namespace Graphics
 		struct GraphicsPipelineCreateInfo
 		{
 		public:
-			const PipelineLayout *pPipelineLayout{ };
-			const RenderPass *pRenderPass{ };
+			VkPipelineLayout hPipelineLayout{ };
+			VkRenderPass hRenderPass{ };
 			uint32_t subpassIndex{ };
 			uint32_t stageCount{ };
 			const VkPipelineShaderStageCreateInfo *pStages{ };
@@ -78,33 +79,36 @@ namespace Graphics
 		constexpr Queue &getQueue() noexcept;
 
 		[[nodiscard]]
-		std::unique_ptr<Surface> createSurface(const HINSTANCE hAppInstance, const HWND hwnd);
+		Surface *createSurface(const HINSTANCE hAppInstance, const HWND hwnd);
 
 		[[nodiscard]]
-		std::unique_ptr<Shader> createShader(const size_t codeSize, const uint32_t *const pCode);
+		Shader *createShader(const size_t codeSize, const uint32_t *const pCode);
 
 		[[nodiscard]]
-		std::unique_ptr<DescriptorSetLayout> createDescriptorSetLayout(
+		DescriptorSetLayout *createDescriptorSetLayout(
 			const uint32_t bindingCount, const VkDescriptorSetLayoutBinding *const pBindings);
 
 		[[nodiscard]]
-		std::unique_ptr<PipelineLayout> createPipelineLayout(
+		PipelineLayout *createPipelineLayout(
 			const uint32_t setLayoutCount, const VkDescriptorSetLayout *const pSetLayouts,
 			const uint32_t pushConstantRangeCount, const VkPushConstantRange *const pPushConstantRanges);
 
 		[[nodiscard]]
-		std::unique_ptr<RenderPass> createRenderPass(
+		RenderPass *createRenderPass(
 			const uint32_t attachmentCount, const VkAttachmentDescription2 *const pAttachments,
 			const uint32_t subpassCount, const VkSubpassDescription2 *const pSubpasses,
 			const uint32_t dependencyCount, const VkSubpassDependency2 *const pDependencies);
 
 		[[nodiscard]]
-		std::unique_ptr<Pipeline> createPipeline(const GraphicsPipelineCreateInfo &createInfo);
+		Pipeline *createPipeline(const GraphicsPipelineCreateInfo &createInfo);
 
 		[[nodiscard]]
-		std::unique_ptr<Framebuffer> createFramebuffer(
-			const RenderPass &renderPass, const uint32_t width, const uint32_t height,
+		Framebuffer *createFramebuffer(
+			const VkRenderPass hRenderPass, const uint32_t width, const uint32_t height,
 			const uint32_t attachmentCount, const Framebuffer::AttachmentInfo *const pAttachments);
+
+		[[nodiscard]]
+		CommandPool *createCommandPool();
 
 	private:
 		const VK::InstanceProc &__instanceProc;
@@ -155,7 +159,7 @@ namespace Graphics
 		__deviceProc.vkDestroyDevice(__handle, nullptr);
 	}
 
-	std::unique_ptr<Surface> LogicalDevice::createSurface(const HINSTANCE hAppInstance, const HWND hwnd)
+	Surface *LogicalDevice::createSurface(const HINSTANCE hAppInstance, const HWND hwnd)
 	{
 		const Surface::CreateInfo createInfo
 		{
@@ -169,10 +173,10 @@ namespace Graphics
 			.hwnd				{ hwnd }
 		};
 
-		return std::make_unique<Surface>(createInfo);
+		return new Surface{ createInfo };
 	}
 
-	std::unique_ptr<Shader> LogicalDevice::createShader(const size_t codeSize, const uint32_t *const pCode)
+	Shader *LogicalDevice::createShader(const size_t codeSize, const uint32_t *const pCode)
 	{
 		const Shader::CreateInfo createInfo
 		{
@@ -182,10 +186,10 @@ namespace Graphics
 			.pCode			{ pCode }
 		};
 
-		return std::make_unique<Shader>(createInfo);
+		return new Shader{ createInfo };
 	}
 
-	std::unique_ptr<DescriptorSetLayout> LogicalDevice::createDescriptorSetLayout(
+	DescriptorSetLayout *LogicalDevice::createDescriptorSetLayout(
 		const uint32_t bindingCount, const VkDescriptorSetLayoutBinding *const pBindings)
 	{
 		const DescriptorSetLayout::CreateInfo createInfo
@@ -196,10 +200,10 @@ namespace Graphics
 			.pBindings		{ pBindings }
 		};
 
-		return std::make_unique<DescriptorSetLayout>(createInfo);
+		return new DescriptorSetLayout{ createInfo };
 	}
 
-	std::unique_ptr<PipelineLayout> LogicalDevice::createPipelineLayout(
+	PipelineLayout *LogicalDevice::createPipelineLayout(
 		const uint32_t setLayoutCount,
 		const VkDescriptorSetLayout *const pSetLayouts,
 		const uint32_t pushConstantRangeCount,
@@ -215,10 +219,10 @@ namespace Graphics
 			.pPushConstantRanges		{ pPushConstantRanges }
 		};
 
-		return std::make_unique<PipelineLayout>(createInfo);
+		return new PipelineLayout{ createInfo };
 	}
 
-	std::unique_ptr<RenderPass> LogicalDevice::createRenderPass(
+	RenderPass *LogicalDevice::createRenderPass(
 		const uint32_t attachmentCount, const VkAttachmentDescription2 *const pAttachments,
 		const uint32_t subpassCount, const VkSubpassDescription2 *const pSubpasses,
 		const uint32_t dependencyCount, const VkSubpassDependency2 *const pDependencies)
@@ -235,18 +239,18 @@ namespace Graphics
 			.pDependencies		{ pDependencies }
 		};
 
-		return std::make_unique<RenderPass>(createInfo);
+		return new RenderPass{ createInfo };
 	}
 
-	std::unique_ptr<Pipeline> LogicalDevice::createPipeline(const GraphicsPipelineCreateInfo &createInfo)
+	Pipeline *LogicalDevice::createPipeline(const GraphicsPipelineCreateInfo &createInfo)
 	{
 		const Pipeline::GraphicsCreateInfo innerCreateInfo
 		{
 			.pDeviceProc			{ &__deviceProc },
 			.hDevice				{ __handle },
 			.hPipelineCache			{ __hPipelineCache },
-			.hPipelineLayout		{ createInfo.pPipelineLayout->__handle },
-			.hRenderPass			{ createInfo.pRenderPass->__handle },
+			.hPipelineLayout		{ createInfo.hPipelineLayout },
+			.hRenderPass			{ createInfo.hRenderPass },
 			.subpassIndex			{ createInfo.subpassIndex },
 			.stageCount				{ createInfo.stageCount },
 			.pStages				{ createInfo.pStages },
@@ -261,25 +265,37 @@ namespace Graphics
 			.pDynamicState			{ createInfo.pDynamicState }
 		};
 
-		return std::make_unique<Pipeline>(innerCreateInfo);
+		return new Pipeline{ innerCreateInfo };
 	}
 
-	std::unique_ptr<Framebuffer> LogicalDevice::createFramebuffer(
-		const RenderPass &renderPass, const uint32_t width, const uint32_t height,
+	Framebuffer *LogicalDevice::createFramebuffer(
+		const VkRenderPass hRenderPass, const uint32_t width, const uint32_t height,
 		const uint32_t attachmentCount, const Framebuffer::AttachmentInfo *const pAttachments)
 	{
 		const Framebuffer::CreateInfo createInfo
 		{
 			.pDeviceProc		{ &__deviceProc },
 			.hDevice			{ __handle },
-			.hRenderPass		{ renderPass.__handle },
+			.hRenderPass		{ hRenderPass },
 			.width				{ width },
 			.height				{ height },
 			.attachmentCount	{ attachmentCount },
 			.pAttachments		{ pAttachments }
 		}; 
 
-		return std::make_unique<Framebuffer>(createInfo);
+		return new Framebuffer{ createInfo };
+	}
+
+	CommandPool *LogicalDevice::createCommandPool()
+	{
+		const CommandPool::CreateInfo createInfo
+		{
+			.pDeviceProc		{ &__deviceProc },
+			.hDevice			{ __handle },
+			.queueFamilyIndex	{ __queueFamilyIndex }
+		}; 
+
+		return new CommandPool{ createInfo };
 	}
 
 	void LogicalDevice::__createDevice(const CreateInfo &createInfo)
@@ -422,6 +438,7 @@ namespace Graphics
 		LOAD_DEVICE_PROC(vkCreateSwapchainKHR);
 		LOAD_DEVICE_PROC(vkDestroySwapchainKHR);
 		LOAD_DEVICE_PROC(vkGetSwapchainImagesKHR);
+		LOAD_DEVICE_PROC(vkAcquireNextImage2KHR);
 
 		// Image view
 		LOAD_DEVICE_PROC(vkCreateImageView);
@@ -430,6 +447,23 @@ namespace Graphics
 		// Framebuffer
 		LOAD_DEVICE_PROC(vkCreateFramebuffer);
 		LOAD_DEVICE_PROC(vkDestroyFramebuffer);
+
+		// Command pool
+		LOAD_DEVICE_PROC(vkCreateCommandPool);
+		LOAD_DEVICE_PROC(vkDestroyCommandPool);
+		LOAD_DEVICE_PROC(vkAllocateCommandBuffers);
+		LOAD_DEVICE_PROC(vkResetCommandPool);
+
+		// Command buffer
+		LOAD_DEVICE_PROC(vkBeginCommandBuffer);
+		LOAD_DEVICE_PROC(vkEndCommandBuffer);
+		LOAD_DEVICE_PROC(vkCmdBeginRenderPass2);
+		LOAD_DEVICE_PROC(vkCmdEndRenderPass2);
+		LOAD_DEVICE_PROC(vkCmdBindPipeline);
+		LOAD_DEVICE_PROC(vkCmdSetViewport);
+		LOAD_DEVICE_PROC(vkCmdSetScissor);
+		LOAD_DEVICE_PROC(vkCmdDraw);
+		LOAD_DEVICE_PROC(vkCmdDrawIndexed);
 	}
 
 	void LogicalDevice::__retrieveQueue()

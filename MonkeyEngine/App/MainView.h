@@ -45,5 +45,7 @@ private:
 	std::unique_ptr<Engine::RenderTarget> __pRenderTarget;
 
 	int __createRenderTarget(const HINSTANCE hInstance);
+public:
+	afx_msg BOOL OnEraseBkgnd(CDC *pDC);
 };
 

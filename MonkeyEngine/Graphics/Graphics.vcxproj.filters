@@ -16,5 +16,7 @@
     <ClCompile Include="RenderPass.ixx" />
     <ClCompile Include="Pipeline.ixx" />
     <ClCompile Include="Framebuffer.ixx" />
+    <ClCompile Include="CommandPool.ixx" />
+    <ClCompile Include="CommandBuffer.ixx" />
   </ItemGroup>
 </Project>

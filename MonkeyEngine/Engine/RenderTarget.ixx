@@ -68,7 +68,7 @@ namespace Engine
 	RenderTarget::RenderTarget(const CreateInfo &createInfo) :
 		__logicalDevice{ *(createInfo.pLogicalDevice) }
 	{
-		__pSurface = __logicalDevice.createSurface(createInfo.hinstance, createInfo.hwnd);
+		__pSurface = std::unique_ptr<Graphics::Surface>{ __logicalDevice.createSurface(createInfo.hinstance, createInfo.hwnd) };
 		__validateSwapchainDependencies();
 	}
 
@@ -91,6 +91,11 @@ namespace Engine
 		if (!(isPresentable()))
 			return;
 
-		__pSwapchain = __pSurface->createSwapchain(VkImageUsageFlagBits::VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, true, std::move(pOldSwapchain));
+		__pSwapchain = std::unique_ptr<Graphics::Swapchain>
+		{
+			__pSurface->createSwapchain(
+				VkImageUsageFlagBits::VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
+				true, pOldSwapchain.get())
+		};
 	}
 }

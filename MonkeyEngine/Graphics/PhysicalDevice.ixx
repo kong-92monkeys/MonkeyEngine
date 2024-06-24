@@ -38,7 +38,7 @@ namespace Graphics
 		explicit PhysicalDevice(const MakeInfo &makeInfo) noexcept;
 
 		[[nodiscard]]
-		std::unique_ptr<LogicalDevice> createLogicalDevice() const;
+		LogicalDevice *createLogicalDevice() const;
 
 	private:
 		const VK::InstanceProc &__instanceProc;
@@ -95,7 +95,7 @@ namespace Graphics
 		__resolveQueueFamilyIndex();
 	}
 
-	std::unique_ptr<LogicalDevice> PhysicalDevice::createLogicalDevice() const
+	LogicalDevice *PhysicalDevice::createLogicalDevice() const
 	{
 		const LogicalDevice::CreateInfo createInfo
 		{
@@ -121,7 +121,7 @@ namespace Graphics
 			.pExtensionMap				{ &__extensionMap }
 		};
 
-		return std::make_unique<LogicalDevice>(createInfo);
+		return new LogicalDevice{ createInfo };
 	}
 
 	void PhysicalDevice::__resolveProps() noexcept

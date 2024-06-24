@@ -9,22 +9,23 @@ import ntmonkeys.com.Graphics.RenderPass;
 import ntmonkeys.com.Graphics.Shader;
 import ntmonkeys.com.Graphics.Pipeline;
 import ntmonkeys.com.Graphics.LogicalDevice;
-import ntmonkeys.com.Frameworks.FrameworkRenderer;
+import ntmonkeys.com.Frameworks.Renderer;
 import <memory>;
 import <array>;
 
 namespace Frameworks
 {
-	export class TriangleRenderer : public FrameworkRenderer
+	export class TriangleRenderer : public Renderer
 	{
 	public:
 		virtual ~TriangleRenderer() noexcept override;
 
-		virtual void init() override;
+		[[nodiscard]]
+		virtual RenderPassType getRenderPassType() const noexcept override;
+		virtual void bind(Graphics::CommandBuffer &commandBuffer) noexcept override;
 
 	protected:
-		[[nodiscard]]
-		virtual const Graphics::Pipeline &_getPipeline() const noexcept override;
+		virtual void _onInit() override;
 
 	private:
 		std::unique_ptr<Graphics::DescriptorSetLayout> __pDescriptorSetLayout;
@@ -51,16 +52,21 @@ namespace Frameworks
 		__pPipelineLayout = nullptr;
 	}
 
-	void TriangleRenderer::init()
+	RenderPassType TriangleRenderer::getRenderPassType() const noexcept
+	{
+		return RenderPassType::COLOR;
+	}
+
+	void TriangleRenderer::bind(Graphics::CommandBuffer &commandBuffer) noexcept
+	{
+		// TODO: bind pipeline
+	}
+
+	void TriangleRenderer::_onInit()
 	{
 		__createPipelineLayout();
 		__createShaders();
 		__createPipeline();
-	}
-
-	const Graphics::Pipeline &TriangleRenderer::_getPipeline() const noexcept
-	{
-		return *__pPipeline;
 	}
 
 	void TriangleRenderer::__createPipelineLayout()
@@ -167,8 +173,8 @@ namespace Frameworks
 
 		const Graphics::LogicalDevice::GraphicsPipelineCreateInfo createInfo
 		{
-			.pPipelineLayout		{ __pPipelineLayout.get() },
-			.pRenderPass			{ &(_getRenderPass(RenderPassType::COLOR)) },
+			.hPipelineLayout		{ __pPipelineLayout->getHandle() },
+			.hRenderPass			{ _getRenderPass().getHandle() },
 			.subpassIndex			{ 0U },
 			.stageCount				{ static_cast<uint32_t>(stages.size()) },
 			.pStages				{ stages.data() },

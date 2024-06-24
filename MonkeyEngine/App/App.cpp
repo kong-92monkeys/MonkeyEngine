@@ -97,7 +97,7 @@ int CApp::ExitInstance()
 
 void CApp::__onInitBeforeMainFrame()
 {
-	__pAssetManager = std::make_unique<Engine::AssetManager>();
+	__pAssetManager = std::make_unique<Frameworks::AssetManager>();
 	__pAssetManager->setRootPath("Assets");
 
 	__createGraphicsCore();
@@ -105,9 +105,9 @@ void CApp::__onInitBeforeMainFrame()
 
 	__pRenderPassFactory = std::make_unique<Frameworks::RenderPassFactory>(*__pRenderingEngine);
 	__pFramebufferFactory = std::make_unique<Frameworks::FramebufferFactory>(*__pRenderingEngine, *__pRenderPassFactory);
-	__pRendererFactory = std::make_unique<Frameworks::RendererFactory>(*__pRenderingEngine, *__pRenderPassFactory);
+	__pRendererFactory = std::make_unique<Frameworks::RendererFactory>(*__pRenderingEngine, *__pAssetManager, *__pRenderPassFactory);
 
-	__pTriangleRenderer = __pRendererFactory->createRenderer<Frameworks::TriangleRenderer>();
+	__pTriangleRenderer = std::unique_ptr<Frameworks::TriangleRenderer>{ __pRendererFactory->createRenderer<Frameworks::TriangleRenderer>() };
 
 	__pFramebufferFactory->invalidate(400, 300);
 	auto &a = __pFramebufferFactory->getInstance(Frameworks::RenderPassType::COLOR);
@@ -119,12 +119,9 @@ void CApp::__createGraphicsCore()
 	{
 		const Engine::Core::CreateInfo createInfo
 		{
-			.pAssetManager			{ __pAssetManager.get() },
 			.vulkanLoaderLibName	{ "vulkan_loader_dedicated-1.dll" },
-
 			.appName				{ "MonkeyEngineDemo" },
 			.appVersion				{ 0U, 0U, 1U, 0U },
-			
 			.engineName				{ "MonkeyEngine" },
 			.engineVersion			{ 0U, 0U, 1U, 0U }
 		};
@@ -147,7 +144,7 @@ void CApp::__createRenderingEngine()
 {
 	try
 	{
-		__pRenderingEngine = __pCore->createEngine();
+		__pRenderingEngine = std::unique_ptr<Engine::RenderingEngine>{ __pCore->createEngine() };
 	}
 	catch (const std::runtime_error &e)
 	{

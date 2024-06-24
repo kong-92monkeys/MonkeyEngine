@@ -19,6 +19,8 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="CommandBuffer.ixx" />
+    <ClCompile Include="CommandPool.ixx" />
     <ClCompile Include="ConversionUtil.ixx" />
     <ClCompile Include="DescriptorSetLayout.ixx" />
     <ClCompile Include="Framebuffer.ixx" />

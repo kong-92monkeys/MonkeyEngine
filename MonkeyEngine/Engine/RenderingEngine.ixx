@@ -1,23 +1,23 @@
 module;
 
 #include "../Vulkan/Vulkan.h"
-#include <shaderc/shaderc.hpp>
 
 export module ntmonkeys.com.Engine.RenderingEngine;
 
 import ntmonkeys.com.Lib.Unique;
 import ntmonkeys.com.Graphics.PhysicalDevice;
 import ntmonkeys.com.Graphics.LogicalDevice;
+import ntmonkeys.com.Graphics.Shader;
+import ntmonkeys.com.Graphics.DescriptorSetLayout;
+import ntmonkeys.com.Graphics.PipelineLayout;
 import ntmonkeys.com.Graphics.RenderPass;
 import ntmonkeys.com.Graphics.Framebuffer;
+import ntmonkeys.com.Graphics.Pipeline;
 import ntmonkeys.com.Graphics.ConversionUtil;
-import ntmonkeys.com.Engine.AssetManager;
 import ntmonkeys.com.Engine.RenderTarget;
-import ntmonkeys.com.Engine.Renderer;
-import <optional>;
+import ntmonkeys.com.Engine.CommandExecutor;
 import <stdexcept>;
 import <memory>;
-import <format>;
 import <concepts>;
 
 namespace Engine
@@ -29,49 +29,54 @@ namespace Engine
 		{
 		public:
 			const Graphics::PhysicalDevice *pPhysicalDevice{ };
-			const AssetManager *pAssetManager{ };
 		};
 
 		explicit RenderingEngine(const CreateInfo &createInfo);
 		virtual ~RenderingEngine() noexcept override;
 
 		[[nodiscard]]
-		std::unique_ptr<RenderTarget> createRenderTarget(const HINSTANCE hinstance, const HWND hwnd);
+		RenderTarget *createRenderTarget(const HINSTANCE hinstance, const HWND hwnd);
 
 		[[nodiscard]]
-		std::unique_ptr<Graphics::RenderPass> createRenderPass(
+		Graphics::Shader *createShader(const size_t codeSize, const uint32_t *const pCode);
+
+		[[nodiscard]]
+		Graphics::DescriptorSetLayout *createDescriptorSetLayout(
+			const uint32_t bindingCount, const VkDescriptorSetLayoutBinding *const pBindings);
+
+		[[nodiscard]]
+		Graphics::PipelineLayout *createPipelineLayout(
+			const uint32_t setLayoutCount, const VkDescriptorSetLayout *const pSetLayouts,
+			const uint32_t pushConstantRangeCount, const VkPushConstantRange *const pPushConstantRanges);
+
+		[[nodiscard]]
+		Graphics::RenderPass *createRenderPass(
 			const uint32_t attachmentCount, const VkAttachmentDescription2 *const pAttachments,
 			const uint32_t subpassCount, const VkSubpassDescription2 *const pSubpasses,
 			const uint32_t dependencyCount, const VkSubpassDependency2 *const pDependencies);
 
 		[[nodiscard]]
-		std::unique_ptr<Graphics::Framebuffer> createFramebuffer(
-			const Graphics::RenderPass &renderPass, const uint32_t width, const uint32_t height,
+		Graphics::Framebuffer *createFramebuffer(
+			const VkRenderPass hRenderPass, const uint32_t width, const uint32_t height,
 			const uint32_t attachmentCount, const Graphics::Framebuffer::AttachmentInfo *const pAttachments);
 
-		template <std::derived_from<Renderer> $Renderer, typename ...$Args>
 		[[nodiscard]]
-		std::unique_ptr<$Renderer> createRenderer($Args &&...args);
+		Graphics::Pipeline *createPipeline(const Graphics::LogicalDevice::GraphicsPipelineCreateInfo &createInfo);
+
+		[[nodiscard]]
+		constexpr CommandExecutor &getCommandExecutor() noexcept;
 
 	private:
 		const Graphics::PhysicalDevice &__physicalDevice;
-		const AssetManager &__assetManager;
 
 		std::unique_ptr<Graphics::LogicalDevice> __pLogicalDevice;
+		std::unique_ptr<CommandExecutor> __pCommandExecutor;
 	};
 
-	template <std::derived_from<Renderer> $Renderer, typename ...$Args>
-	std::unique_ptr<$Renderer> RenderingEngine::createRenderer($Args &&...args)
+	[[nodiscard]]
+	constexpr CommandExecutor &RenderingEngine::getCommandExecutor() noexcept
 	{
-		const Renderer::DependencyInfo dependencyInfo
-		{
-			.pLogicalDevice	{ __pLogicalDevice.get() },
-			.pAssetManager	{ &__assetManager }
-		};
-
-		auto retVal{ std::make_unique<$Renderer>(std::forward<$Args>(args)...) };
-		retVal->injectDependencies(dependencyInfo);
-		return retVal;
+		return *__pCommandExecutor;
 	}
 }
 
@@ -80,18 +85,19 @@ module: private;
 namespace Engine
 {
 	RenderingEngine::RenderingEngine(const CreateInfo &createInfo) :
-		__physicalDevice	{ *(createInfo.pPhysicalDevice) },
-		__assetManager		{ *(createInfo.pAssetManager) }
+		__physicalDevice{ *(createInfo.pPhysicalDevice) }
 	{
-		__pLogicalDevice = __physicalDevice.createLogicalDevice();
+		__pLogicalDevice = std::unique_ptr<Graphics::LogicalDevice>{ __physicalDevice.createLogicalDevice() };
+		__pCommandExecutor = std::make_unique<CommandExecutor>(*__pLogicalDevice);
 	}
 
 	RenderingEngine::~RenderingEngine() noexcept
 	{
+		__pCommandExecutor = nullptr;
 		__pLogicalDevice = nullptr;
 	}
 
-	std::unique_ptr<RenderTarget> RenderingEngine::createRenderTarget(const HINSTANCE hinstance, const HWND hwnd)
+	RenderTarget *RenderingEngine::createRenderTarget(const HINSTANCE hinstance, const HWND hwnd)
 	{
 		const RenderTarget::CreateInfo createInfo
 		{
@@ -100,10 +106,29 @@ namespace Engine
 			.hwnd			{ hwnd }
 		};
 
-		return std::make_unique<RenderTarget>(createInfo);
+		return new RenderTarget{ createInfo };
 	}
 
-	std::unique_ptr<Graphics::RenderPass> RenderingEngine::createRenderPass(
+	Graphics::Shader *RenderingEngine::createShader(const size_t codeSize, const uint32_t *const pCode)
+	{
+		return __pLogicalDevice->createShader(codeSize, pCode);
+	}
+
+	Graphics::DescriptorSetLayout *RenderingEngine::createDescriptorSetLayout(
+		const uint32_t bindingCount, const VkDescriptorSetLayoutBinding *const pBindings)
+	{
+		return __pLogicalDevice->createDescriptorSetLayout(bindingCount, pBindings);
+	}
+
+	Graphics::PipelineLayout *RenderingEngine::createPipelineLayout(
+		const uint32_t setLayoutCount, const VkDescriptorSetLayout *const pSetLayouts,
+		const uint32_t pushConstantRangeCount, const VkPushConstantRange *const pPushConstantRanges)
+	{
+		return __pLogicalDevice->createPipelineLayout(
+			setLayoutCount, pSetLayouts, pushConstantRangeCount, pPushConstantRanges);
+	}
+
+	Graphics::RenderPass *RenderingEngine::createRenderPass(
 		const uint32_t attachmentCount, const VkAttachmentDescription2 *const pAttachments,
 		const uint32_t subpassCount, const VkSubpassDescription2 *const pSubpasses,
 		const uint32_t dependencyCount, const VkSubpassDependency2 *const pDependencies)
@@ -114,10 +139,15 @@ namespace Engine
 			dependencyCount, pDependencies);
 	}
 
-	std::unique_ptr<Graphics::Framebuffer> RenderingEngine::createFramebuffer(
-		const Graphics::RenderPass &renderPass, const uint32_t width, const uint32_t height,
+	Graphics::Framebuffer *RenderingEngine::createFramebuffer(
+		const VkRenderPass hRenderPass, const uint32_t width, const uint32_t height,
 		const uint32_t attachmentCount, const Graphics::Framebuffer::AttachmentInfo *const pAttachments)
 	{
-		return __pLogicalDevice->createFramebuffer(renderPass, width, height, attachmentCount, pAttachments);
+		return __pLogicalDevice->createFramebuffer(hRenderPass, width, height, attachmentCount, pAttachments);
+	}
+
+	Graphics::Pipeline *RenderingEngine::createPipeline(const Graphics::LogicalDevice::GraphicsPipelineCreateInfo &createInfo)
+	{
+		return __pLogicalDevice->createPipeline(createInfo);
 	}
 }

@@ -10,9 +10,9 @@
 #include "resource.h"       // main symbols
 import <memory>;
 import ntmonkeys.com.Lib.Event;
-import ntmonkeys.com.Engine.AssetManager;
 import ntmonkeys.com.Engine.Core;
 import ntmonkeys.com.Engine.RenderingEngine;
+import ntmonkeys.com.Frameworks.AssetManager;
 import ntmonkeys.com.Frameworks.RenderPassFactory;
 import ntmonkeys.com.Frameworks.FramebufferFactory;
 import ntmonkeys.com.Frameworks.RendererFactory;
@@ -47,10 +47,10 @@ public:
 	constexpr Lib::EventView<> &getIdleEvent() const noexcept;
 
 private:
-	std::unique_ptr<Engine::AssetManager> __pAssetManager;
 	std::unique_ptr<Engine::Core> __pCore;
 	std::unique_ptr<Engine::RenderingEngine> __pRenderingEngine;
 
+	std::unique_ptr<Frameworks::AssetManager> __pAssetManager;
 	std::unique_ptr<Frameworks::RenderPassFactory> __pRenderPassFactory;
 	std::unique_ptr<Frameworks::FramebufferFactory> __pFramebufferFactory;
 	std::unique_ptr<Frameworks::RendererFactory> __pRendererFactory;
