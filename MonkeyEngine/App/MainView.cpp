@@ -53,8 +53,8 @@ void CMainView::OnPaint()
 {
 	ValidateRect(nullptr);
 
-	auto &renderSystem{ theApp.getRenderSystem() };
-	renderSystem.render(*__pWindow);
+	auto &renderingEngine{ theApp.getRenderingEngine() };
+	renderingEngine.render(*__pRenderTarget);
 }
 
 int CMainView::OnCreate(LPCREATESTRUCT lpCreateStruct)
@@ -63,23 +63,23 @@ int CMainView::OnCreate(LPCREATESTRUCT lpCreateStruct)
 		return -1;
 
 	// TODO:  Add your specialized creation code here
-	if (__createWindow(lpCreateStruct->hInstance) == -1)
+	if (__createRenderTarget(lpCreateStruct->hInstance) == -1)
 		return -1;
 
-	Lib::Logger::log(Lib::Logger::Severity::INFO, "Main window created.");
+	Lib::Logger::log(Lib::Logger::Severity::INFO, "Main view created.");
 
 	return 0;
 }
 
-int CMainView::__createWindow(const HINSTANCE hInstance)
+int CMainView::__createRenderTarget(const HINSTANCE hInstance)
 {
-	auto &renderSystem{ theApp.getRenderSystem() };
+	auto &renderingEngine{ theApp.getRenderingEngine() };
 
 	try
 	{
-		__pWindow = std::unique_ptr<Frameworks::Window>{ renderSystem.createWindow(hInstance, GetSafeHwnd()) };
-		__pLayer = std::unique_ptr<Frameworks::Layer>{ renderSystem.createLayer() };
-		__pWindow->addLayer(*__pLayer);
+		__pRenderTarget = std::unique_ptr<Engine::RenderTarget>{ renderingEngine.createRenderTarget(hInstance, GetSafeHwnd()) };
+		__pLayer = std::unique_ptr<Engine::Layer>{ renderingEngine.createLayer() };
+		__pRenderTarget->addLayer(*__pLayer);
 		return 0;
 	}
 	catch (...)
@@ -90,9 +90,9 @@ int CMainView::__createWindow(const HINSTANCE hInstance)
 
 void CMainView::OnDestroy()
 {
-	__pWindow->removeLayer(*__pLayer);
+	__pRenderTarget->removeLayer(*__pLayer);
 	__pLayer = nullptr;
-	__pWindow = nullptr;
+	__pRenderTarget = nullptr;
 	CWnd::OnDestroy();
 }
 
@@ -102,7 +102,7 @@ void CMainView::OnSize(UINT nType, int cx, int cy)
 	CWnd::OnSize(nType, cx, cy);
 
 	// TODO: Add your message handler code here
-	__pWindow->sync();
+	__pRenderTarget->sync();
 }
 
 BOOL CMainView::OnEraseBkgnd(CDC *pDC)

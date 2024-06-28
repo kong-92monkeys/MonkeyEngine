@@ -20,6 +20,7 @@ namespace Graphics
 		public:
 			const VK::DeviceProc *pDeviceProc{ };
 			VkDevice hDevice{ };
+			VkCommandPoolCreateFlags flags{ };
 			uint32_t queueFamilyIndex{ };
 		};
 
@@ -98,7 +99,7 @@ namespace Graphics
 		const VkCommandPoolCreateInfo vkCreateInfo
 		{
 			.sType				{ VkStructureType::VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO },
-			.flags				{ VkCommandPoolCreateFlagBits::VK_COMMAND_POOL_CREATE_TRANSIENT_BIT },
+			.flags				{ createInfo.flags },
 			.queueFamilyIndex	{ createInfo.queueFamilyIndex }
 		};
 

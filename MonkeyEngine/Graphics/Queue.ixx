@@ -25,6 +25,7 @@ namespace Graphics
 		Queue(const CreateInfo &createInfo) noexcept;
 
 		VkResult waitIdle() noexcept;
+		VkResult submit(const uint32_t submitCount, const VkSubmitInfo2 *const pSubmits, const VkFence hFence);
 
 	private:
 		const VK::DeviceProc &__deviceProc;
@@ -52,6 +53,11 @@ namespace Graphics
 	VkResult Queue::waitIdle() noexcept
 	{
 		return __deviceProc.vkQueueWaitIdle(__handle);
+	}
+
+	VkResult Queue::submit(const uint32_t submitCount, const VkSubmitInfo2 *const pSubmits, const VkFence hFence)
+	{
+		return __deviceProc.vkQueueSubmit2(__handle, submitCount, pSubmits, hFence);
 	}
 
 	void Queue::__retrieve(const VkDevice hDevice)

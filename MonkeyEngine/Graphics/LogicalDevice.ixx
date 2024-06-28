@@ -15,6 +15,8 @@ import ntmonkeys.com.Graphics.PipelineLayout;
 import ntmonkeys.com.Graphics.RenderPass;
 import ntmonkeys.com.Graphics.Pipeline;
 import ntmonkeys.com.Graphics.Framebuffer;
+import ntmonkeys.com.Graphics.Semaphore;
+import ntmonkeys.com.Graphics.Fence;
 import ntmonkeys.com.Graphics.CommandPool;
 import <vector>;
 import <memory>;
@@ -108,7 +110,13 @@ namespace Graphics
 			const uint32_t attachmentCount, const Framebuffer::AttachmentInfo *const pAttachments);
 
 		[[nodiscard]]
-		CommandPool *createCommandPool();
+		Semaphore *createSemaphore(const VkSemaphoreType type, const uint64_t initialValue);
+
+		[[nodiscard]]
+		Fence *createFence(const bool signaled);
+
+		[[nodiscard]]
+		CommandPool *createCommandPool(const VkCommandPoolCreateFlags flags);
 
 	private:
 		const VK::InstanceProc &__instanceProc;
@@ -286,12 +294,38 @@ namespace Graphics
 		return new Framebuffer{ createInfo };
 	}
 
-	CommandPool *LogicalDevice::createCommandPool()
+	Semaphore *LogicalDevice::createSemaphore(const VkSemaphoreType type, const uint64_t initialValue)
+	{
+		const Semaphore::CreateInfo createInfo
+		{
+			.pDeviceProc		{ &__deviceProc },
+			.hDevice			{ __handle },
+			.type				{ type },
+			.initialValue		{ initialValue }
+		}; 
+
+		return new Semaphore{ createInfo };
+	}
+
+	Fence *LogicalDevice::createFence(const bool signaled)
+	{
+		const Fence::CreateInfo createInfo
+		{
+			.pDeviceProc	{ &__deviceProc },
+			.hDevice		{ __handle },
+			.signaled		{ signaled }
+		}; 
+
+		return new Fence{ createInfo };
+	}
+
+	CommandPool *LogicalDevice::createCommandPool(const VkCommandPoolCreateFlags flags)
 	{
 		const CommandPool::CreateInfo createInfo
 		{
 			.pDeviceProc		{ &__deviceProc },
 			.hDevice			{ __handle },
+			.flags				{ flags },
 			.queueFamilyIndex	{ __queueFamilyIndex }
 		}; 
 
@@ -447,6 +481,14 @@ namespace Graphics
 		// Framebuffer
 		LOAD_DEVICE_PROC(vkCreateFramebuffer);
 		LOAD_DEVICE_PROC(vkDestroyFramebuffer);
+
+		// Semaphore
+		LOAD_DEVICE_PROC(vkCreateSemaphore);
+		LOAD_DEVICE_PROC(vkDestroySemaphore);
+
+		// Fence
+		LOAD_DEVICE_PROC(vkCreateFence);
+		LOAD_DEVICE_PROC(vkDestroyFence);
 
 		// Command pool
 		LOAD_DEVICE_PROC(vkCreateCommandPool);

@@ -23,6 +23,7 @@
     <ClCompile Include="CommandPool.ixx" />
     <ClCompile Include="ConversionUtil.ixx" />
     <ClCompile Include="DescriptorSetLayout.ixx" />
+    <ClCompile Include="Fence.ixx" />
     <ClCompile Include="Framebuffer.ixx" />
     <ClCompile Include="Image.ixx" />
     <ClCompile Include="ImageView.ixx" />
@@ -33,6 +34,7 @@
     <ClCompile Include="Queue.ixx" />
     <ClCompile Include="RenderContext.ixx" />
     <ClCompile Include="RenderPass.ixx" />
+    <ClCompile Include="Semaphore.ixx" />
     <ClCompile Include="Shader.ixx" />
     <ClCompile Include="Surface.ixx" />
     <ClCompile Include="Swapchain.ixx" />

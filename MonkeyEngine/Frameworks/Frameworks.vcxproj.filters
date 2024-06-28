@@ -4,29 +4,10 @@
     <Filter Include="Renderer">
       <UniqueIdentifier>{bed11dc8-c97e-4352-8dc1-0cfb2a5e5b78}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Renderer\Impl">
-      <UniqueIdentifier>{270fc59f-02ed-4bc5-860b-f5bb5f5c7cbc}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Util">
-      <UniqueIdentifier>{e07de989-bc45-489d-b775-672dc42ddac7}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="RenderPassFactory.ixx" />
-    <ClCompile Include="Renderer.ixx">
+    <ClCompile Include="TriangleRenderer.ixx">
       <Filter>Renderer</Filter>
     </ClCompile>
-    <ClCompile Include="TriangleRenderer.ixx">
-      <Filter>Renderer\Impl</Filter>
-    </ClCompile>
-    <ClCompile Include="RendererFactory.ixx" />
-    <ClCompile Include="FramebufferFactory.ixx" />
-    <ClCompile Include="Window.ixx" />
-    <ClCompile Include="Layer.ixx" />
-    <ClCompile Include="AssetManager.ixx" />
-    <ClCompile Include="ShaderIncluder.ixx">
-      <Filter>Util</Filter>
-    </ClCompile>
-    <ClCompile Include="RenderSystem.ixx" />
   </ItemGroup>
 </Project>

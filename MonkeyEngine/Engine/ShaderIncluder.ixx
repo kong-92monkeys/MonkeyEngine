@@ -2,14 +2,14 @@ module;
 
 #include <shaderc/shaderc.hpp>
 
-export module ntmonkeys.com.Frameworks.ShaderIncluder;
+export module ntmonkeys.com.Engine.ShaderIncluder;
 import <fstream>;
 import <sstream>;
 import <string>;
 import <format>;
 import <filesystem>;
 
-namespace Frameworks
+namespace Engine
 {
     export class ShaderIncluder : public shaderc::CompileOptions::IncluderInterface
     {
@@ -40,7 +40,7 @@ namespace Frameworks
 
 module: private;
 
-namespace Frameworks
+namespace Engine
 {
     shaderc_include_result *ShaderIncluder::GetInclude(
         const char *const requested_source,

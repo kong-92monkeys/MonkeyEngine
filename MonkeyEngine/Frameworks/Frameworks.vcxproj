@@ -19,16 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="AssetManager.ixx" />
-    <ClCompile Include="FramebufferFactory.ixx" />
-    <ClCompile Include="Renderer.ixx" />
-    <ClCompile Include="Layer.ixx" />
-    <ClCompile Include="RendererFactory.ixx" />
-    <ClCompile Include="RenderPassFactory.ixx" />
-    <ClCompile Include="RenderSystem.ixx" />
-    <ClCompile Include="ShaderIncluder.ixx" />
     <ClCompile Include="TriangleRenderer.ixx" />
-    <ClCompile Include="Window.ixx" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Engine\Engine.vcxproj">

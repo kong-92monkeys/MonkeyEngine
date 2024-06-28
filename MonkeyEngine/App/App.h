@@ -10,10 +10,9 @@
 #include "resource.h"       // main symbols
 import <memory>;
 import ntmonkeys.com.Lib.Event;
+import ntmonkeys.com.Lib.AssetManager;
 import ntmonkeys.com.Engine.Core;
 import ntmonkeys.com.Engine.RenderingEngine;
-import ntmonkeys.com.Frameworks.AssetManager;
-import ntmonkeys.com.Frameworks.RenderSystem;
 import ntmonkeys.com.Frameworks.TriangleRenderer;
 
 // CApp:
@@ -39,17 +38,17 @@ public:
 
 public:
 	[[nodiscard]]
-	constexpr Frameworks::RenderSystem &getRenderSystem() noexcept;
+	constexpr Engine::RenderingEngine &getRenderingEngine() noexcept;
 
 	[[nodiscard]]
 	constexpr Lib::EventView<> &getIdleEvent() const noexcept;
 
 private:
+	std::unique_ptr<Lib::AssetManager> __pAssetManager;
+
 	std::unique_ptr<Engine::Core> __pCore;
 	std::unique_ptr<Engine::RenderingEngine> __pRenderingEngine;
-	std::unique_ptr<Frameworks::AssetManager> __pAssetManager;
 
-	std::unique_ptr<Frameworks::RenderSystem> __pRenderSystem;
 	std::unique_ptr<Frameworks::TriangleRenderer> __pTriangleRenderer;
 
 	mutable Lib::Event<> __idleEvent;
@@ -64,9 +63,9 @@ public:
 
 extern CApp theApp;
 
-constexpr Frameworks::RenderSystem &CApp::getRenderSystem() noexcept
+constexpr Engine::RenderingEngine &CApp::getRenderingEngine() noexcept
 {
-	return *__pRenderSystem;
+	return *__pRenderingEngine;
 }
 
 constexpr Lib::EventView<> &CApp::getIdleEvent() const noexcept

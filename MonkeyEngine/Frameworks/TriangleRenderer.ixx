@@ -9,19 +9,20 @@ import ntmonkeys.com.Graphics.RenderPass;
 import ntmonkeys.com.Graphics.Shader;
 import ntmonkeys.com.Graphics.Pipeline;
 import ntmonkeys.com.Graphics.LogicalDevice;
-import ntmonkeys.com.Frameworks.Renderer;
+import ntmonkeys.com.Engine.Renderer;
+import ntmonkeys.com.Engine.RenderPassFactory;
 import <memory>;
 import <array>;
 
 namespace Frameworks
 {
-	export class TriangleRenderer : public Renderer
+	export class TriangleRenderer : public Engine::Renderer
 	{
 	public:
 		virtual ~TriangleRenderer() noexcept override;
 
 		[[nodiscard]]
-		virtual RenderPassType getRenderPassType() const noexcept override;
+		virtual Engine::RenderPassType getRenderPassType() const noexcept override;
 		virtual void bind(Graphics::CommandBuffer &commandBuffer) noexcept override;
 
 	protected:
@@ -52,9 +53,9 @@ namespace Frameworks
 		__pPipelineLayout = nullptr;
 	}
 
-	RenderPassType TriangleRenderer::getRenderPassType() const noexcept
+	Engine::RenderPassType TriangleRenderer::getRenderPassType() const noexcept
 	{
-		return RenderPassType::COLOR;
+		return Engine::RenderPassType::COLOR;
 	}
 
 	void TriangleRenderer::bind(Graphics::CommandBuffer &commandBuffer) noexcept

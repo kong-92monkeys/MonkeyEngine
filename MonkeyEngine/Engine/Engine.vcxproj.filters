@@ -4,7 +4,26 @@
     <ClCompile Include="Core.ixx" />
     <ClCompile Include="RenderingEngine.ixx" />
     <ClCompile Include="RenderTarget.ixx" />
-    <ClCompile Include="CommandBufferCirculator.ixx" />
-    <ClCompile Include="CommandExecutor.ixx" />
+    <ClCompile Include="RenderPassFactory.ixx" />
+    <ClCompile Include="ShaderIncluder.ixx">
+      <Filter>Util</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer.ixx" />
+    <ClCompile Include="FramebufferFactory.ixx" />
+    <ClCompile Include="Layer.ixx" />
+    <ClCompile Include="CommandBufferCirculator.ixx">
+      <Filter>Circulator</Filter>
+    </ClCompile>
+    <ClCompile Include="SemaphoreCirculator.ixx">
+      <Filter>Circulator</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Util">
+      <UniqueIdentifier>{64304623-f5ba-4bec-a345-890f993445d2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Circulator">
+      <UniqueIdentifier>{654302a8-7940-4ee7-98a6-d9821f04df0e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
 </Project>

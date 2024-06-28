@@ -3,8 +3,10 @@ module;
 #include "../Vulkan/Vulkan.h"
 #include <shaderc/shaderc.hpp>
 
-export module ntmonkeys.com.Frameworks.Renderer;
+export module ntmonkeys.com.Engine.Renderer;
+
 import ntmonkeys.com.Lib.Unique;
+import ntmonkeys.com.Lib.AssetManager;
 import ntmonkeys.com.Graphics.LogicalDevice;
 import ntmonkeys.com.Graphics.RenderPass;
 import ntmonkeys.com.Graphics.CommandBuffer;
@@ -13,17 +15,15 @@ import ntmonkeys.com.Graphics.DescriptorSetLayout;
 import ntmonkeys.com.Graphics.PipelineLayout;
 import ntmonkeys.com.Graphics.RenderPass;
 import ntmonkeys.com.Graphics.Pipeline;
-import ntmonkeys.com.Engine.RenderingEngine;
-import ntmonkeys.com.Frameworks.AssetManager;
-import ntmonkeys.com.Frameworks.ShaderIncluder;
-import ntmonkeys.com.Frameworks.RenderPassFactory;
+import ntmonkeys.com.Engine.ShaderIncluder;
+import ntmonkeys.com.Engine.RenderPassFactory;
 import <vector>;
 import <string>;
 import <memory>;
 import <stdexcept>;
 import <format>;
 
-namespace Frameworks
+namespace Engine
 {
 	export class Renderer : public Lib::Unique
 	{
@@ -31,8 +31,8 @@ namespace Frameworks
 		struct InitInfo
 		{
 		public:
-			Engine::RenderingEngine * pEngine{ };
-			const AssetManager *pAssetManager{ };
+			Graphics::LogicalDevice *pDevice{ };
+			const Lib::AssetManager *pAssetManager{ };
 			const RenderPassFactory *pRenderPassFactory{ };
 		};
 
@@ -68,8 +68,8 @@ namespace Frameworks
 		virtual void _onInit() = 0;
 
 	private:
-		Engine::RenderingEngine *__pEngine{ };
-		const AssetManager *__pAssetManager{ };
+		Graphics::LogicalDevice *__pDevice{ };
+		const Lib::AssetManager *__pAssetManager{ };
 		const RenderPassFactory *__pRenderPassFactory{ };
 
 		[[nodiscard]]
@@ -82,11 +82,11 @@ namespace Frameworks
 
 module: private;
 
-namespace Frameworks
+namespace Engine
 {
 	void Renderer::init(const InitInfo &info)
 	{
-		__pEngine				= info.pEngine;
+		__pDevice				= info.pDevice;
 		__pAssetManager			= info.pAssetManager;
 		__pRenderPassFactory	= info.pRenderPassFactory;
 
@@ -98,7 +98,7 @@ namespace Frameworks
 	{
 		return std::unique_ptr<Graphics::DescriptorSetLayout>
 		{
-			__pEngine->createDescriptorSetLayout(bindingCount, pBindings)
+			__pDevice->createDescriptorSetLayout(bindingCount, pBindings)
 		};
 	}
 
@@ -108,7 +108,7 @@ namespace Frameworks
 	{
 		return std::unique_ptr<Graphics::PipelineLayout>
 		{
-			__pEngine->createPipelineLayout(
+			__pDevice->createPipelineLayout(
 				setLayoutCount, pSetLayouts,
 				pushConstantRangeCount, pPushConstantRanges)
 		};
@@ -119,13 +119,13 @@ namespace Frameworks
 		const auto code{ __readShaderFile(assetPath) };
 		return std::unique_ptr<Graphics::Shader>
 		{
-			__pEngine->createShader(code.size() * sizeof(uint32_t), code.data())
+			__pDevice->createShader(code.size() * sizeof(uint32_t), code.data())
 		};
 	}
 
 	std::unique_ptr<Graphics::Pipeline> Renderer::_createPipeline(const Graphics::LogicalDevice::GraphicsPipelineCreateInfo &createInfo) const
 	{
-		return std::unique_ptr<Graphics::Pipeline>{ __pEngine->createPipeline(createInfo) };
+		return std::unique_ptr<Graphics::Pipeline>{ __pDevice->createPipeline(createInfo) };
 	}
 
 	const Graphics::RenderPass &Renderer::_getRenderPass() const noexcept

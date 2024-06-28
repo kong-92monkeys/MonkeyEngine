@@ -60,7 +60,7 @@ namespace Engine
 	{
 		for (uint32_t poolIter{ }; poolIter < __poolCount; ++poolIter)
 		{
-			auto pPool{ logicalDevice.createCommandPool() };
+			auto pPool{ logicalDevice.createCommandPool(VkCommandPoolCreateFlagBits::VK_COMMAND_POOL_CREATE_TRANSIENT_BIT) };
 			pPool->allocateCommandBuffers(level, __bufferCount);
 			__pools.emplace_back(std::move(pPool));
 		}

@@ -2,21 +2,21 @@ module;
 
 #include "../Vulkan/Vulkan.h"
 
-export module ntmonkeys.com.Frameworks.FramebufferFactory;
+export module ntmonkeys.com.Engine.FramebufferFactory;
 
 import ntmonkeys.com.Lib.Unique;
 import ntmonkeys.com.Graphics.Framebuffer;
-import ntmonkeys.com.Engine.RenderingEngine;
-import ntmonkeys.com.Frameworks.RenderPassFactory;
+import ntmonkeys.com.Graphics.LogicalDevice;
+import ntmonkeys.com.Engine.RenderPassFactory;
 import <unordered_map>;
 import <memory>;
 
-namespace Frameworks
+namespace Engine
 {
 	export class FramebufferFactory : public Lib::Unique
 	{
 	public:
-		FramebufferFactory(Engine::RenderingEngine &engine, const RenderPassFactory &renderPassFactory);
+		FramebufferFactory(Graphics::LogicalDevice &device, const RenderPassFactory &renderPassFactory);
 		virtual ~FramebufferFactory() noexcept override = default;
 
 		void invalidate(const uint32_t width, const uint32_t height) noexcept;
@@ -27,7 +27,7 @@ namespace Frameworks
 	private:
 		using __InstanceGenerator = std::unique_ptr<Graphics::Framebuffer>(FramebufferFactory::*)();
 
-		Engine::RenderingEngine &__engine;
+		Graphics::LogicalDevice &__device;
 		const RenderPassFactory &__renderPassFactory;
 
 		uint32_t __width{ };
@@ -43,11 +43,11 @@ namespace Frameworks
 
 module: private;
 
-namespace Frameworks
+namespace Engine
 {
 	FramebufferFactory::FramebufferFactory(
-		Engine::RenderingEngine &engine, const RenderPassFactory &renderPassFactory) :
-		__engine				{ engine },
+		Graphics::LogicalDevice &device, const RenderPassFactory &renderPassFactory) :
+		__device				{ device },
 		__renderPassFactory		{ renderPassFactory }
 	{
 		__instanceGeneratorMap[RenderPassType::COLOR] = &FramebufferFactory::__createInstance_color;
@@ -79,7 +79,7 @@ namespace Frameworks
 
 		return std::unique_ptr<Graphics::Framebuffer>
 		{
-			__engine.createFramebuffer(
+			__device.createFramebuffer(
 				__renderPassFactory.getInstance(RenderPassType::COLOR).getHandle(),
 				__width, __height, 1U, &attachmentInfo)
 		};

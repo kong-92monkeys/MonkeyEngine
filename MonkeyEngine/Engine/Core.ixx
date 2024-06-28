@@ -5,6 +5,7 @@
 export module ntmonkeys.com.Engine.Core;
 
 import ntmonkeys.com.Lib.Unique;
+import ntmonkeys.com.Lib.AssetManager;
 import ntmonkeys.com.Lib.Logger;
 import ntmonkeys.com.Lib.Version;
 import ntmonkeys.com.Graphics.RenderContext;
@@ -33,7 +34,7 @@ namespace Engine
 		virtual ~Core() noexcept;
 
 		[[nodiscard]]
-		RenderingEngine *createEngine();
+		RenderingEngine *createEngine(const Lib::AssetManager &assetManager);
 
 	private:
 		std::unique_ptr<Graphics::RenderContext> __pRenderContext;
@@ -62,13 +63,14 @@ namespace Engine
 		__pRenderContext = nullptr;
 	}
 
-	RenderingEngine *Core::createEngine()
+	RenderingEngine *Core::createEngine(const Lib::AssetManager &assetManager)
     {
         const auto &devices{ __pRenderContext->getPhysicalDevices() };
 
         const RenderingEngine::CreateInfo createInfo
         {
-            .pPhysicalDevice{ &(devices.front()) }
+            .pPhysicalDevice	{ &(devices.front()) },
+			.pAssetManager		{ &assetManager }
         };
 
 		return new RenderingEngine{ createInfo };

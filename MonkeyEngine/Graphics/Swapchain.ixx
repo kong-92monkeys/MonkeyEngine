@@ -41,6 +41,12 @@ namespace Graphics
 		virtual ~Swapchain() noexcept override;
 
 		[[nodiscard]]
+		uint32_t acquireNextImage(const uint64_t timeout, const VkSemaphore hSemaphore, const VkFence hFence);
+
+		[[nodiscard]]
+		constexpr ImageView &getImageView(const uint32_t index) noexcept;
+
+		[[nodiscard]]
 		VkSwapchainKHR makeOldSwapchain() noexcept;
 
 	private:
@@ -56,6 +62,11 @@ namespace Graphics
 		void __enumerateImages() noexcept;
 		void __createImageViews();
 	};
+
+	constexpr ImageView &Swapchain::getImageView(const uint32_t index) noexcept
+	{
+		return *(__imageViews[index]);
+	}
 }
 
 module: private;
@@ -80,6 +91,24 @@ namespace Graphics
 		__imageViews.clear();
 		__images.clear();
 		__deviceProc.vkDestroySwapchainKHR(__hDevice, __handle, nullptr);
+	}
+
+	uint32_t Swapchain::acquireNextImage(const uint64_t timeout, const VkSemaphore hSemaphore, const VkFence hFence)
+	{
+		const VkAcquireNextImageInfoKHR acquireInfo
+		{
+			.sType			{ VkStructureType::VK_STRUCTURE_TYPE_ACQUIRE_NEXT_IMAGE_INFO_KHR },
+			.swapchain		{ __handle },
+			.timeout		{ timeout },
+			.semaphore		{ hSemaphore },
+			.fence			{ hFence },
+			.deviceMask		{ 1U }
+		};
+
+		uint32_t retVal{ };
+		__deviceProc.vkAcquireNextImage2KHR(__hDevice, &acquireInfo, &retVal);
+
+		return retVal;
 	}
 
 	VkSwapchainKHR Swapchain::makeOldSwapchain() noexcept

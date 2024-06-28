@@ -14,8 +14,6 @@ namespace Graphics
 	export class PipelineLayout : public Lib::Unique
 	{
 	public:
-		friend class LogicalDevice;
-
 		struct CreateInfo
 		{
 		public:

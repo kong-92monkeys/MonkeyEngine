@@ -2,15 +2,15 @@ module;
 
 #include "../Vulkan/Vulkan.h"
 
-export module ntmonkeys.com.Frameworks.RenderPassFactory;
+export module ntmonkeys.com.Engine.RenderPassFactory;
 
 import ntmonkeys.com.Lib.Unique;
+import ntmonkeys.com.Graphics.LogicalDevice;
 import ntmonkeys.com.Graphics.RenderPass;
-import ntmonkeys.com.Engine.RenderingEngine;
 import <unordered_map>;
 import <memory>;
 
-namespace Frameworks
+namespace Engine
 {
 	export enum class RenderPassType
 	{
@@ -20,14 +20,14 @@ namespace Frameworks
 	export class RenderPassFactory : public Lib::Unique
 	{
 	public:
-		RenderPassFactory(Engine::RenderingEngine &engine);
+		RenderPassFactory(Graphics::LogicalDevice &device);
 		virtual ~RenderPassFactory() noexcept override = default;
 
 		[[nodiscard]]
 		const Graphics::RenderPass &getInstance(const RenderPassType type) const noexcept;
 
 	protected:
-		Engine::RenderingEngine &__engine;
+		Graphics::LogicalDevice &__device;
 
 		std::unordered_map<RenderPassType, std::unique_ptr<Graphics::RenderPass>> __instanceMap;
 
@@ -37,9 +37,9 @@ namespace Frameworks
 
 module: private;
 
-namespace Frameworks
+namespace Engine
 {
-	RenderPassFactory::RenderPassFactory(Engine::RenderingEngine &engine) : __engine{ engine }
+	RenderPassFactory::RenderPassFactory(Graphics::LogicalDevice &device) : __device{ device }
 	{
 		__createInstance_color();
 	}
@@ -99,7 +99,7 @@ namespace Frameworks
 
 		__instanceMap[RenderPassType::COLOR] = std::unique_ptr<Graphics::RenderPass>
 		{
-			__engine.createRenderPass(1U, &attachmentDesc, 1U, &subpass, 1U, &dependency)
+			__device.createRenderPass(1U, &attachmentDesc, 1U, &subpass, 1U, &dependency)
 		};
 	}
 }

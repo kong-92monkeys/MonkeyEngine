@@ -100,6 +100,14 @@ namespace VK
 		PFN_vkCreateFramebuffer vkCreateFramebuffer{ };
 		PFN_vkDestroyFramebuffer vkDestroyFramebuffer{ };
 
+		// Semaphore
+		PFN_vkCreateSemaphore vkCreateSemaphore{ };
+		PFN_vkDestroySemaphore vkDestroySemaphore{ };
+
+		// Fence
+		PFN_vkCreateFence vkCreateFence{ };
+		PFN_vkDestroyFence vkDestroyFence{ };
+
 		// Command pool
 		PFN_vkCreateCommandPool vkCreateCommandPool{ };
 		PFN_vkDestroyCommandPool vkDestroyCommandPool{ };

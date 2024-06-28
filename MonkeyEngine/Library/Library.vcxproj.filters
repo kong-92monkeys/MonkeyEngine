@@ -6,5 +6,6 @@
     <ClCompile Include="TimelineIdAllocator.ixx" />
     <ClCompile Include="Unique.ixx" />
     <ClCompile Include="Version.ixx" />
+    <ClCompile Include="AssetManager.ixx" />
   </ItemGroup>
 </Project>
