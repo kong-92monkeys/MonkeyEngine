@@ -8,4 +8,7 @@
     <ClCompile Include="Version.ixx" />
     <ClCompile Include="AssetManager.ixx" />
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="GLM.h" />
+  </ItemGroup>
 </Project>

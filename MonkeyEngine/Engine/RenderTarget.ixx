@@ -1,5 +1,6 @@
 module;
 
+#include "../Library/GLM.h"
 #include "../Vulkan/Vulkan.h"
 
 export module ntmonkeys.com.Engine.RenderTarget;
@@ -67,6 +68,8 @@ namespace Engine
 		void addLayer(Layer &layer) noexcept;
 		void removeLayer(Layer &layer) noexcept;
 
+		constexpr void setBackgroundColor(const glm::vec4 &color) noexcept;
+
 		void sync();
 
 		[[nodiscard]]
@@ -83,6 +86,8 @@ namespace Engine
 		std::unique_ptr<SemaphoreCirculator> __pImgAcquireSemaphoreCirculator;
 
 		std::unordered_set<Layer *> __layers;
+
+		glm::vec4 __backgroundColor{ 0.01f, 0.01f, 0.01f, 1.0f };
 
 		void __validateSwapchainDependencies();
 	};
@@ -105,6 +110,11 @@ namespace Engine
 	constexpr const VkSwapchainKHR &RenderTarget::getSwapchainHandle() noexcept
 	{
 		return __pSwapchain->getHandle();
+	}
+
+	constexpr void RenderTarget::setBackgroundColor(const glm::vec4 &color) noexcept
+	{
+		__backgroundColor = color;
 	}
 }
 
@@ -177,9 +187,10 @@ namespace Engine
 
 		const Layer::DrawInfo drawInfo
 		{
-			.pImageView					{ &imageView },
-			.renderArea					{ renderArea },
-			.pFramebufferFactory		{ __pFramebufferFactory.get() }
+			.pImageView				{ &imageView },
+			.renderArea				{ renderArea },
+			.pClearColor			{ &__backgroundColor },
+			.pFramebufferFactory	{ __pFramebufferFactory.get() }
 		};
 
 		for (const auto pLayer : __layers)

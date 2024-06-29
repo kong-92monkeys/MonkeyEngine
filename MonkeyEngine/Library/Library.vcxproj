@@ -32,6 +32,9 @@
     </ClCompile>
     <ClCompile Include="Version.ixx" />
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="GLM.h" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>

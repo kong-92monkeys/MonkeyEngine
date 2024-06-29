@@ -1,5 +1,6 @@
 module;
 
+#include "../Library/GLM.h"
 #include "../Vulkan/Vulkan.h"
 
 export module ntmonkeys.com.Engine.Layer;
@@ -22,6 +23,7 @@ namespace Engine
 		public:
 			Graphics::ImageView *pImageView{ };
 			VkRect2D renderArea{ };
+			const glm::vec4 *pClearColor{ };
 			FramebufferFactory *pFramebufferFactory{ };
 		};
 
@@ -67,10 +69,10 @@ namespace Engine
 		VkClearValue clearValue{ };
 		
 		auto &color{ clearValue.color };
-		color.float32[0] = 1.0f;
-		color.float32[1] = 0.5f;
-		color.float32[2] = 0.2f;
-		color.float32[3] = 1.0f;
+		color.float32[0] = drawInfo.pClearColor->r;
+		color.float32[1] = drawInfo.pClearColor->g;
+		color.float32[2] = drawInfo.pClearColor->b;
+		color.float32[3] = drawInfo.pClearColor->a;
 
 		const VkRenderPassBeginInfo renderPassBeginInfo
 		{
