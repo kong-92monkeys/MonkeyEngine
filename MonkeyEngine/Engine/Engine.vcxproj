@@ -162,7 +162,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="CommandBufferCirculator.ixx" />
+    <ClCompile Include="Constants.ixx" />
     <ClCompile Include="Core.ixx" />
+    <ClCompile Include="FenceCirculator.ixx" />
     <ClCompile Include="FramebufferFactory.ixx" />
     <ClCompile Include="Layer.ixx" />
     <ClCompile Include="Renderer.ixx" />

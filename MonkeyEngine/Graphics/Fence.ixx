@@ -25,8 +25,11 @@ namespace Graphics
 		explicit Fence(const CreateInfo &createInfo) noexcept;
 		virtual ~Fence() noexcept override;
 
+		VkResult wait(const uint64_t timeout) noexcept;
+		VkResult reset();
+
 		[[nodiscard]]
-		constexpr VkFence getHandle() noexcept;
+		constexpr const VkFence &getHandle() noexcept;
 
 	private:
 		const VK::DeviceProc &__deviceProc;
@@ -37,7 +40,7 @@ namespace Graphics
 		void __create(const CreateInfo &createInfo);
 	};
 
-	constexpr VkFence Fence::getHandle() noexcept
+	constexpr const VkFence &Fence::getHandle() noexcept
 	{
 		return __handle;
 	}
@@ -57,6 +60,16 @@ namespace Graphics
 	Fence::~Fence() noexcept
 	{
 		__deviceProc.vkDestroyFence(__hDevice, __handle, nullptr);
+	}
+
+	VkResult Fence::wait(const uint64_t timeout) noexcept
+	{
+		return __deviceProc.vkWaitForFences(__hDevice, 1U, &__handle, VK_FALSE, timeout);
+	}
+
+	VkResult Fence::reset() 
+	{
+		return __deviceProc.vkResetFences(__hDevice, 1U, &__handle);
 	}
 
 	void Fence::__create(const CreateInfo &createInfo)

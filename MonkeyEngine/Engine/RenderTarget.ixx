@@ -9,11 +9,13 @@ import ntmonkeys.com.Graphics.LogicalDevice;
 import ntmonkeys.com.Graphics.Surface;
 import ntmonkeys.com.Graphics.Swapchain;
 import ntmonkeys.com.Graphics.ImageView;
+import ntmonkeys.com.Graphics.Semaphore;
 import ntmonkeys.com.Graphics.CommandBuffer;
 import ntmonkeys.com.Engine.RenderPassFactory;
 import ntmonkeys.com.Engine.FramebufferFactory;
 import ntmonkeys.com.Engine.SemaphoreCirculator;
 import ntmonkeys.com.Engine.Layer;
+import ntmonkeys.com.Engine.Constants;
 import <memory>;
 import <unordered_set>;
 import <limits>;
@@ -32,6 +34,21 @@ namespace Engine
 			HWND hwnd{ };
 		};
 
+		struct DrawResult
+		{
+		public:
+			Graphics::Semaphore *pImgAcquireSemaphore{ };
+			uint32_t imageIndex{ };
+		};
+
+		struct PresentInfo
+		{
+		public:
+			uint32_t waitSemaphoreCount{ };
+			const VkSemaphore *pWaitSemaphores{ };
+			uint32_t imageIdx{ };
+		};
+
 		explicit RenderTarget(const CreateInfo &createInfo);
 		virtual ~RenderTarget() noexcept override;
 
@@ -44,11 +61,16 @@ namespace Engine
 		[[nodiscard]]
 		constexpr bool isPresentable() const noexcept;
 
+		[[nodiscard]]
+		constexpr const VkSwapchainKHR &getSwapchainHandle() noexcept;
+
 		void addLayer(Layer &layer) noexcept;
 		void removeLayer(Layer &layer) noexcept;
 
 		void sync();
-		void draw(Graphics::CommandBuffer &commandBuffer);
+
+		[[nodiscard]]
+		DrawResult draw(Graphics::CommandBuffer &commandBuffer);
 
 	private:
 		Graphics::LogicalDevice &__logicalDevice;
@@ -58,7 +80,7 @@ namespace Engine
 		std::unique_ptr<Graphics::Swapchain> __pSwapchain;
 
 		std::unique_ptr<FramebufferFactory> __pFramebufferFactory;
-		std::unique_ptr<SemaphoreCirculator> __pSemaphoreCirculator;
+		std::unique_ptr<SemaphoreCirculator> __pImgAcquireSemaphoreCirculator;
 
 		std::unordered_set<Layer *> __layers;
 
@@ -79,6 +101,11 @@ namespace Engine
 	{
 		return (getWidth() && getHeight());
 	}
+
+	constexpr const VkSwapchainKHR &RenderTarget::getSwapchainHandle() noexcept
+	{
+		return __pSwapchain->getHandle();
+	}
 }
 
 module: private;
@@ -92,14 +119,20 @@ namespace Engine
 		__pSurface = std::unique_ptr<Graphics::Surface>{ __logicalDevice.createSurface(createInfo.hinstance, createInfo.hwnd) };
 
 		__pFramebufferFactory = std::make_unique<FramebufferFactory>(__logicalDevice, __renderPassFactory);
-		__pSemaphoreCirculator = std::make_unique<SemaphoreCirculator>(__logicalDevice, VkSemaphoreType::VK_SEMAPHORE_TYPE_BINARY, 10ULL);
+
+		// max in-flight 도달 이후 다음 프레임까지 acquire 요청할 수 있으므로 limit에 1 추가해야 함.
+		__pImgAcquireSemaphoreCirculator = std::make_unique<SemaphoreCirculator>(
+			__logicalDevice, VkSemaphoreType::VK_SEMAPHORE_TYPE_BINARY, Constants::MAX_IN_FLIGHT_FRAME_COUNT_LIMIT + 1ULL);
 
 		__validateSwapchainDependencies();
 	}
 
 	RenderTarget::~RenderTarget() noexcept
 	{
-		__pSemaphoreCirculator = nullptr;
+		auto &queue{ __logicalDevice.getQueue() };
+		queue.waitIdle();
+
+		__pImgAcquireSemaphoreCirculator = nullptr;
 		__pFramebufferFactory = nullptr;
 		__pSwapchain = nullptr;
 		__pSurface = nullptr;
@@ -117,21 +150,24 @@ namespace Engine
 
 	void RenderTarget::sync()
 	{
+		auto &queue{ __logicalDevice.getQueue() };
+		queue.waitIdle();
+
 		__pSurface->sync();
 		__validateSwapchainDependencies();
 	}
 
-	void RenderTarget::draw(Graphics::CommandBuffer &commandBuffer)
+	RenderTarget::DrawResult RenderTarget::draw(Graphics::CommandBuffer &commandBuffer)
 	{
-		auto &imageAcquireSemaphore{ __pSemaphoreCirculator->getNext() };
+		auto &imgAcquireSemaphore{ __pImgAcquireSemaphoreCirculator->getNext() };
 
 		const uint32_t imageIdx
 		{
 			__pSwapchain->acquireNextImage(
-				UINT64_MAX, imageAcquireSemaphore.getHandle(), VK_NULL_HANDLE)
+				UINT64_MAX, imgAcquireSemaphore.getHandle(), VK_NULL_HANDLE)
 		};
 
-		auto &imageView{ __pSwapchain->getImageView(imageIdx) };
+		auto &imageView{ __pSwapchain->getImageViewOf(imageIdx) };
 
 		const VkRect2D renderArea
 		{
@@ -148,6 +184,8 @@ namespace Engine
 
 		for (const auto pLayer : __layers)
 			pLayer->draw(drawInfo, commandBuffer);
+
+		return { &imgAcquireSemaphore, imageIdx };
 	}
 
 	void RenderTarget::__validateSwapchainDependencies()

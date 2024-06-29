@@ -29,7 +29,7 @@ namespace Graphics
 		virtual ~PipelineLayout() noexcept override;
 
 		[[nodiscard]]
-		constexpr VkPipelineLayout getHandle() const noexcept;
+		constexpr const VkPipelineLayout &getHandle() const noexcept;
 
 	private:
 		const VK::DeviceProc &__deviceProc;
@@ -40,7 +40,7 @@ namespace Graphics
 		void __create(const CreateInfo &createInfo);
 	};
 
-	constexpr VkPipelineLayout PipelineLayout::getHandle() const noexcept
+	constexpr const VkPipelineLayout &PipelineLayout::getHandle() const noexcept
 	{
 		return __handle;
 	}

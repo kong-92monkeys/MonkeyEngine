@@ -31,7 +31,7 @@ namespace Graphics
 		virtual ~RenderPass() noexcept override;
 
 		[[nodiscard]]
-		constexpr VkRenderPass getHandle() const noexcept;
+		constexpr const VkRenderPass &getHandle() const noexcept;
 
 	private:
 		const VK::DeviceProc &__deviceProc;
@@ -42,7 +42,7 @@ namespace Graphics
 		void __create(const CreateInfo &createInfo);
 	};
 
-	constexpr VkRenderPass RenderPass::getHandle() const noexcept
+	constexpr const VkRenderPass &RenderPass::getHandle() const noexcept
 	{
 		return __handle;
 	}

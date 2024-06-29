@@ -30,7 +30,7 @@ namespace Graphics
 		virtual ~ImageView() noexcept override;
 
 		[[nodiscard]]
-		constexpr VkImageView getHandle() noexcept;
+		constexpr const VkImageView &getHandle() noexcept;
 
 	private:
 		const VK::DeviceProc &__deviceProc;
@@ -41,7 +41,7 @@ namespace Graphics
 		void __create(const CreateInfo &createInfo);
 	};
 
-	constexpr VkImageView ImageView::getHandle() noexcept
+	constexpr const VkImageView &ImageView::getHandle() noexcept
 	{
 		return __handle;
 	}

@@ -80,6 +80,8 @@ namespace Graphics
 		[[nodiscard]]
 		constexpr Queue &getQueue() noexcept;
 
+		VkResult waitIdle() const noexcept;
+
 		[[nodiscard]]
 		Surface *createSurface(const HINSTANCE hAppInstance, const HWND hwnd);
 
@@ -165,6 +167,11 @@ namespace Graphics
 	{
 		__deviceProc.vkDestroyPipelineCache(__handle, __hPipelineCache, nullptr);
 		__deviceProc.vkDestroyDevice(__handle, nullptr);
+	}
+
+	VkResult LogicalDevice::waitIdle() const noexcept
+	{
+		return __deviceProc.vkDeviceWaitIdle(__handle);
 	}
 
 	Surface *LogicalDevice::createSurface(const HINSTANCE hAppInstance, const HWND hwnd)
@@ -489,6 +496,8 @@ namespace Graphics
 		// Fence
 		LOAD_DEVICE_PROC(vkCreateFence);
 		LOAD_DEVICE_PROC(vkDestroyFence);
+		LOAD_DEVICE_PROC(vkWaitForFences);
+		LOAD_DEVICE_PROC(vkResetFences);
 
 		// Command pool
 		LOAD_DEVICE_PROC(vkCreateCommandPool);

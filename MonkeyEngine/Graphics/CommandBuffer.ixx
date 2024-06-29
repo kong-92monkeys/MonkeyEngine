@@ -42,7 +42,7 @@ namespace Graphics
 			const uint32_t firstIndex, const int32_t vertexOffset, const uint32_t firstInstance) noexcept;
 
 		[[nodiscard]]
-		constexpr VkCommandBuffer getHandle() noexcept;
+		constexpr const VkCommandBuffer &getHandle() noexcept;
 
 	private:
 		const VK::DeviceProc &__deviceProc;
@@ -54,7 +54,7 @@ namespace Graphics
 		__handle		{makeInfo.handle }
 	{}
 
-	constexpr VkCommandBuffer CommandBuffer::getHandle() noexcept
+	constexpr const VkCommandBuffer &CommandBuffer::getHandle() noexcept
 	{
 		return __handle;
 	}

@@ -107,6 +107,8 @@ namespace VK
 		// Fence
 		PFN_vkCreateFence vkCreateFence{ };
 		PFN_vkDestroyFence vkDestroyFence{ };
+		PFN_vkWaitForFences vkWaitForFences{ };
+		PFN_vkResetFences vkResetFences{ };
 
 		// Command pool
 		PFN_vkCreateCommandPool vkCreateCommandPool{ };

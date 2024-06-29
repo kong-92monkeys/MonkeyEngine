@@ -17,6 +17,10 @@
     <ClCompile Include="SemaphoreCirculator.ixx">
       <Filter>Circulator</Filter>
     </ClCompile>
+    <ClCompile Include="FenceCirculator.ixx">
+      <Filter>Circulator</Filter>
+    </ClCompile>
+    <ClCompile Include="Constants.ixx" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Util">

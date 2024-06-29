@@ -37,7 +37,7 @@ namespace Graphics
 		virtual ~Framebuffer() noexcept override;
 
 		[[nodiscard]]
-		constexpr VkFramebuffer getHandle() const noexcept;
+		constexpr const VkFramebuffer &getHandle() const noexcept;
 
 	private:
 		const VK::DeviceProc &__deviceProc;
@@ -48,7 +48,7 @@ namespace Graphics
 		void __create(const CreateInfo &createInfo);
 	};
 
-	constexpr VkFramebuffer Framebuffer::getHandle() const noexcept
+	constexpr const VkFramebuffer &Framebuffer::getHandle() const noexcept
 	{
 		return __handle;
 	}

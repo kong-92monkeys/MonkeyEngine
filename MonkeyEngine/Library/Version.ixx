@@ -1,9 +1,6 @@
-module;
-
-#include <cstdint>
-
 export module ntmonkeys.com.Lib.Version;
 
+import <cstdint>;
 import <compare>;
 
 namespace Lib

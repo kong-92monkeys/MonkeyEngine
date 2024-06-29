@@ -57,13 +57,11 @@ namespace Engine
 		const auto &renderPass		{ __renderPassFactory.getInstance(RenderPassType::COLOR) };
 		const auto &framebuffer		{ drawInfo.pFramebufferFactory->getInstance(RenderPassType::COLOR) };
 
-		const auto hImageView		{ drawInfo.pImageView->getHandle() };
-
 		const VkRenderPassAttachmentBeginInfo attachmentInfo
 		{
 			.sType				{ VkStructureType::VK_STRUCTURE_TYPE_RENDER_PASS_ATTACHMENT_BEGIN_INFO },
 			.attachmentCount	{ 1U },
-			.pAttachments		{ &hImageView }
+			.pAttachments		{ &(drawInfo.pImageView->getHandle()) }
 		};
 
 		VkClearValue clearValue{ };
@@ -93,7 +91,6 @@ namespace Engine
 
 		commandBuffer.beginRenderPass(renderPassBeginInfo, subpassBeginInfo);
 
-		
 		const VkSubpassEndInfo subpassEndInfo
 		{
 			.sType{ VkStructureType::VK_STRUCTURE_TYPE_SUBPASS_END_INFO }

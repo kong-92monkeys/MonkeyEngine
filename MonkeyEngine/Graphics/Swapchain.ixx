@@ -44,10 +44,13 @@ namespace Graphics
 		uint32_t acquireNextImage(const uint64_t timeout, const VkSemaphore hSemaphore, const VkFence hFence);
 
 		[[nodiscard]]
-		constexpr ImageView &getImageView(const uint32_t index) noexcept;
+		constexpr size_t getImageCount() const noexcept;
 
 		[[nodiscard]]
-		VkSwapchainKHR makeOldSwapchain() noexcept;
+		constexpr ImageView &getImageViewOf(const uint32_t index) noexcept;
+
+		[[nodiscard]]
+		constexpr const VkSwapchainKHR &getHandle() noexcept;
 
 	private:
 		const VK::DeviceProc &__deviceProc;
@@ -63,9 +66,19 @@ namespace Graphics
 		void __createImageViews();
 	};
 
-	constexpr ImageView &Swapchain::getImageView(const uint32_t index) noexcept
+	constexpr size_t Swapchain::getImageCount() const noexcept
+	{
+		return __images.size();
+	}
+
+	constexpr ImageView &Swapchain::getImageViewOf(const uint32_t index) noexcept
 	{
 		return *(__imageViews[index]);
+	}
+
+	constexpr const VkSwapchainKHR &Swapchain::getHandle() noexcept
+	{
+		return __handle;
 	}
 }
 
@@ -85,9 +98,6 @@ namespace Graphics
 
 	Swapchain::~Swapchain() noexcept
 	{
-		if (!__handle)
-			return;
-
 		__imageViews.clear();
 		__images.clear();
 		__deviceProc.vkDestroySwapchainKHR(__hDevice, __handle, nullptr);
@@ -107,17 +117,6 @@ namespace Graphics
 
 		uint32_t retVal{ };
 		__deviceProc.vkAcquireNextImage2KHR(__hDevice, &acquireInfo, &retVal);
-
-		return retVal;
-	}
-
-	VkSwapchainKHR Swapchain::makeOldSwapchain() noexcept
-	{
-		const VkSwapchainKHR retVal{ __handle };
-
-		__imageViews.clear();
-		__images.clear();
-		__handle = VK_NULL_HANDLE;
 
 		return retVal;
 	}
@@ -153,7 +152,7 @@ namespace Graphics
 			.compositeAlpha			{ createInfo.compositeAlpha },
 			.presentMode			{ createInfo.presentMode },
 			.clipped				{ createInfo.clipped },
-			.oldSwapchain			{ createInfo.pOldSwapchain ? createInfo.pOldSwapchain->makeOldSwapchain() : VK_NULL_HANDLE }
+			.oldSwapchain			{ createInfo.pOldSwapchain ? createInfo.pOldSwapchain->getHandle() : VK_NULL_HANDLE }
 		};
 
 		__deviceProc.vkCreateSwapchainKHR(__hDevice, &vkCreateInfo, nullptr, &__handle);
