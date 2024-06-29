@@ -78,8 +78,8 @@ int CMainView::__createRenderTarget(const HINSTANCE hInstance)
 	try
 	{
 		__pRenderTarget = std::unique_ptr<Engine::RenderTarget>{ renderingEngine.createRenderTarget(hInstance, GetSafeHwnd()) };
-		__pLayer = std::unique_ptr<Engine::Layer>{ renderingEngine.createLayer() };
-		__pRenderTarget->addLayer(*__pLayer);
+		__pLayer = std::shared_ptr<Engine::Layer>{ renderingEngine.createLayer() };
+		__pRenderTarget->addLayer(__pLayer);
 		return 0;
 	}
 	catch (...)
@@ -90,7 +90,6 @@ int CMainView::__createRenderTarget(const HINSTANCE hInstance)
 
 void CMainView::OnDestroy()
 {
-	__pRenderTarget->removeLayer(*__pLayer);
 	__pLayer = nullptr;
 	__pRenderTarget = nullptr;
 	CWnd::OnDestroy();

@@ -44,7 +44,7 @@ public:
 
 private:
 	std::unique_ptr<Engine::RenderTarget> __pRenderTarget;
-	std::unique_ptr<Engine::Layer> __pLayer;
+	std::shared_ptr<Engine::Layer> __pLayer;
 
 	int __createRenderTarget(const HINSTANCE hInstance);
 public:

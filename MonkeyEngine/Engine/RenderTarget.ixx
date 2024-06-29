@@ -18,7 +18,7 @@ import ntmonkeys.com.Engine.SemaphoreCirculator;
 import ntmonkeys.com.Engine.Layer;
 import ntmonkeys.com.Engine.Constants;
 import <memory>;
-import <unordered_set>;
+import <unordered_map>;
 import <limits>;
 
 namespace Engine
@@ -65,8 +65,8 @@ namespace Engine
 		[[nodiscard]]
 		constexpr const VkSwapchainKHR &getSwapchainHandle() noexcept;
 
-		void addLayer(Layer &layer) noexcept;
-		void removeLayer(Layer &layer) noexcept;
+		void addLayer(const std::shared_ptr<Layer> &pLayer) noexcept;
+		void removeLayer(const std::shared_ptr<Layer> &pLayer) noexcept;
 
 		constexpr void setBackgroundColor(const glm::vec4 &color) noexcept;
 
@@ -85,7 +85,7 @@ namespace Engine
 		std::unique_ptr<FramebufferFactory> __pFramebufferFactory;
 		std::unique_ptr<SemaphoreCirculator> __pImgAcquireSemaphoreCirculator;
 
-		std::unordered_set<Layer *> __layers;
+		std::unordered_map<Layer *, std::weak_ptr<Layer>> __layers;
 
 		glm::vec4 __backgroundColor{ 0.01f, 0.01f, 0.01f, 1.0f };
 
@@ -148,14 +148,14 @@ namespace Engine
 		__pSurface = nullptr;
 	}
 
-	void RenderTarget::addLayer(Layer &layer) noexcept
+	void RenderTarget::addLayer(const std::shared_ptr<Layer> &pLayer) noexcept
 	{
-		__layers.emplace(&layer);
+		__layers.emplace(pLayer.get(), pLayer);
 	}
 
-	void RenderTarget::removeLayer(Layer &layer) noexcept
+	void RenderTarget::removeLayer(const std::shared_ptr<Layer> &pLayer) noexcept
 	{
-		__layers.erase(&layer);
+		__layers.erase(pLayer.get());
 	}
 
 	void RenderTarget::sync()
@@ -193,8 +193,18 @@ namespace Engine
 			.pFramebufferFactory	{ __pFramebufferFactory.get() }
 		};
 
-		for (const auto pLayer : __layers)
+		for (auto layerIt{ __layers.begin() }; layerIt != __layers.end(); )
+		{
+			const auto &[pLayer, wpLayer]{ *layerIt };
+			if (wpLayer.expired())
+			{
+				layerIt = __layers.erase(layerIt);
+				continue;
+			}
+
 			pLayer->draw(drawInfo, commandBuffer);
+			++layerIt;
+		}
 
 		return { &imgAcquireSemaphore, imageIdx };
 	}

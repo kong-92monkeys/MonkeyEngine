@@ -169,6 +169,7 @@
     <ClCompile Include="Layer.ixx" />
     <ClCompile Include="Renderer.ixx" />
     <ClCompile Include="RenderingEngine.ixx" />
+    <ClCompile Include="RenderObject.ixx" />
     <ClCompile Include="RenderPassFactory.ixx" />
     <ClCompile Include="RenderTarget.ixx" />
     <ClCompile Include="SemaphoreCirculator.ixx" />

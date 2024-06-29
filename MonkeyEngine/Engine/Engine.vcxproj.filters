@@ -21,6 +21,7 @@
       <Filter>Circulator</Filter>
     </ClCompile>
     <ClCompile Include="Constants.ixx" />
+    <ClCompile Include="RenderObject.ixx" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Util">
