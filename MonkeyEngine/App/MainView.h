@@ -6,7 +6,6 @@
 #pragma once
 
 import ntmonkeys.com.Engine.RenderTarget;
-import ntmonkeys.com.Engine.Layer;
 
 // CChildView window
 
@@ -44,7 +43,6 @@ public:
 
 private:
 	std::unique_ptr<Engine::RenderTarget> __pRenderTarget;
-	std::shared_ptr<Engine::Layer> __pLayer;
 
 	int __createRenderTarget(const HINSTANCE hInstance);
 public:

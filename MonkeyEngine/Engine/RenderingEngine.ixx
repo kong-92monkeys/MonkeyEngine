@@ -19,6 +19,7 @@ import ntmonkeys.com.Graphics.ConversionUtil;
 import ntmonkeys.com.Engine.RenderTarget;
 import ntmonkeys.com.Engine.Renderer;
 import ntmonkeys.com.Engine.Layer;
+import ntmonkeys.com.Engine.RenderObject;
 import ntmonkeys.com.Engine.RenderPassFactory;
 import ntmonkeys.com.Engine.CommandBufferCirculator;
 import ntmonkeys.com.Engine.FenceCirculator;
@@ -54,6 +55,9 @@ namespace Engine
 		template <std::derived_from<Renderer> $Renderer, typename ...$Args>
 		[[nodiscard]]
 		$Renderer *createRenderer($Args &&...args);
+
+		[[nodiscard]]
+		RenderObject *createRenderObject() noexcept;
 
 		void setMaxInFlightFrameCount(const size_t count);
 
@@ -139,6 +143,11 @@ namespace Engine
 	Layer *RenderingEngine::createLayer()
 	{
 		return new Layer{ *__pRenderPassFactory };
+	}
+
+	RenderObject *RenderingEngine::createRenderObject() noexcept
+	{
+		return new RenderObject{ };
 	}
 
 	void RenderingEngine::setMaxInFlightFrameCount(const size_t count)

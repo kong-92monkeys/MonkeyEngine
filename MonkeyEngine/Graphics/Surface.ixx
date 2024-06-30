@@ -65,11 +65,8 @@ namespace Graphics
 		VkPresentModeKHR __presentMode{ };
 
 		VkSurfacePresentModeEXT __presentModeInfo{ };
-		VkSurfaceFullScreenExclusiveInfoEXT __fullscreenInfo{ };
-		VkSurfaceFullScreenExclusiveWin32InfoEXT __fullscreenWin32Info{ };
 		VkPhysicalDeviceSurfaceInfo2KHR __surfaceInfo{ };
 
-		VkSurfaceCapabilitiesFullScreenExclusiveEXT __fullScreenCapabilities{ };
 		VkSurfaceCapabilities2KHR __capabilities{ };
 
 		VkFormat __format{ };
@@ -153,9 +150,7 @@ namespace Graphics
 			.compositeAlpha		{ __compositeAlpha },
 			.presentMode		{ __presentMode },
 			.clipped			{ clipped ? VK_TRUE : VK_FALSE },
-			.pOldSwapchain		{ std::move(pOldSwapchain) },
-			.fullScreenMode		{ __fullscreenInfo.fullScreenExclusive },
-			.fullScreenMonitor	{ __fullscreenWin32Info.hmonitor }
+			.pOldSwapchain		{ std::move(pOldSwapchain) }
 		};
 
 		return new Swapchain{ createInfo };
@@ -206,21 +201,8 @@ namespace Graphics
 
 	void Surface::__populateQueryInfos()
 	{
-		const auto hMonitor{ MonitorFromWindow(__hwnd, MONITOR_DEFAULTTONEAREST) };
-		if (!hMonitor)
-			throw std::runtime_error{ "Cannot find the monitor handle." };
-
 		__presentModeInfo.sType					= VkStructureType::VK_STRUCTURE_TYPE_SURFACE_PRESENT_MODE_EXT;
-		__presentModeInfo.pNext					= &__fullscreenInfo;
 		__presentModeInfo.presentMode			= __presentMode;
-
-		__fullscreenInfo.sType					= VkStructureType::VK_STRUCTURE_TYPE_SURFACE_FULL_SCREEN_EXCLUSIVE_INFO_EXT;
-		__fullscreenInfo.pNext					= &__fullscreenWin32Info;
-		__fullscreenInfo.fullScreenExclusive	= VkFullScreenExclusiveEXT::VK_FULL_SCREEN_EXCLUSIVE_APPLICATION_CONTROLLED_EXT;
-
-		__fullscreenWin32Info.sType				= VkStructureType::VK_STRUCTURE_TYPE_SURFACE_FULL_SCREEN_EXCLUSIVE_WIN32_INFO_EXT;
-		__fullscreenWin32Info.pNext				= nullptr;
-		__fullscreenWin32Info.hmonitor			= hMonitor;
 		
 		__surfaceInfo.sType						= VkStructureType::VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SURFACE_INFO_2_KHR;
 		__surfaceInfo.pNext						= &__presentModeInfo;
@@ -229,15 +211,10 @@ namespace Graphics
 
 	void Surface::__resolveCapabilities()
 	{
-		__fullScreenCapabilities.sType = VkStructureType::VK_STRUCTURE_TYPE_SURFACE_CAPABILITIES_FULL_SCREEN_EXCLUSIVE_EXT;
-
-		__capabilities.sType = VkStructureType::VK_STRUCTURE_TYPE_SURFACE_CAPABILITIES_2_KHR ;
-		__capabilities.pNext = &__fullScreenCapabilities;
+		__capabilities.sType = VkStructureType::VK_STRUCTURE_TYPE_SURFACE_CAPABILITIES_2_KHR;
+		__capabilities.pNext = nullptr;
 
 		__instanceProc.vkGetPhysicalDeviceSurfaceCapabilities2KHR(__hPhysicalDevice, &__surfaceInfo, &__capabilities);
-		
-		if (!(__fullScreenCapabilities.fullScreenExclusiveSupported))
-			throw std::runtime_error{ "Fullscreen mode is not supported on the device." };
 	}
 
 	void Surface::__resolveFormat()

@@ -6,6 +6,7 @@ module;
 export module ntmonkeys.com.Engine.Layer;
 
 import ntmonkeys.com.Lib.Unique;
+import ntmonkeys.com.Lib.WeakReferenceSet;
 import ntmonkeys.com.Graphics.ImageView;
 import ntmonkeys.com.Graphics.Semaphore;
 import ntmonkeys.com.Graphics.CommandBuffer;
@@ -31,10 +32,15 @@ namespace Engine
 		Layer(const RenderPassFactory &renderPassFactory) noexcept;
 		virtual ~Layer() noexcept override;
 
+		void addRenderObject(const std::shared_ptr<RenderObject> &pObject) noexcept;
+		void removeRenderObject(const std::shared_ptr<RenderObject> &pObject) noexcept;
+
 		void draw(const DrawInfo &drawInfo, Graphics::CommandBuffer &commandBuffer);
 
 	private:
 		const RenderPassFactory &__renderPassFactory;
+
+		Lib::WeakReferenceSet<RenderObject> __renderObjects;
 	};
 }
 
@@ -48,6 +54,16 @@ namespace Engine
 
 	Layer::~Layer() noexcept
 	{
+	}
+
+	void Layer::addRenderObject(const std::shared_ptr<RenderObject> &pObject) noexcept
+	{
+		__renderObjects.emplace(pObject);
+	}
+
+	void Layer::removeRenderObject(const std::shared_ptr<RenderObject> &pObject) noexcept
+	{
+		__renderObjects.erase(pObject);
 	}
 
 	void Layer::draw(const DrawInfo &drawInfo, Graphics::CommandBuffer &commandBuffer)
@@ -93,6 +109,12 @@ namespace Engine
 		};
 
 		commandBuffer.beginRenderPass(renderPassBeginInfo, subpassBeginInfo);
+
+		for (const auto &renderObject : __renderObjects)
+		{
+			renderObject.getRenderer()->bind(commandBuffer);
+			commandBuffer.draw(3U, 1U, 0U, 0U);
+		}
 
 		const VkSubpassEndInfo subpassEndInfo
 		{

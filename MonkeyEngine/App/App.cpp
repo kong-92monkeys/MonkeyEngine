@@ -85,11 +85,24 @@ int CApp::ExitInstance()
 {
 	//TODO: handle additional resources you may have added
 	__pTriangleRenderer = nullptr;
+	__pRenderObject = nullptr;
+	__pLayer = nullptr;
+
 	__pRenderingEngine = nullptr;
 	__pCore = nullptr;
 	__pAssetManager = nullptr;
 
 	return CWinApp::ExitInstance();
+}
+
+void CApp::addRenderTarget(Engine::RenderTarget &renderTarget) noexcept
+{
+	renderTarget.addLayer(__pLayer);
+}
+
+void CApp::removeRenderTarget(Engine::RenderTarget &renderTarget) noexcept
+{
+	renderTarget.removeLayer(__pLayer);
 }
 
 void CApp::__onInitBeforeMainFrame()
@@ -100,7 +113,13 @@ void CApp::__onInitBeforeMainFrame()
 	__createGraphicsCore();
 	__createRenderingEngine();
 
-	__pTriangleRenderer = std::unique_ptr<Frameworks::TriangleRenderer>{ __pRenderingEngine->createRenderer<Frameworks::TriangleRenderer>() };
+	__pLayer = std::shared_ptr<Engine::Layer>{ __pRenderingEngine->createLayer() };
+
+	__pRenderObject = std::shared_ptr<Engine::RenderObject>{ __pRenderingEngine->createRenderObject() };
+	__pTriangleRenderer = std::shared_ptr<Frameworks::TriangleRenderer>{ __pRenderingEngine->createRenderer<Frameworks::TriangleRenderer>() };
+
+	__pRenderObject->setRenderer(__pTriangleRenderer);
+	__pLayer->addRenderObject(__pRenderObject);
 }
 
 void CApp::__createGraphicsCore()

@@ -31,6 +31,7 @@
       <FileType>Document</FileType>
     </ClCompile>
     <ClCompile Include="Version.ixx" />
+    <ClCompile Include="WeakReferenceSet.ixx" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GLM.h" />

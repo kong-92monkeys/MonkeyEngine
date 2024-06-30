@@ -60,7 +60,7 @@ namespace Frameworks
 
 	void TriangleRenderer::bind(Graphics::CommandBuffer &commandBuffer) noexcept
 	{
-		// TODO: bind pipeline
+		commandBuffer.bindPipeline(VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, __pPipeline->getHandle());
 	}
 
 	void TriangleRenderer::_onInit()

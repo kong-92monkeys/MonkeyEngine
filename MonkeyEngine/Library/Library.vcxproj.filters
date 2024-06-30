@@ -7,6 +7,7 @@
     <ClCompile Include="Unique.ixx" />
     <ClCompile Include="Version.ixx" />
     <ClCompile Include="AssetManager.ixx" />
+    <ClCompile Include="WeakReferenceSet.ixx" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GLM.h" />

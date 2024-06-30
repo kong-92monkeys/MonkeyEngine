@@ -8,12 +8,15 @@
 #endif
 
 #include "resource.h"       // main symbols
-import <memory>;
 import ntmonkeys.com.Lib.Event;
 import ntmonkeys.com.Lib.AssetManager;
 import ntmonkeys.com.Engine.Core;
 import ntmonkeys.com.Engine.RenderingEngine;
+import ntmonkeys.com.Engine.RenderTarget;
+import ntmonkeys.com.Engine.Layer;
+import ntmonkeys.com.Engine.RenderObject;
 import ntmonkeys.com.Frameworks.TriangleRenderer;
+import <memory>;
 
 // CApp:
 // See App.cpp for the implementation of this class
@@ -40,6 +43,9 @@ public:
 	[[nodiscard]]
 	constexpr Engine::RenderingEngine &getRenderingEngine() noexcept;
 
+	void addRenderTarget(Engine::RenderTarget &renderTarget) noexcept;
+	void removeRenderTarget(Engine::RenderTarget &renderTarget) noexcept;
+
 	[[nodiscard]]
 	constexpr Lib::EventView<> &getIdleEvent() const noexcept;
 
@@ -49,7 +55,9 @@ private:
 	std::unique_ptr<Engine::Core> __pCore;
 	std::unique_ptr<Engine::RenderingEngine> __pRenderingEngine;
 
-	std::unique_ptr<Frameworks::TriangleRenderer> __pTriangleRenderer;
+	std::shared_ptr<Engine::Layer> __pLayer;
+	std::shared_ptr<Engine::RenderObject> __pRenderObject;
+	std::shared_ptr<Frameworks::TriangleRenderer> __pTriangleRenderer;
 
 	mutable Lib::Event<> __idleEvent;
 

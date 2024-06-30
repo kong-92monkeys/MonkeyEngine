@@ -33,8 +33,6 @@ namespace Graphics
 			VkPresentModeKHR presentMode{ };
 			VkBool32 clipped{ };
 			Swapchain *pOldSwapchain{ };
-			VkFullScreenExclusiveEXT fullScreenMode{ };
-			HMONITOR fullScreenMonitor{ };
 		};
 
 		explicit Swapchain(const CreateInfo &createInfo) noexcept;
@@ -123,23 +121,9 @@ namespace Graphics
 
 	void Swapchain::__create(const CreateInfo &createInfo)
 	{
-		VkSurfaceFullScreenExclusiveWin32InfoEXT fullscreenWin32Info
-		{
-			.sType		{ VkStructureType::VK_STRUCTURE_TYPE_SURFACE_FULL_SCREEN_EXCLUSIVE_WIN32_INFO_EXT },
-			.hmonitor	{ createInfo.fullScreenMonitor }
-		};
-
-		const VkSurfaceFullScreenExclusiveInfoEXT fullscreenInfo
-		{
-			.sType					{ VkStructureType::VK_STRUCTURE_TYPE_SURFACE_FULL_SCREEN_EXCLUSIVE_INFO_EXT },
-			.pNext					{ &fullscreenWin32Info },
-			.fullScreenExclusive	{ createInfo.fullScreenMode }
-		};
-
 		const VkSwapchainCreateInfoKHR vkCreateInfo
 		{
 			.sType					{ VkStructureType::VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR },
-			.pNext					{ &fullscreenInfo },
 			.surface				{ createInfo.hSurface },
 			.minImageCount			{ createInfo.minImageCount },
 			.imageFormat			{ __imageFormat },

@@ -6,6 +6,7 @@ module;
 export module ntmonkeys.com.Engine.RenderTarget;
 
 import ntmonkeys.com.Lib.Unique;
+import ntmonkeys.com.Lib.WeakReferenceSet;
 import ntmonkeys.com.Graphics.LogicalDevice;
 import ntmonkeys.com.Graphics.Surface;
 import ntmonkeys.com.Graphics.Swapchain;
@@ -85,7 +86,7 @@ namespace Engine
 		std::unique_ptr<FramebufferFactory> __pFramebufferFactory;
 		std::unique_ptr<SemaphoreCirculator> __pImgAcquireSemaphoreCirculator;
 
-		std::unordered_map<Layer *, std::weak_ptr<Layer>> __layers;
+		Lib::WeakReferenceSet<Layer> __layers;
 
 		glm::vec4 __backgroundColor{ 0.01f, 0.01f, 0.01f, 1.0f };
 
@@ -150,12 +151,12 @@ namespace Engine
 
 	void RenderTarget::addLayer(const std::shared_ptr<Layer> &pLayer) noexcept
 	{
-		__layers.emplace(pLayer.get(), pLayer);
+		__layers.emplace(pLayer);
 	}
 
 	void RenderTarget::removeLayer(const std::shared_ptr<Layer> &pLayer) noexcept
 	{
-		__layers.erase(pLayer.get());
+		__layers.erase(pLayer);
 	}
 
 	void RenderTarget::sync()
@@ -193,18 +194,21 @@ namespace Engine
 			.pFramebufferFactory	{ __pFramebufferFactory.get() }
 		};
 
-		for (auto layerIt{ __layers.begin() }; layerIt != __layers.end(); )
+		const VkViewport viewport
 		{
-			const auto &[pLayer, wpLayer]{ *layerIt };
-			if (wpLayer.expired())
-			{
-				layerIt = __layers.erase(layerIt);
-				continue;
-			}
+			.x			{ 0.0f },
+			.y			{ 0.0f },
+			.width		{ static_cast<float>(getWidth()) },
+			.height		{ static_cast<float>(getHeight()) },
+			.minDepth	{ 0.0f },
+			.maxDepth	{ 1.0f }
+		};
 
-			pLayer->draw(drawInfo, commandBuffer);
-			++layerIt;
-		}
+		commandBuffer.setViewport(0U, 1U, &viewport);
+		commandBuffer.setScissor(0U, 1U, &renderArea);
+
+		for (auto &layer : __layers)
+			layer.draw(drawInfo, commandBuffer);
 
 		return { &imgAcquireSemaphore, imageIdx };
 	}
