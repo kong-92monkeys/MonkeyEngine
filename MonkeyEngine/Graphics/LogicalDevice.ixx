@@ -8,6 +8,8 @@ import ntmonkeys.com.Lib.Unique;
 import ntmonkeys.com.VK.VulkanProc;
 import ntmonkeys.com.Graphics.ConversionUtil;
 import ntmonkeys.com.Graphics.Queue;
+import ntmonkeys.com.Graphics.Memory;
+import ntmonkeys.com.Graphics.Buffer;
 import ntmonkeys.com.Graphics.Surface;
 import ntmonkeys.com.Graphics.Shader;
 import ntmonkeys.com.Graphics.DescriptorSetLayout;
@@ -80,6 +82,14 @@ namespace Graphics
 		constexpr Queue &getQueue() noexcept;
 
 		VkResult waitIdle() const noexcept;
+
+		[[nodiscard]]
+		Memory *createMemory(
+			const VkDeviceSize allocationSize, const uint32_t memoryTypeIndex,
+			const VkImage hDedicatedImage, const VkBuffer hDedicatedBuffer);
+
+		[[nodiscard]]
+		Buffer *createBuffer(const VkDeviceSize size, const VkBufferUsageFlags usage);
 
 		[[nodiscard]]
 		Surface *createSurface(const HINSTANCE hAppInstance, const HWND hwnd);
@@ -171,6 +181,36 @@ namespace Graphics
 	VkResult LogicalDevice::waitIdle() const noexcept
 	{
 		return __deviceProc.vkDeviceWaitIdle(__handle);
+	}
+
+	Memory *LogicalDevice::createMemory(
+		const VkDeviceSize allocationSize, const uint32_t memoryTypeIndex,
+		const VkImage hDedicatedImage, const VkBuffer hDedicatedBuffer)
+	{
+		const Memory::CreateInfo createInfo
+		{
+			.pDeviceProc		{ &__deviceProc },
+			.hDevice			{ __handle },
+			.allocationSize		{ allocationSize },
+			.memoryTypeIndex	{ memoryTypeIndex },
+			.hDedicatedImage	{ hDedicatedImage },
+			.hDedicatedBuffer	{ hDedicatedBuffer }
+		};
+
+		return new Memory{ createInfo };
+	}
+
+	Buffer *LogicalDevice::createBuffer(const VkDeviceSize size, const VkBufferUsageFlags usage)
+	{
+		const Buffer::CreateInfo createInfo
+		{
+			.pDeviceProc	{ &__deviceProc },
+			.hDevice		{ __handle },
+			.size			{ size },
+			.usage			{ usage }
+		};
+
+		return new Buffer{ createInfo };
 	}
 
 	Surface *LogicalDevice::createSurface(const HINSTANCE hAppInstance, const HWND hwnd)

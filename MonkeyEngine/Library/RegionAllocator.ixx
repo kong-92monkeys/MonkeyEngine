@@ -1,12 +1,14 @@
 export module ntmonkeys.com.Lib.RegionAllocator;
 
+import ntmonkeys.com.Lib.Unique;
 import ntmonkeys.com.Lib.MathUtil;
 import <optional>;
 import <map>;
+import <stdexcept>;
 
 namespace Lib
 {
-	export class RegionAllocator
+	export class RegionAllocator : public Unique
 	{
 	public:
 		RegionAllocator(const size_t size) noexcept;
@@ -22,6 +24,38 @@ namespace Lib
 		const size_t __size;
 		std::map<size_t, size_t> __regions;
 	};
+
+	export class Region : public Unique
+	{
+	public:
+		Region(RegionAllocator &allocator, const size_t size, const size_t alignment);
+		virtual ~Region() noexcept;
+
+		[[nodiscard]]
+		constexpr size_t getSize() const noexcept;
+
+		[[nodiscard]]
+		constexpr size_t getOffset() const noexcept;
+
+	private:
+		RegionAllocator &__allocator;
+		const size_t __size;
+		const size_t __alignment;
+
+		size_t __offset{ };
+
+		void __create();
+	};
+
+	constexpr size_t Region::getSize() const noexcept
+	{
+		return __size;
+	}
+
+	constexpr size_t Region::getOffset() const noexcept
+	{
+		return __offset;
+	}
 }
 
 module: private;
@@ -35,9 +69,8 @@ namespace Lib
 	std::optional<size_t> RegionAllocator::allocate(const size_t size, const size_t alignment) noexcept
 	{
 		std::optional<size_t> retVal;
-		const size_t alignedSize{ MathUtil::ceilAlign(size, alignment) };
 
-		if (__regions.empty() && (__size >= alignedSize))
+		if (__regions.empty() && (__size >= size))
 			retVal = 0ULL;
 		else
 		{
@@ -51,7 +84,7 @@ namespace Lib
 				const size_t from	{ MathUtil::ceilAlign(itOffset + itSize, alignment) };
 				const size_t to		{ (nextIt == __regions.end()) ? __size : nextIt->first };
 
-				if ((to - from) >= alignedSize)
+				if ((to - from) >= size)
 				{
 					retVal = from;
 					break;
@@ -62,7 +95,7 @@ namespace Lib
 		}
 
 		if (retVal.has_value())
-			__regions.emplace(retVal.value(), alignedSize);
+			__regions.emplace(retVal.value(), size);
 
 		return retVal;
 	}
@@ -75,5 +108,30 @@ namespace Lib
 	bool RegionAllocator::isEmpty() const noexcept
 	{
 		return __regions.empty();
+	}
+
+	Region::Region(RegionAllocator &allocator, const size_t size, const size_t alignment) :
+		__allocator		{ allocator },
+		__size			{ size },
+		__alignment		{ alignment }
+	{
+		__create();
+	}
+
+	Region::~Region() noexcept
+	{
+		__allocator.free(__offset);
+	}
+
+	void Region::__create()
+	{
+		const auto offset{ __allocator.allocate(__size, __alignment) };
+		if (offset.has_value())
+		{
+			__offset = offset.value();
+			return;
+		}
+
+		throw std::bad_alloc{ };
 	}
 }

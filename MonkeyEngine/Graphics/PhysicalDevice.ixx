@@ -78,7 +78,7 @@ namespace Graphics
 		constexpr const std::unordered_map<std::string_view, const VkExtensionProperties *> &getExtensions() const noexcept;
 
 		[[nodiscard]]
-		constexpr const VkPhysicalDeviceMemoryProperties2 &getMemoryProps() const noexcept;
+		constexpr const VkPhysicalDeviceMemoryProperties &getMemoryProps() const noexcept;
 
 		[[nodiscard]]
 		constexpr const std::unordered_map<VkFormat, VkFormatProperties3> &getFormatProps() const noexcept;
@@ -200,9 +200,9 @@ namespace Graphics
 		return __extensionMap;
 	}
 
-	constexpr const VkPhysicalDeviceMemoryProperties2 &PhysicalDevice::getMemoryProps() const noexcept
+	constexpr const VkPhysicalDeviceMemoryProperties &PhysicalDevice::getMemoryProps() const noexcept
 	{
-		return __memoryProps;
+		return __memoryProps.memoryProperties;
 	}
 
 	constexpr const std::unordered_map<VkFormat, VkFormatProperties3> &PhysicalDevice::getFormatProps() const noexcept

@@ -17,6 +17,7 @@ import ntmonkeys.com.Graphics.Pipeline;
 import ntmonkeys.com.Graphics.Fence;
 import ntmonkeys.com.Graphics.ConversionUtil;
 import ntmonkeys.com.Engine.RenderTarget;
+import ntmonkeys.com.Engine.MemoryAllocator;
 import ntmonkeys.com.Engine.Renderer;
 import ntmonkeys.com.Engine.Layer;
 import ntmonkeys.com.Engine.RenderObject;
@@ -68,6 +69,7 @@ namespace Engine
 		const Lib::AssetManager &__assetManager;
 
 		std::unique_ptr<Graphics::LogicalDevice> __pLogicalDevice;
+		std::unique_ptr<MemoryAllocator> __pMemoryAllocator;
 		std::unique_ptr<RenderPassFactory> __pRenderPassFactory;
 
 		std::unique_ptr<CommandBufferCirculator> __pCBCirculator;
@@ -105,7 +107,15 @@ namespace Engine
 		__physicalDevice	{ *(createInfo.pPhysicalDevice) },
 		__assetManager		{ *(createInfo.pAssetManager) }
 	{
+		const auto &deviceLimits{ __physicalDevice.get10Props().limits };
+
 		__pLogicalDevice = std::unique_ptr<Graphics::LogicalDevice>{ __physicalDevice.createLogicalDevice() };
+		
+		__pMemoryAllocator = std::make_unique<MemoryAllocator>(
+			__physicalDevice, *__pLogicalDevice,
+			Constants::DEFAULT_MEMORY_BLOCK_SIZE, Constants::DEFAULT_BUFFER_BLOCK_SIZE,
+			deviceLimits.minUniformBufferOffsetAlignment, deviceLimits.minStorageBufferOffsetAlignment);
+		
 		__pRenderPassFactory = std::make_unique<RenderPassFactory>(*__pLogicalDevice);
 
 		__pCBCirculator = std::make_unique<CommandBufferCirculator>(

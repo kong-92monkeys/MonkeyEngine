@@ -32,6 +32,8 @@ namespace Graphics
 		[[nodiscard]]
 		constexpr const VkMemoryRequirements &getMemoryRequirements() const noexcept;
 
+		VkResult bindMemory(const VkDeviceMemory hMemory, const VkDeviceSize offset) noexcept;
+
 		[[nodiscard]]
 		constexpr const VkBuffer &getHandle() noexcept;
 
@@ -79,6 +81,19 @@ namespace Graphics
 	Buffer::~Buffer() noexcept
 	{
 		__deviceProc.vkDestroyBuffer(__hDevice, __handle, nullptr);
+	}
+
+	VkResult Buffer::bindMemory(const VkDeviceMemory hMemory, const VkDeviceSize offset) noexcept
+	{
+		const VkBindBufferMemoryInfo bindInfo
+		{
+			.sType			{ VkStructureType::VK_STRUCTURE_TYPE_BIND_BUFFER_MEMORY_INFO },
+			.buffer			{ __handle },
+			.memory			{ hMemory },
+			.memoryOffset	{ offset }
+		};
+
+		return __deviceProc.vkBindBufferMemory2(__hDevice, 1U, &bindInfo);
 	}
 
 	void Buffer::__create(const CreateInfo &createInfo)
