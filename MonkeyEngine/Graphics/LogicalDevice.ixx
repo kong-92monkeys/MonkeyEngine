@@ -553,6 +553,20 @@ namespace Graphics
 		LOAD_DEVICE_PROC(vkCmdSetScissor);
 		LOAD_DEVICE_PROC(vkCmdDraw);
 		LOAD_DEVICE_PROC(vkCmdDrawIndexed);
+		LOAD_DEVICE_PROC(vkCmdCopyBuffer2);
+		LOAD_DEVICE_PROC(vkCmdCopyBufferToImage2);
+
+		// Memory
+		LOAD_DEVICE_PROC(vkAllocateMemory);
+		LOAD_DEVICE_PROC(vkFreeMemory);
+		LOAD_DEVICE_PROC(vkMapMemory);
+		LOAD_DEVICE_PROC(vkUnmapMemory);
+
+		// Buffer
+		LOAD_DEVICE_PROC(vkCreateBuffer);
+		LOAD_DEVICE_PROC(vkDestroyBuffer);
+		LOAD_DEVICE_PROC(vkGetBufferMemoryRequirements2);
+		LOAD_DEVICE_PROC(vkBindBufferMemory2);
 	}
 
 	void LogicalDevice::__retrieveQueue()
