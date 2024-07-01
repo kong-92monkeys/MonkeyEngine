@@ -69,7 +69,7 @@ namespace Engine
 
         const RenderingEngine::CreateInfo createInfo
         {
-            .pPhysicalDevice	{ &(devices.front()) },
+            .pPhysicalDevice	{ devices.front().get() },
 			.pAssetManager		{ &assetManager }
         };
 

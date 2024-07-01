@@ -30,6 +30,7 @@ namespace VK
 		PFN_vkGetPhysicalDeviceFeatures2 vkGetPhysicalDeviceFeatures2{ };
 		PFN_vkGetPhysicalDeviceFormatProperties2 vkGetPhysicalDeviceFormatProperties2{ };
 		PFN_vkEnumerateDeviceExtensionProperties vkEnumerateDeviceExtensionProperties{ };
+		PFN_vkGetPhysicalDeviceMemoryProperties2 vkGetPhysicalDeviceMemoryProperties2{ };
 		PFN_vkGetPhysicalDeviceQueueFamilyProperties2 vkGetPhysicalDeviceQueueFamilyProperties2{ };
 		PFN_vkGetPhysicalDeviceSurfaceSupportKHR vkGetPhysicalDeviceSurfaceSupportKHR{ };
 		PFN_vkGetPhysicalDeviceWin32PresentationSupportKHR vkGetPhysicalDeviceWin32PresentationSupportKHR{ };
@@ -126,5 +127,19 @@ namespace VK
 		PFN_vkCmdSetScissor vkCmdSetScissor{ };
 		PFN_vkCmdDraw vkCmdDraw{ };
 		PFN_vkCmdDrawIndexed vkCmdDrawIndexed{ };
+		PFN_vkCmdCopyBuffer2 vkCmdCopyBuffer2{ };
+		PFN_vkCmdCopyBufferToImage2 vkCmdCopyBufferToImage2{ };
+
+		// Memory
+		PFN_vkAllocateMemory vkAllocateMemory{ };
+		PFN_vkFreeMemory vkFreeMemory{ };
+		PFN_vkMapMemory vkMapMemory{ };
+		PFN_vkUnmapMemory vkUnmapMemory{ };
+
+		// Buffer
+		PFN_vkCreateBuffer vkCreateBuffer{ };
+		PFN_vkDestroyBuffer vkDestroyBuffer{ };
+		PFN_vkGetBufferMemoryRequirements2 vkGetBufferMemoryRequirements2{ };
+		PFN_vkBindBufferMemory2 vkBindBufferMemory2{ };
 	};
 }

@@ -20,5 +20,7 @@
     <ClCompile Include="CommandBuffer.ixx" />
     <ClCompile Include="Semaphore.ixx" />
     <ClCompile Include="Fence.ixx" />
+    <ClCompile Include="Memory.ixx" />
+    <ClCompile Include="Buffer.ixx" />
   </ItemGroup>
 </Project>

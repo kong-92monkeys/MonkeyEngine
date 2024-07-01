@@ -22,6 +22,8 @@
     </ClCompile>
     <ClCompile Include="Constants.ixx" />
     <ClCompile Include="RenderObject.ixx" />
+    <ClCompile Include="Mesh.ixx" />
+    <ClCompile Include="MemoryAllocator.ixx" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Util">

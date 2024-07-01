@@ -43,7 +43,7 @@ namespace Graphics
 		virtual ~RenderContext() noexcept override;
 
 		[[nodiscard]]
-		constexpr const std::vector<PhysicalDevice> &getPhysicalDevices() const noexcept;
+		constexpr const std::vector<std::unique_ptr<PhysicalDevice>> &getPhysicalDevices() const noexcept;
 
 	private:
 		std::unique_ptr<VK::VulkanLoader> __pVulkanLoader;
@@ -62,7 +62,7 @@ namespace Graphics
 
 		VkDebugUtilsMessengerEXT __hDebugMessenger{ };
 
-		std::vector<PhysicalDevice> __physicalDevices;
+		std::vector<std::unique_ptr<PhysicalDevice>> __physicalDevices;
 
 		void __createVulkanLoader(const std::string &libName);
 		void __resolveInstanceVersion();
@@ -81,7 +81,7 @@ namespace Graphics
 		void __enumeratePhysicalDevices();
 	};
 
-	constexpr const std::vector<PhysicalDevice> &RenderContext::getPhysicalDevices() const noexcept
+	constexpr const std::vector<std::unique_ptr<PhysicalDevice>> &RenderContext::getPhysicalDevices() const noexcept
 	{
 		return __physicalDevices;
 	}
@@ -290,6 +290,7 @@ namespace Graphics
 		LOAD_INSTANCE_PROC(vkGetPhysicalDeviceFeatures2);
 		LOAD_INSTANCE_PROC(vkGetPhysicalDeviceFormatProperties2);
 		LOAD_INSTANCE_PROC(vkEnumerateDeviceExtensionProperties);
+		LOAD_INSTANCE_PROC(vkGetPhysicalDeviceMemoryProperties2);
 		LOAD_INSTANCE_PROC(vkGetPhysicalDeviceQueueFamilyProperties2);
 		LOAD_INSTANCE_PROC(vkGetPhysicalDeviceSurfaceSupportKHR);
 		LOAD_INSTANCE_PROC(vkGetPhysicalDeviceWin32PresentationSupportKHR);
@@ -338,7 +339,7 @@ namespace Graphics
 				.hPhysicalDevice	{ handle }
 			};
 
-			__physicalDevices.emplace_back(createInfo);
+			__physicalDevices.emplace_back(std::make_unique<PhysicalDevice>(createInfo));
 		}
 	}
 }

@@ -109,7 +109,7 @@ namespace Engine
 		__pRenderPassFactory = std::make_unique<RenderPassFactory>(*__pLogicalDevice);
 
 		__pCBCirculator = std::make_unique<CommandBufferCirculator>(
-			*__pLogicalDevice, VkCommandBufferLevel::VK_COMMAND_BUFFER_LEVEL_PRIMARY, 2U, 100U);
+			*__pLogicalDevice, VkCommandBufferLevel::VK_COMMAND_BUFFER_LEVEL_PRIMARY, 2U, 30U);
 
 		__pSubmitFenceCirculator = std::make_unique<FenceCirculator>(*__pLogicalDevice, Constants::MAX_IN_FLIGHT_FRAME_COUNT_LIMIT);
 		__pSubmitSemaphoreCirculator = std::make_unique<SemaphoreCirculator>(
@@ -179,6 +179,7 @@ namespace Engine
 
 		auto &queue{ __pLogicalDevice->getQueue() };
 
+		// semaphore wait는 모든 memory visible barrier가 암묵적 내장되어 있음
 		const VkSemaphoreSubmitInfo waitSemaphoreInfo
 		{
 			.sType			{ VkStructureType::VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO },
@@ -194,6 +195,7 @@ namespace Engine
 
 		auto &submitSemaphore{ __pSubmitSemaphoreCirculator->getNext() };
 
+		// semaphore or fence signal은 걸려있는 모든 previous command의 실행 완료, 모든 memory available가 암묵적 내장되어 있음
 		const VkSemaphoreSubmitInfo signalSemaphoreInfo
 		{
 			.sType			{ VkStructureType::VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO },
@@ -215,6 +217,7 @@ namespace Engine
 		auto &fence{ __getSubmitFence() };
 		fence.reset();
 
+		// vkQueueSubmit은 모든 host-visible memory의 full memory barrier (available - visible) 보장
 		queue.submit(1U, &submitInfo, fence.getHandle());
 
 		const VkPresentInfoKHR presentInfo

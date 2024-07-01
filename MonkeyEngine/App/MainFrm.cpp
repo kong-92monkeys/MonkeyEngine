@@ -39,8 +39,8 @@ BOOL CMainFrame::PreCreateWindow(CREATESTRUCT& cs)
 	// TODO: Modify the Window class or styles here by modifying
 	//  the CREATESTRUCT cs
 
-	cs.cx = 1200;
-	cs.cy = 800;
+	cs.cx = 1920;
+	cs.cy = 1080;
 	cs.dwExStyle &= ~WS_EX_CLIENTEDGE;
 	cs.lpszClass = AfxRegisterWndClass(0);
 	return TRUE;
@@ -72,7 +72,7 @@ BOOL CMainFrame::OnCreateClient(LPCREATESTRUCT lpcs, CCreateContext *pContext)
 		return FALSE;
 	}
 
-	if (!(windowSplitter.CreateView(0, 0, RUNTIME_CLASS(CLogView), CSize{ 300, 0 }, pContext)))
+	if (!(windowSplitter.CreateView(0, 0, RUNTIME_CLASS(CLogView), CSize{ 600, 0 }, pContext)))
 	{
 		TRACE("Cannot create the log view.");
 		return FALSE;

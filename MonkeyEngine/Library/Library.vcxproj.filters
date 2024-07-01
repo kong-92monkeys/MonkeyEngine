@@ -8,6 +8,8 @@
     <ClCompile Include="Version.ixx" />
     <ClCompile Include="AssetManager.ixx" />
     <ClCompile Include="WeakReferenceSet.ixx" />
+    <ClCompile Include="RegionAllocator.ixx" />
+    <ClCompile Include="MathUtil.ixx" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GLM.h" />

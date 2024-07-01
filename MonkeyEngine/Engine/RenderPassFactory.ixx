@@ -51,6 +51,7 @@ namespace Engine
 
 	void RenderPassFactory::__createInstance_color()
 	{
+		// loadOp은 dependency 수행 이후 수행, memory barrier를 잘 쳐야 layout transition과 충돌 안남
 		const VkAttachmentDescription2 attachmentDesc
 		{
 			.sType				{ VkStructureType::VK_STRUCTURE_TYPE_ATTACHMENT_DESCRIPTION_2 },
@@ -80,11 +81,12 @@ namespace Engine
 			.pColorAttachments			{ &attachment }
 		};
 
+		// VkImageMemoryBarrier와 동일 기능 수행. layout 전환은 description에 기술 된대로
 		const VkMemoryBarrier2 memoryBarrier
 		{
 			.sType			{ VkStructureType::VK_STRUCTURE_TYPE_MEMORY_BARRIER_2 },
 			.srcStageMask	{ VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT },
-			.srcAccessMask	{ VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT },
+			.srcAccessMask	{ VK_ACCESS_2_NONE },
 			.dstStageMask	{ VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT },
 			.dstAccessMask	{ VK_ACCESS_2_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT }
 		};

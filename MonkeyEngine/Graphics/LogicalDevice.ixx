@@ -50,7 +50,6 @@ namespace Graphics
 			const VkPhysicalDeviceVulkan13Features *p13Features{ };
 			const VkPhysicalDeviceRobustness2FeaturesEXT *pRobustness2Features{ };
 			const VkPhysicalDeviceDescriptorBufferFeaturesEXT *pDescriptorBufferFeatures{ };
-			const VkPhysicalDeviceVariablePointersFeatures *pVariablePointersFeatures{ };
 
 			const std::unordered_map<std::string_view, const VkExtensionProperties *> *pExtensionMap;
 		};
