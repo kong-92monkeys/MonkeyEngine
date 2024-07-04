@@ -85,7 +85,7 @@ namespace Graphics
 
 		[[nodiscard]]
 		Memory *createMemory(
-			const VkDeviceSize allocationSize, const uint32_t memoryTypeIndex,
+			const VkDeviceSize size, const uint32_t typeIndex,
 			const VkImage hDedicatedImage, const VkBuffer hDedicatedBuffer);
 
 		[[nodiscard]]
@@ -184,15 +184,15 @@ namespace Graphics
 	}
 
 	Memory *LogicalDevice::createMemory(
-		const VkDeviceSize allocationSize, const uint32_t memoryTypeIndex,
+		const VkDeviceSize size, const uint32_t typeIndex,
 		const VkImage hDedicatedImage, const VkBuffer hDedicatedBuffer)
 	{
 		const Memory::CreateInfo createInfo
 		{
 			.pDeviceProc		{ &__deviceProc },
 			.hDevice			{ __handle },
-			.allocationSize		{ allocationSize },
-			.memoryTypeIndex	{ memoryTypeIndex },
+			.size				{ size },
+			.typeIndex			{ typeIndex },
 			.hDedicatedImage	{ hDedicatedImage },
 			.hDedicatedBuffer	{ hDedicatedBuffer }
 		};
@@ -555,7 +555,8 @@ namespace Graphics
 		LOAD_DEVICE_PROC(vkCmdDrawIndexed);
 		LOAD_DEVICE_PROC(vkCmdCopyBuffer2);
 		LOAD_DEVICE_PROC(vkCmdCopyBufferToImage2);
-
+		LOAD_DEVICE_PROC(vkCmdPipelineBarrier2);
+		
 		// Memory
 		LOAD_DEVICE_PROC(vkAllocateMemory);
 		LOAD_DEVICE_PROC(vkFreeMemory);

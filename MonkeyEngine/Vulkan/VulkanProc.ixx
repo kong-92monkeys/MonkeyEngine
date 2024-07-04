@@ -129,6 +129,7 @@ namespace VK
 		PFN_vkCmdDrawIndexed vkCmdDrawIndexed{ };
 		PFN_vkCmdCopyBuffer2 vkCmdCopyBuffer2{ };
 		PFN_vkCmdCopyBufferToImage2 vkCmdCopyBufferToImage2{ };
+		PFN_vkCmdPipelineBarrier2 vkCmdPipelineBarrier2{ };
 
 		// Memory
 		PFN_vkAllocateMemory vkAllocateMemory{ };

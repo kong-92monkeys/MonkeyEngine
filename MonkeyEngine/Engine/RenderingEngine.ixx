@@ -5,6 +5,7 @@ module;
 export module ntmonkeys.com.Engine.RenderingEngine;
 
 import ntmonkeys.com.Lib.Unique;
+import ntmonkeys.com.Lib.LazyDeleter;
 import ntmonkeys.com.Lib.AssetManager;
 import ntmonkeys.com.Graphics.PhysicalDevice;
 import ntmonkeys.com.Graphics.LogicalDevice;
@@ -16,10 +17,13 @@ import ntmonkeys.com.Graphics.Framebuffer;
 import ntmonkeys.com.Graphics.Pipeline;
 import ntmonkeys.com.Graphics.Fence;
 import ntmonkeys.com.Graphics.ConversionUtil;
+import ntmonkeys.com.Engine.EngineContext;
 import ntmonkeys.com.Engine.RenderTarget;
 import ntmonkeys.com.Engine.MemoryAllocator;
+import ntmonkeys.com.Engine.CommandExecutor;
 import ntmonkeys.com.Engine.Renderer;
 import ntmonkeys.com.Engine.Layer;
+import ntmonkeys.com.Engine.Mesh;
 import ntmonkeys.com.Engine.RenderObject;
 import ntmonkeys.com.Engine.RenderPassFactory;
 import ntmonkeys.com.Engine.CommandBufferCirculator;
@@ -53,6 +57,9 @@ namespace Engine
 		[[nodiscard]]
 		Layer *createLayer();
 
+		[[nodiscard]]
+		Mesh *createMesh() noexcept;
+
 		template <std::derived_from<Renderer> $Renderer, typename ...$Args>
 		[[nodiscard]]
 		$Renderer *createRenderer($Args &&...args);
@@ -67,6 +74,10 @@ namespace Engine
 	private:
 		const Graphics::PhysicalDevice &__physicalDevice;
 		const Lib::AssetManager &__assetManager;
+
+		EngineContext __context;
+		Lib::LazyDeleter __lazyDeleter{ 5ULL };
+		CommandExecutor __commandExecutor;
 
 		std::unique_ptr<Graphics::LogicalDevice> __pLogicalDevice;
 		std::unique_ptr<MemoryAllocator> __pMemoryAllocator;
@@ -124,16 +135,22 @@ namespace Engine
 		__pSubmitFenceCirculator = std::make_unique<FenceCirculator>(*__pLogicalDevice, Constants::MAX_IN_FLIGHT_FRAME_COUNT_LIMIT);
 		__pSubmitSemaphoreCirculator = std::make_unique<SemaphoreCirculator>(
 			*__pLogicalDevice, VkSemaphoreType::VK_SEMAPHORE_TYPE_BINARY, Constants::MAX_IN_FLIGHT_FRAME_COUNT_LIMIT);
+
+		__context.pLazyDeleter			= &__lazyDeleter;
+		__context.pCommandExecutor		= &__commandExecutor;
+		__context.pMemoryAllocator		= __pMemoryAllocator.get();
 	}
 
 	RenderingEngine::~RenderingEngine() noexcept
 	{
+		__lazyDeleter.flush();
 		__pLogicalDevice->waitIdle();
 
 		__pSubmitSemaphoreCirculator = nullptr;
 		__pSubmitFenceCirculator = nullptr;
 		__pCBCirculator = nullptr;
 		__pRenderPassFactory = nullptr;
+		__pMemoryAllocator = nullptr;
 		__pLogicalDevice = nullptr;
 	}
 
@@ -153,6 +170,11 @@ namespace Engine
 	Layer *RenderingEngine::createLayer()
 	{
 		return new Layer{ *__pRenderPassFactory };
+	}
+
+	Mesh *RenderingEngine::createMesh() noexcept
+	{
+		return new Mesh{ __context };
 	}
 
 	RenderObject *RenderingEngine::createRenderObject() noexcept
@@ -182,9 +204,9 @@ namespace Engine
 		};
 
 		commandBuffer.begin(cbBeginInfo);
+		__commandExecutor.execute(commandBuffer);
 
 		const auto drawResult{ renderTarget.draw(commandBuffer) };
-
 		commandBuffer.end();
 
 		auto &queue{ __pLogicalDevice->getQueue() };
@@ -229,6 +251,7 @@ namespace Engine
 
 		// vkQueueSubmit은 모든 host-visible memory의 full memory barrier (available - visible) 보장
 		queue.submit(1U, &submitInfo, fence.getHandle());
+		__lazyDeleter.advance();
 
 		const VkPresentInfoKHR presentInfo
 		{

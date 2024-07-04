@@ -21,6 +21,8 @@
   <ItemGroup>
     <ClCompile Include="AssetManager.ixx" />
     <ClCompile Include="Event.ixx" />
+    <ClCompile Include="LazyDeleter.ixx" />
+    <ClCompile Include="LazyRecycler.ixx" />
     <ClCompile Include="Logger.ixx">
       <FileType>Document</FileType>
     </ClCompile>

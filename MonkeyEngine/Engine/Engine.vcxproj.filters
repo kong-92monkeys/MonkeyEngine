@@ -24,6 +24,8 @@
     <ClCompile Include="RenderObject.ixx" />
     <ClCompile Include="Mesh.ixx" />
     <ClCompile Include="MemoryAllocator.ixx" />
+    <ClCompile Include="CommandExecutor.ixx" />
+    <ClCompile Include="EngineContext.ixx" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Util">

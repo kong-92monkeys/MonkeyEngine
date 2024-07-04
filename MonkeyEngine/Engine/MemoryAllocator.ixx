@@ -11,6 +11,7 @@ import ntmonkeys.com.Graphics.Memory;
 import ntmonkeys.com.Graphics.Buffer;
 import ntmonkeys.com.Graphics.PhysicalDevice;
 import ntmonkeys.com.Graphics.LogicalDevice;
+import <cstddef>;
 import <memory>;
 import <unordered_map>;
 import <optional>;
@@ -52,10 +53,62 @@ namespace Engine
 		std::unique_ptr<Graphics::Memory> __pMemory;
 	};
 
+	class AbstractMemory : public Lib::Unique
+	{
+	public:
+		[[nodiscard]]
+		virtual Graphics::Memory &getMemory() noexcept = 0;
+
+		[[nodiscard]]
+		virtual size_t getSize() const noexcept = 0;
+
+		[[nodiscard]]
+		virtual size_t getOffset() const noexcept = 0;
+
+		[[nodiscard]]
+		void *getMappedMemory() noexcept;
+	};
+
+	class AbstractMemory_Memory : public AbstractMemory
+	{
+	public:
+		AbstractMemory_Memory(std::unique_ptr<Graphics::Memory> &&pMemory) noexcept;
+
+		[[nodiscard]]
+		virtual Graphics::Memory &getMemory() noexcept override;
+
+		[[nodiscard]]
+		virtual size_t getSize() const noexcept override;
+
+		[[nodiscard]]
+		virtual size_t getOffset() const noexcept override;
+
+	private:
+		std::unique_ptr<Graphics::Memory> __pMemory;
+	};
+
+	class AbstractMemory_MemoryChunk : public AbstractMemory
+	{
+	public:
+		AbstractMemory_MemoryChunk(std::unique_ptr<MemoryChunk> &&pMemoryChunk) noexcept;
+
+		[[nodiscard]]
+		virtual Graphics::Memory &getMemory() noexcept override;
+
+		[[nodiscard]]
+		virtual size_t getSize() const noexcept override;
+
+		[[nodiscard]]
+		virtual size_t getOffset() const noexcept override;
+
+	private:
+		std::unique_ptr<MemoryChunk> __pMemoryChunk;
+	};
+
 	export class BufferChunk : public Lib::Unique
 	{
 	public:
-		BufferChunk(Graphics::Buffer &buffer, std::unique_ptr<Lib::Region> &&pRegion) noexcept;
+		BufferChunk(Graphics::Buffer &buffer, AbstractMemory &memory, std::unique_ptr<Lib::Region> &&pRegion) noexcept;
 
 		[[nodiscard]]
 		constexpr Graphics::Buffer &getBuffer() noexcept;
@@ -66,8 +119,12 @@ namespace Engine
 		[[nodiscard]]
 		constexpr size_t getOffset() const noexcept;
 
+		[[nodiscard]]
+		void *getMappedMemory() noexcept;
+
 	private:
 		Graphics::Buffer &__buffer;
+		AbstractMemory &__memory;
 		std::unique_ptr<Lib::Region> __pRegion;
 	};
 
@@ -82,8 +139,7 @@ namespace Engine
 		[[nodiscard]]
 		constexpr Graphics::Buffer &getBuffer() noexcept;
 
-		void bindMemory(std::unique_ptr<Graphics::Memory> &&pMemory) noexcept;
-		void bindMemory(std::unique_ptr<MemoryChunk> &&pMemory) noexcept;
+		void bindMemory(std::unique_ptr<AbstractMemory> &&pMemory) noexcept;
 
 		[[nodiscard]]
 		BufferChunk *allocateChunk(const size_t size, const size_t alignment) noexcept;
@@ -91,9 +147,7 @@ namespace Engine
 	private:
 		Lib::RegionAllocator __regionAllocator;
 		std::unique_ptr<Graphics::Buffer> __pBuffer;
-
-		std::unique_ptr<Graphics::Memory> __pDedicatedMemory;
-		std::unique_ptr<MemoryChunk> __pBoundMemory;
+		std::unique_ptr<AbstractMemory> __pBoundMemory;
 	};
 
 	export class MemoryAllocator : public Lib::Unique
@@ -201,10 +255,60 @@ namespace Engine
 		}
 	}
 
-	BufferChunk::BufferChunk(Graphics::Buffer &buffer, std::unique_ptr<Lib::Region> &&pRegion) noexcept :
+	void *AbstractMemory::getMappedMemory() noexcept
+	{
+		const auto pMappedMemory{ static_cast<std::byte *>(getMemory().getMappedMemory()) };
+		return (pMappedMemory + getOffset());
+	}
+
+	AbstractMemory_Memory::AbstractMemory_Memory(std::unique_ptr<Graphics::Memory> &&pMemory) noexcept
+		:__pMemory{ std::move(pMemory) }
+	{}
+
+	Graphics::Memory &AbstractMemory_Memory::getMemory() noexcept
+	{
+		return *__pMemory;
+	}
+
+	size_t AbstractMemory_Memory::getSize() const noexcept
+	{
+		return __pMemory->getSize();
+	}
+
+	size_t AbstractMemory_Memory::getOffset() const noexcept
+	{
+		return 0ULL;
+	}
+
+	AbstractMemory_MemoryChunk::AbstractMemory_MemoryChunk(std::unique_ptr<MemoryChunk> &&pMemoryChunk) noexcept
+		:__pMemoryChunk{ std::move(pMemoryChunk) }
+	{}
+
+	Graphics::Memory &AbstractMemory_MemoryChunk::getMemory() noexcept
+	{
+		return __pMemoryChunk->getMemory();
+	}
+
+	size_t AbstractMemory_MemoryChunk::getSize() const noexcept
+	{
+		return __pMemoryChunk->getSize();
+	}
+
+	size_t AbstractMemory_MemoryChunk::getOffset() const noexcept
+	{
+		return __pMemoryChunk->getOffset();
+	}
+
+	BufferChunk::BufferChunk(Graphics::Buffer &buffer, AbstractMemory &memory, std::unique_ptr<Lib::Region> &&pRegion) noexcept :
 		__buffer	{ buffer },
+		__memory	{ memory },
 		__pRegion	{ std::move(pRegion) }
 	{}
+
+	void *BufferChunk::getMappedMemory() noexcept
+	{
+		return __memory.getMappedMemory();
+	}
 
 	BufferBlock::BufferBlock(
 		Graphics::LogicalDevice &device,
@@ -215,13 +319,7 @@ namespace Engine
 		__pBuffer = std::unique_ptr<Graphics::Buffer>{ device.createBuffer(size, usage) };
 	}
 
-	void BufferBlock::bindMemory(std::unique_ptr<Graphics::Memory> &&pMemory) noexcept
-	{
-		__pBuffer->bindMemory(pMemory->getHandle(), 0U);
-		__pDedicatedMemory = std::move(pMemory);
-	}
-
-	void BufferBlock::bindMemory(std::unique_ptr<MemoryChunk> &&pMemory) noexcept
+	void BufferBlock::bindMemory(std::unique_ptr<AbstractMemory> &&pMemory) noexcept
 	{
 		__pBuffer->bindMemory(pMemory->getMemory().getHandle(), pMemory->getOffset());
 		__pBoundMemory = std::move(pMemory);
@@ -232,7 +330,7 @@ namespace Engine
 		try
 		{
 			auto pRegion{ std::make_unique<Lib::Region>(__regionAllocator, size, alignment) };
-			return new BufferChunk{ *__pBuffer, std::move(pRegion) };
+			return new BufferChunk{ *__pBuffer, *__pBoundMemory, std::move(pRegion) };
 		}
 		catch (...)
 		{
@@ -300,14 +398,14 @@ namespace Engine
 			{
 				if (buffer.needDedicatedAllocation())
 				{
-					std::unique_ptr<Graphics::Memory> pDedicatedMemory
+					const auto pDedicatedMemory
 					{
 						__logicalDevice.createMemory(
 							bufferBlockMemReq.size, memoryTypeIndex.value(),
 							VK_NULL_HANDLE, buffer.getHandle())
 					};
 
-					pNewBufferBlock->bindMemory(std::move(pDedicatedMemory));
+					pNewBufferBlock->bindMemory(std::unique_ptr<AbstractMemory>{ new AbstractMemory_Memory{ std::unique_ptr<Graphics::Memory>{ pDedicatedMemory } } });
 				}
 				else
 				{
@@ -330,7 +428,7 @@ namespace Engine
 						memoryBlocks.emplace_back(std::move(pNewBufferMemoryBlock));
 					}
 
-					pNewBufferBlock->bindMemory(std::unique_ptr<MemoryChunk>{ pNewBufferMemoryChunk });
+					pNewBufferBlock->bindMemory(std::unique_ptr<AbstractMemory>{ new AbstractMemory_MemoryChunk{ std::unique_ptr<MemoryChunk>{ pNewBufferMemoryChunk } } });
 				}
 
 				pRetVal = pNewBufferBlock->allocateChunk(size, alignment);

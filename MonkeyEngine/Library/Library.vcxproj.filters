@@ -10,6 +10,8 @@
     <ClCompile Include="WeakReferenceSet.ixx" />
     <ClCompile Include="RegionAllocator.ixx" />
     <ClCompile Include="MathUtil.ixx" />
+    <ClCompile Include="LazyDeleter.ixx" />
+    <ClCompile Include="LazyRecycler.ixx" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GLM.h" />
