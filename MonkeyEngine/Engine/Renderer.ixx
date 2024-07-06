@@ -43,7 +43,7 @@ namespace Engine
 
 		[[nodiscard]]
 		virtual RenderPassType getRenderPassType() const noexcept = 0;
-		virtual void bind(Graphics::CommandBuffer &commandBuffer) noexcept = 0;
+		virtual void bind(Graphics::CommandBuffer &commandBuffer) const noexcept = 0;
 
 	protected:
 		[[nodiscard]]
@@ -76,7 +76,7 @@ namespace Engine
 		std::vector<uint32_t> __readShaderFile(const std::string &assetPath) const;
 
 		[[nodiscard]]
-		static shaderc::CompileOptions __makeCopileOptions() noexcept;
+		shaderc::CompileOptions __makeCopileOptions() const noexcept;
 	};
 }
 
@@ -155,7 +155,7 @@ namespace Engine
 		return { result.begin(), result.end() };
 	}
 
-	shaderc::CompileOptions Renderer::__makeCopileOptions() noexcept
+	shaderc::CompileOptions Renderer::__makeCopileOptions() const noexcept
 	{
 		shaderc::CompileOptions retVal;
 
@@ -169,7 +169,7 @@ namespace Engine
 			shaderc_target_env::shaderc_target_env_vulkan,
 			shaderc_env_version::shaderc_env_version_vulkan_1_3);
 
-		retVal.SetIncluder(std::unique_ptr<shaderc::CompileOptions::IncluderInterface>{ new ShaderIncluder });
+		retVal.SetIncluder(std::unique_ptr<shaderc::CompileOptions::IncluderInterface>{ new ShaderIncluder{ *__pAssetManager } });
 
 		return retVal;
 	}

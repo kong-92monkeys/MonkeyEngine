@@ -20,6 +20,10 @@ BEGIN_MESSAGE_MAP(CApp, CWinApp)
 END_MESSAGE_MAP()
 
 import ntmonkeys.com.Lib.Logger;
+import ntmonkeys.com.Engine.Mesh;
+import ntmonkeys.com.Engine.DrawParam;
+import ntmonkeys.com.Frameworks.HostBuffer;
+import ntmonkeys.com.Frameworks.Vertex;
 
 // CApp construction
 
@@ -84,7 +88,7 @@ BOOL CApp::InitInstance()
 int CApp::ExitInstance()
 {
 	//TODO: handle additional resources you may have added
-	__pTriangleRenderer = nullptr;
+	__pRenderer = nullptr;
 	__pRenderObject = nullptr;
 	__pLayer = nullptr;
 
@@ -115,10 +119,35 @@ void CApp::__onInitBeforeMainFrame()
 
 	__pLayer = std::shared_ptr<Engine::Layer>{ __pRenderingEngine->createLayer() };
 
-	__pRenderObject = std::shared_ptr<Engine::RenderObject>{ __pRenderingEngine->createRenderObject() };
-	__pTriangleRenderer = std::shared_ptr<Frameworks::TriangleRenderer>{ __pRenderingEngine->createRenderer<Frameworks::TriangleRenderer>() };
+	__pRenderer = std::shared_ptr<Frameworks::SimpleRenderer>{ __pRenderingEngine->createRenderer<Frameworks::SimpleRenderer>() };
 
-	__pRenderObject->setRenderer(__pTriangleRenderer);
+	Frameworks::HostBuffer posBuffer;
+	posBuffer.typedAdd<glm::vec2>({ -0.5f, -0.5f });
+	posBuffer.typedAdd<glm::vec2>({ -0.5f, 0.5f });
+	posBuffer.typedAdd<glm::vec2>({ 0.5f, 0.5f });
+	posBuffer.typedAdd<glm::vec2>({ 0.5f, -0.5f });
+
+	Frameworks::HostBuffer colorBuffer;
+	colorBuffer.typedAdd<glm::vec4>({ 1.0f, 0.0f, 0.0f, 1.0f });
+	colorBuffer.typedAdd<glm::vec4>({ 0.0f, 1.0f, 0.0f, 1.0f });
+	colorBuffer.typedAdd<glm::vec4>({ 0.0f, 0.0f, 1.0f, 1.0f });
+	colorBuffer.typedAdd<glm::vec4>({ 1.0f, 0.0f, 1.0f, 1.0f });
+
+	Frameworks::HostBuffer indexBuffer;
+	indexBuffer.typedAdd<uint16_t>({ 0U, 1U, 2U, 0U, 2U, 3U });
+
+	auto pMesh = std::shared_ptr<Engine::Mesh>{ __pRenderingEngine->createMesh() };
+	pMesh->createVertexBuffer(Frameworks::VertexAttrib::POS_LOCATION, posBuffer.getData(), posBuffer.getSize());
+	pMesh->createVertexBuffer(Frameworks::VertexAttrib::COLOR_LOCATION, colorBuffer.getData(), colorBuffer.getSize());
+	pMesh->createIndexBuffer(VkIndexType::VK_INDEX_TYPE_UINT16, indexBuffer.getData(), indexBuffer.getSize());
+
+	auto pDrawParam{ std::make_shared<Engine::DrawParamIndexed>(6U, 0U, 0) };
+
+	__pRenderObject = std::shared_ptr<Engine::RenderObject>{ __pRenderingEngine->createRenderObject() };
+	__pRenderObject->setRenderer(__pRenderer);
+	__pRenderObject->setMesh(pMesh);
+	__pRenderObject->setDrawParam(pDrawParam);
+
 	__pLayer->addRenderObject(__pRenderObject);
 }
 

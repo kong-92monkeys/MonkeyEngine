@@ -26,6 +26,7 @@
     <ClCompile Include="MemoryAllocator.ixx" />
     <ClCompile Include="CommandExecutor.ixx" />
     <ClCompile Include="EngineContext.ixx" />
+    <ClCompile Include="DrawParam.ixx" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Util">

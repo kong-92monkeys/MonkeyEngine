@@ -556,7 +556,9 @@ namespace Graphics
 		LOAD_DEVICE_PROC(vkCmdCopyBuffer2);
 		LOAD_DEVICE_PROC(vkCmdCopyBufferToImage2);
 		LOAD_DEVICE_PROC(vkCmdPipelineBarrier2);
-		
+		LOAD_DEVICE_PROC(vkCmdBindVertexBuffers);
+		LOAD_DEVICE_PROC(vkCmdBindIndexBuffer);
+
 		// Memory
 		LOAD_DEVICE_PROC(vkAllocateMemory);
 		LOAD_DEVICE_PROC(vkFreeMemory);

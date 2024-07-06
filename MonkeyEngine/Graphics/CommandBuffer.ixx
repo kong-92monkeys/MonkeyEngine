@@ -43,6 +43,12 @@ namespace Graphics
 
 		void copyBuffer(const VkCopyBufferInfo2 &copyBufferInfo) noexcept;
 		void pipelineBarrier(const VkDependencyInfo &dependencyInfo) noexcept;
+		
+		void bindVertexBuffers(
+			const uint32_t firstBinding, const uint32_t bindingCount,
+			const VkBuffer *const pBuffers, const VkDeviceSize *const pOffsets) noexcept;
+
+		void bindIndexBuffer(const VkBuffer buffer, const VkDeviceSize offset, const VkIndexType indexType) noexcept;
 
 		[[nodiscard]]
 		constexpr const VkCommandBuffer &getHandle() noexcept;
@@ -126,5 +132,18 @@ namespace Graphics
 	void CommandBuffer::pipelineBarrier(const VkDependencyInfo &dependencyInfo) noexcept
 	{
 		__deviceProc.vkCmdPipelineBarrier2(__handle, &dependencyInfo);
+	}
+
+	void CommandBuffer::bindVertexBuffers(
+		const uint32_t firstBinding, const uint32_t bindingCount,
+		const VkBuffer *const pBuffers, const VkDeviceSize *const pOffsets) noexcept
+	{
+		__deviceProc.vkCmdBindVertexBuffers(__handle, firstBinding, bindingCount, pBuffers, pOffsets);
+	}
+
+	void CommandBuffer::bindIndexBuffer(
+		const VkBuffer buffer, const VkDeviceSize offset, const VkIndexType indexType) noexcept
+	{
+		__deviceProc.vkCmdBindIndexBuffer(__handle, buffer, offset, indexType);
 	}
 }

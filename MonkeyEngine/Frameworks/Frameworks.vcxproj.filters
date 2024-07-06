@@ -4,10 +4,23 @@
     <Filter Include="Renderer">
       <UniqueIdentifier>{bed11dc8-c97e-4352-8dc1-0cfb2a5e5b78}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Vertex">
+      <UniqueIdentifier>{75b25bc3-44ea-4e19-9e3d-d50dfaa4cb3d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="TriangleRenderer.ixx">
       <Filter>Renderer</Filter>
     </ClCompile>
+    <ClCompile Include="SimpleRenderer.ixx">
+      <Filter>Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="Vertex.ixx">
+      <Filter>Vertex</Filter>
+    </ClCompile>
+    <ClCompile Include="VertexAttribute.ixx">
+      <Filter>Vertex</Filter>
+    </ClCompile>
+    <ClCompile Include="HostBuffer.ixx" />
   </ItemGroup>
 </Project>

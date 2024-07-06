@@ -2,7 +2,7 @@ module;
 
 #include "../Vulkan/Vulkan.h"
 
-export module ntmonkeys.com.Frameworks.TriangleRenderer;
+export module ntmonkeys.com.Frameworks.SimpleRenderer;
 
 import ntmonkeys.com.Graphics.PipelineLayout;
 import ntmonkeys.com.Graphics.RenderPass;
@@ -11,15 +11,17 @@ import ntmonkeys.com.Graphics.Pipeline;
 import ntmonkeys.com.Graphics.LogicalDevice;
 import ntmonkeys.com.Engine.Renderer;
 import ntmonkeys.com.Engine.RenderPassFactory;
+import ntmonkeys.com.Frameworks.Vertex;
 import <memory>;
 import <array>;
+import <vector>;
 
 namespace Frameworks
 {
-	export class TriangleRenderer : public Engine::Renderer
+	export class SimpleRenderer : public Engine::Renderer
 	{
 	public:
-		virtual ~TriangleRenderer() noexcept override;
+		virtual ~SimpleRenderer() noexcept override;
 
 		[[nodiscard]]
 		virtual Engine::RenderPassType getRenderPassType() const noexcept override;
@@ -45,7 +47,7 @@ module: private;
 
 namespace Frameworks
 {
-	TriangleRenderer::~TriangleRenderer() noexcept
+	SimpleRenderer::~SimpleRenderer() noexcept
 	{
 		__pPipeline = nullptr;
 		__pFragmentShader = nullptr;
@@ -54,35 +56,35 @@ namespace Frameworks
 		__pDescriptorSetLayout = nullptr;
 	}
 
-	Engine::RenderPassType TriangleRenderer::getRenderPassType() const noexcept
+	Engine::RenderPassType SimpleRenderer::getRenderPassType() const noexcept
 	{
 		return Engine::RenderPassType::COLOR;
 	}
 
-	void TriangleRenderer::bind(Graphics::CommandBuffer &commandBuffer) const noexcept
+	void SimpleRenderer::bind(Graphics::CommandBuffer &commandBuffer) const noexcept
 	{
 		commandBuffer.bindPipeline(VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, __pPipeline->getHandle());
 	}
 
-	void TriangleRenderer::_onInit()
+	void SimpleRenderer::_onInit()
 	{
 		__createPipelineLayout();
 		__createShaders();
 		__createPipeline();
 	}
 
-	void TriangleRenderer::__createPipelineLayout()
+	void SimpleRenderer::__createPipelineLayout()
 	{
 		__pPipelineLayout = _createPipelineLayout(0U, nullptr, 0U, nullptr);
 	}
 
-	void TriangleRenderer::__createShaders()
+	void SimpleRenderer::__createShaders()
 	{
-		__pVertexShader = _createShader("Shaders/Triangle.vert");
-		__pFragmentShader = _createShader("Shaders/Triangle.frag");
+		__pVertexShader = _createShader("Shaders/Simple.vert");
+		__pFragmentShader = _createShader("Shaders/Simple.frag");
 	}
 
-	void TriangleRenderer::__createPipeline()
+	void SimpleRenderer::__createPipeline()
 	{
 		std::vector<VkPipelineShaderStageCreateInfo> stages;
 		stages.resize(2ULL);
@@ -99,9 +101,39 @@ namespace Frameworks
 		fragShaderInfo.module = __pFragmentShader->getHandle();
 		fragShaderInfo.pName = "main";
 
+		std::vector<VkVertexInputBindingDescription> vertexBindingDescs;
+
+		auto &posBindingDesc		{ vertexBindingDescs.emplace_back() };
+		posBindingDesc.binding		= VertexAttrib::POS_LOCATION;
+		posBindingDesc.stride		= sizeof(Vertex_P);
+		posBindingDesc.inputRate	= VkVertexInputRate::VK_VERTEX_INPUT_RATE_VERTEX;
+
+		auto &colorBindingDesc		{ vertexBindingDescs.emplace_back() };
+		colorBindingDesc.binding	= VertexAttrib::COLOR_LOCATION;
+		colorBindingDesc.stride		= sizeof(Vertex_C);
+		colorBindingDesc.inputRate	= VkVertexInputRate::VK_VERTEX_INPUT_RATE_VERTEX;
+
+		std::vector<VkVertexInputAttributeDescription> vertexAttribDescs;
+
+		auto &posAttribDesc			{ vertexAttribDescs.emplace_back() };
+		posAttribDesc.location		= VertexAttrib::POS_LOCATION;
+		posAttribDesc.binding		= VertexAttrib::POS_LOCATION;
+		posAttribDesc.format		= VkFormat::VK_FORMAT_R32G32B32_SFLOAT;
+		posAttribDesc.offset		= 0U;
+
+		auto &colorAttribDesc		{ vertexAttribDescs.emplace_back() };
+		colorAttribDesc.location	= VertexAttrib::COLOR_LOCATION;
+		colorAttribDesc.binding		= VertexAttrib::COLOR_LOCATION;
+		colorAttribDesc.format		= VkFormat::VK_FORMAT_R32G32B32A32_SFLOAT;
+		colorAttribDesc.offset		= 0U;
+
 		const VkPipelineVertexInputStateCreateInfo vertexInputState
 		{
-			.sType{ VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO }
+			.sType								{ VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO },
+			.vertexBindingDescriptionCount		{ static_cast<uint32_t>(vertexBindingDescs.size()) },
+			.pVertexBindingDescriptions			{ vertexBindingDescs.data() },
+			.vertexAttributeDescriptionCount	{ static_cast<uint32_t>(vertexAttribDescs.size()) },
+			.pVertexAttributeDescriptions		{ vertexAttribDescs.data() }
 		};
 		
 		const VkPipelineInputAssemblyStateCreateInfo inputAssemblyState

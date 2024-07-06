@@ -8,6 +8,7 @@
 #endif
 
 #include "resource.h"       // main symbols
+#include "../Library/GLM.h"
 import ntmonkeys.com.Lib.Event;
 import ntmonkeys.com.Lib.AssetManager;
 import ntmonkeys.com.Engine.Core;
@@ -15,7 +16,7 @@ import ntmonkeys.com.Engine.RenderingEngine;
 import ntmonkeys.com.Engine.RenderTarget;
 import ntmonkeys.com.Engine.Layer;
 import ntmonkeys.com.Engine.RenderObject;
-import ntmonkeys.com.Frameworks.TriangleRenderer;
+import ntmonkeys.com.Frameworks.SimpleRenderer;
 import <memory>;
 
 // CApp:
@@ -57,7 +58,7 @@ private:
 
 	std::shared_ptr<Engine::Layer> __pLayer;
 	std::shared_ptr<Engine::RenderObject> __pRenderObject;
-	std::shared_ptr<Frameworks::TriangleRenderer> __pTriangleRenderer;
+	std::shared_ptr<Frameworks::SimpleRenderer> __pRenderer;
 
 	mutable Lib::Event<> __idleEvent;
 

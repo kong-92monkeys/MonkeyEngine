@@ -3,6 +3,8 @@ module;
 #include <shaderc/shaderc.hpp>
 
 export module ntmonkeys.com.Engine.ShaderIncluder;
+
+import ntmonkeys.com.Lib.AssetManager;
 import <fstream>;
 import <sstream>;
 import <string>;
@@ -14,6 +16,8 @@ namespace Engine
     export class ShaderIncluder : public shaderc::CompileOptions::IncluderInterface
     {
     public:
+        explicit ShaderIncluder(const Lib::AssetManager &assetManager) noexcept;
+
         virtual shaderc_include_result *GetInclude(
             const char *const requested_source,
             const shaderc_include_type includeType,
@@ -30,6 +34,8 @@ namespace Engine
             std::string content;
         };
 
+        const Lib::AssetManager &__assetManager;
+
         [[nodiscard]]
         static std::filesystem::path __resolveTargetAbsolutePath(
             const shaderc_include_type includeType,
@@ -42,35 +48,38 @@ module: private;
 
 namespace Engine
 {
+    ShaderIncluder::ShaderIncluder(const Lib::AssetManager &assetManager) noexcept :
+        __assetManager{ assetManager }
+    {}
+
     shaderc_include_result *ShaderIncluder::GetInclude(
         const char *const requested_source,
         const shaderc_include_type includeType,
         const char *const requesting_source,
         const size_t include_depth)
     {
-        auto *const pPlaceholder{ new IncludeResultPlaceholder };
-        auto &sourceName{ pPlaceholder->sourceName };
-        auto &content{ pPlaceholder->content };
+        auto *const pPlaceholder    { new IncludeResultPlaceholder };
+        auto &sourceName            { pPlaceholder->sourceName };
+        auto &content               { pPlaceholder->content };
 
         const auto absolutePath{ __resolveTargetAbsolutePath(includeType, requested_source, requesting_source) };
-        std::ifstream fin{ absolutePath };
-        if (fin)
-        {
-            std::ostringstream oss;
-            oss << fin.rdbuf();
 
-            sourceName = absolutePath.string();
-            content = oss.str();
+        try
+        {
+            sourceName  = absolutePath.string();
+            content     = __assetManager.readString(sourceName);
         }
-        else
+        catch (...)
+        {
             content = std::format("Cannot open file: {}", requested_source);
+        }
 
         auto *const pRetVal{ new shaderc_include_result };
-        pRetVal->source_name = pPlaceholder->sourceName.c_str();
-        pRetVal->source_name_length = pPlaceholder->sourceName.size();
-        pRetVal->content = pPlaceholder->content.c_str();
-        pRetVal->content_length = pPlaceholder->content.size();
-        pRetVal->user_data = pPlaceholder;
+        pRetVal->source_name            = pPlaceholder->sourceName.c_str();
+        pRetVal->source_name_length     = pPlaceholder->sourceName.size();
+        pRetVal->content                = pPlaceholder->content.c_str();
+        pRetVal->content_length         = pPlaceholder->content.size();
+        pRetVal->user_data              = pPlaceholder;
 
         return pRetVal;
     }

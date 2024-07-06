@@ -113,7 +113,8 @@ namespace Engine
 		for (const auto &renderObject : __renderObjects)
 		{
 			renderObject.getRenderer()->bind(commandBuffer);
-			commandBuffer.draw(3U, 1U, 0U, 0U);
+			renderObject.getMesh()->bind(commandBuffer);
+			renderObject.draw(commandBuffer);
 		}
 
 		const VkSubpassEndInfo subpassEndInfo

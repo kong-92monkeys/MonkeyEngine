@@ -233,8 +233,11 @@
     <ResourceCompile Include="App.rc" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Assets\Shaders\triangle.frag" />
-    <None Include="Assets\Shaders\triangle.vert" />
+    <None Include="Assets\Shaders\Constants.glsl" />
+    <None Include="Assets\Shaders\Simple.frag" />
+    <None Include="Assets\Shaders\Simple.vert" />
+    <None Include="Assets\Shaders\Triangle.frag" />
+    <None Include="Assets\Shaders\Triangle.vert" />
     <None Include="res\App.rc2" />
   </ItemGroup>
   <ItemGroup>

@@ -158,7 +158,7 @@ namespace Engine
 			const size_t memoryBlockSize, const size_t bufferBlockSize,
 			const VkDeviceSize uniformBufferAlignment, const VkDeviceSize storageBufferAlignment) noexcept;
 
-		virtual ~MemoryAllocator() noexcept = default;
+		virtual ~MemoryAllocator() noexcept;
 
 		[[nodiscard]]
 		BufferChunk *allocateBuffer(
@@ -349,6 +349,12 @@ namespace Engine
 		__uniformBufferAlignment	{ uniformBufferAlignment },
 		__storageBufferAlignment	{ storageBufferAlignment }
 	{}
+
+	MemoryAllocator::~MemoryAllocator() noexcept
+	{
+		__bufferBlockMap.clear();
+		__bufferMemoryBlockMap.clear();
+	}
 
 	BufferChunk *MemoryAllocator::allocateBuffer(
 		const VkMemoryPropertyFlags memoryProps,

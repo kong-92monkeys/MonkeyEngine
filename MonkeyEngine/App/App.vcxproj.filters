@@ -33,6 +33,12 @@
     <Filter Include="Assets\Shaders">
       <UniqueIdentifier>{91d57ade-e457-4619-8beb-1fe10fdc5133}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Assets\Shaders\triangle">
+      <UniqueIdentifier>{db2e12f1-96d9-48df-a136-98b4434ad623}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Assets\Shaders\simple">
+      <UniqueIdentifier>{44d7721c-6604-4529-bfef-641d6817ff68}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -89,10 +95,19 @@
     <None Include="res\App.rc2">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="Assets\Shaders\triangle.frag">
-      <Filter>Assets\Shaders</Filter>
+    <None Include="Assets\Shaders\Triangle.vert">
+      <Filter>Assets\Shaders\triangle</Filter>
     </None>
-    <None Include="Assets\Shaders\triangle.vert">
+    <None Include="Assets\Shaders\Triangle.frag">
+      <Filter>Assets\Shaders\triangle</Filter>
+    </None>
+    <None Include="Assets\Shaders\Simple.frag">
+      <Filter>Assets\Shaders\simple</Filter>
+    </None>
+    <None Include="Assets\Shaders\Simple.vert">
+      <Filter>Assets\Shaders\simple</Filter>
+    </None>
+    <None Include="Assets\Shaders\Constants.glsl">
       <Filter>Assets\Shaders</Filter>
     </None>
   </ItemGroup>

@@ -165,6 +165,7 @@
     <ClCompile Include="CommandBufferCirculator.ixx" />
     <ClCompile Include="Constants.ixx" />
     <ClCompile Include="Core.ixx" />
+    <ClCompile Include="DrawParam.ixx" />
     <ClCompile Include="EngineContext.ixx" />
     <ClCompile Include="FenceCirculator.ixx" />
     <ClCompile Include="FramebufferFactory.ixx" />
