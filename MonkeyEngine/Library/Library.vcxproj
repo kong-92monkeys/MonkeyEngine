@@ -20,7 +20,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AssetManager.ixx" />
-    <ClCompile Include="ConceptExtension.ixx" />
     <ClCompile Include="Event.ixx" />
     <ClCompile Include="LazyDeleter.ixx" />
     <ClCompile Include="LazyRecycler.ixx" />

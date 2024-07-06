@@ -122,10 +122,10 @@ void CApp::__onInitBeforeMainFrame()
 	__pRenderer = std::shared_ptr<Frameworks::SimpleRenderer>{ __pRenderingEngine->createRenderer<Frameworks::SimpleRenderer>() };
 
 	Frameworks::HostBuffer posBuffer;
-	posBuffer.typedAdd<glm::vec2>({ -0.5f, -0.5f });
-	posBuffer.typedAdd<glm::vec2>({ -0.5f, 0.5f });
-	posBuffer.typedAdd<glm::vec2>({ 0.5f, 0.5f });
-	posBuffer.typedAdd<glm::vec2>({ 0.5f, -0.5f });
+	posBuffer.typedAdd<glm::vec3>({ -0.5f, -0.5f, 0.5f });
+	posBuffer.typedAdd<glm::vec3>({ -0.5f, 0.5f, 0.5f });
+	posBuffer.typedAdd<glm::vec3>({ 0.5f, 0.5f, 0.5f });
+	posBuffer.typedAdd<glm::vec3>({ 0.5f, -0.5f, 0.5f });
 
 	Frameworks::HostBuffer colorBuffer;
 	colorBuffer.typedAdd<glm::vec4>({ 1.0f, 0.0f, 0.0f, 1.0f });

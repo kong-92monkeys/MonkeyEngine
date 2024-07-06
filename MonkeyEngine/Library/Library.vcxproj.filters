@@ -12,7 +12,6 @@
     <ClCompile Include="MathUtil.ixx" />
     <ClCompile Include="LazyDeleter.ixx" />
     <ClCompile Include="LazyRecycler.ixx" />
-    <ClCompile Include="ConceptExtension.ixx" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GLM.h" />

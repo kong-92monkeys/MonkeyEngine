@@ -307,7 +307,7 @@ namespace Engine
 
 	void *BufferChunk::getMappedMemory() noexcept
 	{
-		return __memory.getMappedMemory();
+		return (static_cast<std::byte *>(__memory.getMappedMemory()) + getOffset());
 	}
 
 	BufferBlock::BufferBlock(
