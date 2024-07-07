@@ -170,6 +170,7 @@
     <ClCompile Include="FenceCirculator.ixx" />
     <ClCompile Include="FramebufferFactory.ixx" />
     <ClCompile Include="Layer.ixx" />
+    <ClCompile Include="Material.ixx" />
     <ClCompile Include="MemoryAllocator.ixx" />
     <ClCompile Include="Mesh.ixx" />
     <ClCompile Include="Renderer.ixx" />

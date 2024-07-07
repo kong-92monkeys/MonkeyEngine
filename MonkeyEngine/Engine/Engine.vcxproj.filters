@@ -27,6 +27,7 @@
     <ClCompile Include="CommandExecutor.ixx" />
     <ClCompile Include="EngineContext.ixx" />
     <ClCompile Include="DrawParam.ixx" />
+    <ClCompile Include="Material.ixx" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Util">
