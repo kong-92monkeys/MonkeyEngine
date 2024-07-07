@@ -1,4 +1,4 @@
-module;
+ï»¿module;
 
 #include "../Vulkan/Vulkan.h"
 
@@ -14,6 +14,7 @@ namespace Engine
 {
 	export enum class RenderPassType
 	{
+		CLEAR_COLOR,
 		COLOR
 	};
 
@@ -31,6 +32,7 @@ namespace Engine
 
 		std::unordered_map<RenderPassType, std::unique_ptr<Graphics::RenderPass>> __instanceMap;
 
+		void __createInstance_clearColor();
 		void __createInstance_color();
 	};
 }
@@ -41,6 +43,7 @@ namespace Engine
 {
 	RenderPassFactory::RenderPassFactory(Graphics::LogicalDevice &device) : __device{ device }
 	{
+		__createInstance_clearColor();
 		__createInstance_color();
 	}
 
@@ -49,9 +52,9 @@ namespace Engine
 		return *(__instanceMap.at(type));
 	}
 
-	void RenderPassFactory::__createInstance_color()
+	void RenderPassFactory::__createInstance_clearColor()
 	{
-		// loadOpÀº dependency ¼öÇà ÀÌÈÄ ¼öÇà, memory barrier¸¦ Àß ÃÄ¾ß layout transition°ú Ãæµ¹ ¾È³²
+		// loadOpì€ dependency ìˆ˜í–‰ ì´í›„ ìˆ˜í–‰, memory barrierë¥¼ ì˜ ì³ì•¼ layout transitionê³¼ ì¶©ëŒ ì•ˆë‚¨
 		const VkAttachmentDescription2 attachmentDesc
 		{
 			.sType				{ VkStructureType::VK_STRUCTURE_TYPE_ATTACHMENT_DESCRIPTION_2 },
@@ -62,7 +65,7 @@ namespace Engine
 			.stencilLoadOp		{ VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_DONT_CARE },
 			.stencilStoreOp		{ VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_DONT_CARE },
 			.initialLayout		{ VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED },
-			.finalLayout		{ VkImageLayout::VK_IMAGE_LAYOUT_PRESENT_SRC_KHR }
+			.finalLayout		{ VkImageLayout::VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL }
 		};
 
 		const VkAttachmentReference2 attachment
@@ -81,12 +84,68 @@ namespace Engine
 			.pColorAttachments			{ &attachment }
 		};
 
-		// VkImageMemoryBarrier¿Í µ¿ÀÏ ±â´É ¼öÇà. layout ÀüÈ¯Àº description¿¡ ±â¼ú µÈ´ë·Î
+		// VkImageMemoryBarrierì™€ ë™ì¼ ê¸°ëŠ¥ ìˆ˜í–‰. layout ì „í™˜ì€ descriptionì— ê¸°ìˆ  ëœëŒ€ë¡œ
 		const VkMemoryBarrier2 memoryBarrier
 		{
 			.sType			{ VkStructureType::VK_STRUCTURE_TYPE_MEMORY_BARRIER_2 },
 			.srcStageMask	{ VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT },
 			.srcAccessMask	{ VK_ACCESS_2_NONE },
+			.dstStageMask	{ VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT },
+			.dstAccessMask	{ VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT }
+		};
+
+		const VkSubpassDependency2 dependency
+		{
+			.sType				{ VkStructureType::VK_STRUCTURE_TYPE_SUBPASS_DEPENDENCY_2 },
+			.pNext				{ &memoryBarrier },
+			.srcSubpass			{ VK_SUBPASS_EXTERNAL },
+			.dstSubpass			{ 0U }
+		};
+
+		__instanceMap[RenderPassType::CLEAR_COLOR] = std::unique_ptr<Graphics::RenderPass>
+		{
+			__device.createRenderPass(1U, &attachmentDesc, 1U, &subpass, 1U, &dependency)
+		};
+	}
+
+	void RenderPassFactory::__createInstance_color()
+	{
+		// loadOpì€ dependency ìˆ˜í–‰ ì´í›„ ìˆ˜í–‰, memory barrierë¥¼ ì˜ ì³ì•¼ layout transitionê³¼ ì¶©ëŒ ì•ˆë‚¨
+		const VkAttachmentDescription2 attachmentDesc
+		{
+			.sType				{ VkStructureType::VK_STRUCTURE_TYPE_ATTACHMENT_DESCRIPTION_2 },
+			.format				{ VkFormat::VK_FORMAT_R8G8B8A8_SRGB },
+			.samples			{ VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT },
+			.loadOp				{ VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_LOAD },
+			.storeOp			{ VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_STORE },
+			.stencilLoadOp		{ VkAttachmentLoadOp::VK_ATTACHMENT_LOAD_OP_DONT_CARE },
+			.stencilStoreOp		{ VkAttachmentStoreOp::VK_ATTACHMENT_STORE_OP_DONT_CARE },
+			.initialLayout		{ VkImageLayout::VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL },
+			.finalLayout		{ VkImageLayout::VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL }
+		};
+
+		const VkAttachmentReference2 attachment
+		{
+			.sType			{ VkStructureType::VK_STRUCTURE_TYPE_ATTACHMENT_REFERENCE_2 },
+			.attachment		{ 0U },
+			.layout			{ VkImageLayout::VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL },
+			.aspectMask		{ VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT }
+		};
+
+		const VkSubpassDescription2 subpass
+		{
+			.sType						{ VkStructureType::VK_STRUCTURE_TYPE_SUBPASS_DESCRIPTION_2 },
+			.pipelineBindPoint			{ VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS },
+			.colorAttachmentCount		{ 1U },
+			.pColorAttachments			{ &attachment }
+		};
+
+		// VkImageMemoryBarrierì™€ ë™ì¼ ê¸°ëŠ¥ ìˆ˜í–‰. layout ì „í™˜ì€ descriptionì— ê¸°ìˆ  ëœëŒ€ë¡œ
+		const VkMemoryBarrier2 memoryBarrier
+		{
+			.sType			{ VkStructureType::VK_STRUCTURE_TYPE_MEMORY_BARRIER_2 },
+			.srcStageMask	{ VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT },
+			.srcAccessMask	{ VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT },
 			.dstStageMask	{ VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT },
 			.dstAccessMask	{ VK_ACCESS_2_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT }
 		};

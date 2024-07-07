@@ -35,7 +35,7 @@ namespace Graphics
 		VkResult bindMemory(const VkDeviceMemory hMemory, const VkDeviceSize offset) noexcept;
 
 		[[nodiscard]]
-		constexpr const VkBuffer &getHandle() noexcept;
+		constexpr const VkBuffer &getHandle() const noexcept;
 
 	private:
 		const VK::DeviceProc &__deviceProc;
@@ -60,7 +60,7 @@ namespace Graphics
 		return __memReq2.memoryRequirements;
 	}
 
-	constexpr const VkBuffer &Buffer::getHandle() noexcept
+	constexpr const VkBuffer &Buffer::getHandle() const noexcept
 	{
 		return __handle;
 	}

@@ -9,9 +9,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="TriangleRenderer.ixx">
-      <Filter>Renderer</Filter>
-    </ClCompile>
     <ClCompile Include="SimpleRenderer.ixx">
       <Filter>Renderer</Filter>
     </ClCompile>

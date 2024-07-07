@@ -15,9 +15,11 @@ import ntmonkeys.com.Graphics.DescriptorSetLayout;
 import ntmonkeys.com.Graphics.PipelineLayout;
 import ntmonkeys.com.Graphics.RenderPass;
 import ntmonkeys.com.Graphics.Pipeline;
+import ntmonkeys.com.Graphics.ImageView;
 import ntmonkeys.com.Engine.Material;
 import ntmonkeys.com.Engine.ShaderIncluder;
 import ntmonkeys.com.Engine.RenderPassFactory;
+import ntmonkeys.com.Engine.FramebufferFactory;
 import <vector>;
 import <string>;
 import <memory>;
@@ -37,6 +39,14 @@ namespace Engine
 			const RenderPassFactory *pRenderPassFactory{ };
 		};
 
+		struct BeginInfo
+		{
+		public:
+			const Graphics::ImageView *pSwapchainImageView{ };
+			const VkRect2D *pRenderArea{ };
+			FramebufferFactory *pFramebufferFactory{ };
+		};
+
 		Renderer() = default;
 		virtual ~Renderer() noexcept override = default;
 
@@ -45,10 +55,8 @@ namespace Engine
 		[[nodiscard]]
 		virtual bool isValidMaterialPack(const MaterialPack *const pMaterialPack) const noexcept;
 
-		[[nodiscard]]
-		virtual RenderPassType getRenderPassType() const noexcept = 0;
-
-		virtual void bind(Graphics::CommandBuffer &commandBuffer) const noexcept = 0;
+		virtual void begin(Graphics::CommandBuffer &commandBuffer, const BeginInfo &beginInfo) const noexcept = 0;
+		virtual void end(Graphics::CommandBuffer &commandBuffer) const noexcept;
 
 	protected:
 		[[nodiscard]]
@@ -68,7 +76,7 @@ namespace Engine
 			const Graphics::LogicalDevice::GraphicsPipelineCreateInfo &createInfo) const;
 
 		[[nodiscard]]
-		const Graphics::RenderPass &_getRenderPass() const noexcept;
+		const Graphics::RenderPass &_getRenderPass(const RenderPassType type) const noexcept;
 
 		virtual void _onInit() = 0;
 
@@ -101,6 +109,16 @@ namespace Engine
 	bool Renderer::isValidMaterialPack(const MaterialPack *const pMaterialPack) const noexcept
 	{
 		return true;
+	}
+
+	void Renderer::end(Graphics::CommandBuffer &commandBuffer) const noexcept
+	{
+		const VkSubpassEndInfo subpassEndInfo
+		{
+			.sType{ VkStructureType::VK_STRUCTURE_TYPE_SUBPASS_END_INFO }
+		};
+
+		commandBuffer.endRenderPass(subpassEndInfo);
 	}
 
 	std::unique_ptr<Graphics::DescriptorSetLayout> Renderer::_createDescriptorSetLayout(
@@ -138,9 +156,9 @@ namespace Engine
 		return std::unique_ptr<Graphics::Pipeline>{ __pDevice->createPipeline(createInfo) };
 	}
 
-	const Graphics::RenderPass &Renderer::_getRenderPass() const noexcept
+	const Graphics::RenderPass &Renderer::_getRenderPass(const RenderPassType type) const noexcept
 	{
-		return __pRenderPassFactory->getInstance(getRenderPassType());
+		return __pRenderPassFactory->getInstance(type);
 	}
 
 	std::vector<uint32_t> Renderer::__readShaderFile(const std::string &assetPath) const

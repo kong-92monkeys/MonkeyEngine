@@ -37,6 +37,9 @@ namespace Engine
 		std::unordered_map<RenderPassType, std::unique_ptr<Graphics::Framebuffer>> __instanceMap;
 
 		[[nodiscard]]
+		std::unique_ptr<Graphics::Framebuffer> __createInstance_clearColor();
+
+		[[nodiscard]]
 		std::unique_ptr<Graphics::Framebuffer> __createInstance_color();
 	};
 }
@@ -50,7 +53,8 @@ namespace Engine
 		__device				{ device },
 		__renderPassFactory		{ renderPassFactory }
 	{
-		__instanceGeneratorMap[RenderPassType::COLOR] = &FramebufferFactory::__createInstance_color;
+		__instanceGeneratorMap[RenderPassType::CLEAR_COLOR]		= &FramebufferFactory::__createInstance_clearColor;
+		__instanceGeneratorMap[RenderPassType::COLOR]			= &FramebufferFactory::__createInstance_color;
 	}
 
 	const Graphics::Framebuffer &FramebufferFactory::getInstance(const RenderPassType type) noexcept
@@ -67,6 +71,22 @@ namespace Engine
 		__width = width;
 		__height = height;
 		__instanceMap.clear();
+	}
+
+	std::unique_ptr<Graphics::Framebuffer> FramebufferFactory::__createInstance_clearColor()
+	{
+		const Graphics::Framebuffer::AttachmentInfo attachmentInfo
+		{
+			.format	{ VkFormat::VK_FORMAT_R8G8B8A8_SRGB },
+			.usage	{ VkImageUsageFlagBits::VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT }
+		};
+
+		return std::unique_ptr<Graphics::Framebuffer>
+		{
+			__device.createFramebuffer(
+				__renderPassFactory.getInstance(RenderPassType::CLEAR_COLOR).getHandle(),
+				__width, __height, 1U, &attachmentInfo)
+		};
 	}
 
 	std::unique_ptr<Graphics::Framebuffer> FramebufferFactory::__createInstance_color()

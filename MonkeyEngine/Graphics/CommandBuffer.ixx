@@ -51,7 +51,7 @@ namespace Graphics
 		void bindIndexBuffer(const VkBuffer buffer, const VkDeviceSize offset, const VkIndexType indexType) noexcept;
 
 		[[nodiscard]]
-		constexpr const VkCommandBuffer &getHandle() noexcept;
+		constexpr const VkCommandBuffer &getHandle() const noexcept;
 
 	private:
 		const VK::DeviceProc &__deviceProc;
@@ -63,7 +63,7 @@ namespace Graphics
 		__handle		{makeInfo.handle }
 	{}
 
-	constexpr const VkCommandBuffer &CommandBuffer::getHandle() noexcept
+	constexpr const VkCommandBuffer &CommandBuffer::getHandle() const noexcept
 	{
 		return __handle;
 	}

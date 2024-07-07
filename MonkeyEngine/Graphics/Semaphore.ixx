@@ -30,7 +30,7 @@ namespace Graphics
 		constexpr VkSemaphoreType getType() const noexcept;
 
 		[[nodiscard]]
-		constexpr const VkSemaphore &getHandle() noexcept;
+		constexpr const VkSemaphore &getHandle() const noexcept;
 
 	private:
 		const VK::DeviceProc &__deviceProc;
@@ -47,7 +47,7 @@ namespace Graphics
 		return __type;
 	}
 
-	constexpr const VkSemaphore &Semaphore::getHandle() noexcept
+	constexpr const VkSemaphore &Semaphore::getHandle() const noexcept
 	{
 		return __handle;
 	}

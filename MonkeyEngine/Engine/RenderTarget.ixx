@@ -10,6 +10,7 @@ import ntmonkeys.com.Lib.WeakReferenceSet;
 import ntmonkeys.com.Graphics.LogicalDevice;
 import ntmonkeys.com.Graphics.Surface;
 import ntmonkeys.com.Graphics.Swapchain;
+import ntmonkeys.com.Graphics.Image;
 import ntmonkeys.com.Graphics.ImageView;
 import ntmonkeys.com.Graphics.Semaphore;
 import ntmonkeys.com.Graphics.CommandBuffer;
@@ -17,6 +18,7 @@ import ntmonkeys.com.Engine.RenderPassFactory;
 import ntmonkeys.com.Engine.FramebufferFactory;
 import ntmonkeys.com.Engine.SemaphoreCirculator;
 import ntmonkeys.com.Engine.Layer;
+import ntmonkeys.com.Engine.Renderer;
 import ntmonkeys.com.Engine.Constants;
 import <memory>;
 import <unordered_map>;
@@ -91,6 +93,8 @@ namespace Engine
 		glm::vec4 __backgroundColor{ 0.01f, 0.01f, 0.01f, 1.0f };
 
 		void __validateSwapchainDependencies();
+		void __clearImageColor(Graphics::CommandBuffer &commandBuffer, const Graphics::ImageView &imageView);
+		void __transitImageToPresent(Graphics::CommandBuffer &commandBuffer, const Graphics::Image &image);
 	};
 
 	constexpr uint32_t RenderTarget::getWidth() const noexcept
@@ -178,20 +182,15 @@ namespace Engine
 				UINT64_MAX, imgAcquireSemaphore.getHandle(), VK_NULL_HANDLE)
 		};
 
-		auto &imageView{ __pSwapchain->getImageViewOf(imageIdx) };
+		const auto &swapchainImage		{ __pSwapchain->getImageOf(imageIdx) };
+		const auto &swapchainImageView	{ __pSwapchain->getImageViewOf(imageIdx) };
+
+		__clearImageColor(commandBuffer, swapchainImageView);
 
 		const VkRect2D renderArea
 		{
 			.offset	{ 0, 0 },
 			.extent	{ getWidth(), getHeight() }
-		};
-
-		const Layer::DrawInfo drawInfo
-		{
-			.pImageView				{ &imageView },
-			.renderArea				{ renderArea },
-			.pClearColor			{ &__backgroundColor },
-			.pFramebufferFactory	{ __pFramebufferFactory.get() }
 		};
 
 		const VkViewport viewport
@@ -207,9 +206,17 @@ namespace Engine
 		commandBuffer.setViewport(0U, 1U, &viewport);
 		commandBuffer.setScissor(0U, 1U, &renderArea);
 
-		for (auto &layer : __layers)
-			layer.draw(drawInfo, commandBuffer);
+		const Renderer::BeginInfo rendererBeginInfo
+		{
+			.pSwapchainImageView	{ &swapchainImageView },
+			.pRenderArea			{ &renderArea },
+			.pFramebufferFactory	{ __pFramebufferFactory.get() }
+		};
 
+		for (auto &layer : __layers)
+			layer.draw(commandBuffer, rendererBeginInfo);
+
+		__transitImageToPresent(commandBuffer, swapchainImage);
 		return { &imgAcquireSemaphore, imageIdx };
 	}
 
@@ -228,5 +235,80 @@ namespace Engine
 		};
 
 		__pFramebufferFactory->invalidate(getWidth(), getHeight());
+	}
+
+	void RenderTarget::__clearImageColor(Graphics::CommandBuffer &commandBuffer, const Graphics::ImageView &imageView)
+	{
+		const auto &renderPass		{ __renderPassFactory.getInstance(Engine::RenderPassType::CLEAR_COLOR) };
+		const auto &framebuffer		{ __pFramebufferFactory->getInstance(Engine::RenderPassType::CLEAR_COLOR) };
+
+		const VkRenderPassAttachmentBeginInfo attachmentInfo
+		{
+			.sType				{ VkStructureType::VK_STRUCTURE_TYPE_RENDER_PASS_ATTACHMENT_BEGIN_INFO },
+			.attachmentCount	{ 1U },
+			.pAttachments		{ &(imageView.getHandle()) }
+		};
+
+		VkClearValue clearValue{ };
+		std::memcpy(&clearValue, &__backgroundColor, sizeof(glm::vec4));
+
+		VkRenderPassBeginInfo renderPassBeginInfo{ };
+		renderPassBeginInfo.sType				= VkStructureType::VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+		renderPassBeginInfo.pNext				= &attachmentInfo;
+		renderPassBeginInfo.renderPass			= renderPass.getHandle();
+		renderPassBeginInfo.framebuffer			= framebuffer.getHandle();
+		renderPassBeginInfo.clearValueCount		= 1U;
+		renderPassBeginInfo.pClearValues		= &clearValue;
+
+		auto &renderArea{ renderPassBeginInfo.renderArea };
+		renderArea.offset.x			= 0;
+		renderArea.offset.y			= 0;
+		renderArea.extent.width		= getWidth();
+		renderArea.extent.height	= getHeight();
+
+		static constexpr VkSubpassBeginInfo subpassBeginInfo
+		{
+			.sType		{ VkStructureType::VK_STRUCTURE_TYPE_SUBPASS_BEGIN_INFO },
+			.contents	{ VkSubpassContents::VK_SUBPASS_CONTENTS_INLINE }
+		};
+
+		static constexpr VkSubpassEndInfo subpassEndInfo
+		{
+			.sType		{ VkStructureType::VK_STRUCTURE_TYPE_SUBPASS_END_INFO }
+		};
+
+		commandBuffer.beginRenderPass(renderPassBeginInfo, subpassBeginInfo);
+		commandBuffer.endRenderPass(subpassEndInfo);
+	}
+
+	void RenderTarget::__transitImageToPresent(Graphics::CommandBuffer &commandBuffer, const Graphics::Image &image)
+	{
+		const VkImageMemoryBarrier2 imageBarrier
+		{
+			.sType					{ VkStructureType::VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2 },
+			.srcStageMask			{ VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT },
+			.srcAccessMask			{ VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT },
+			.dstStageMask			{ VK_PIPELINE_STAGE_2_NONE },
+			.dstAccessMask			{ VK_ACCESS_2_NONE },
+			.oldLayout				{ VkImageLayout::VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL },
+			.newLayout				{ VkImageLayout::VK_IMAGE_LAYOUT_PRESENT_SRC_KHR },
+			.image					{ image.getHandle() },
+			.subresourceRange		{
+				.aspectMask			{ VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT },
+				.baseMipLevel		{ 0U },
+				.levelCount			{ 1U },
+				.baseArrayLayer		{ 0U },
+				.layerCount			{ 1U }
+			}
+		};
+
+		const VkDependencyInfo dependencyInfo
+		{
+			.sType						{ VkStructureType::VK_STRUCTURE_TYPE_DEPENDENCY_INFO },
+			.imageMemoryBarrierCount	{ 1U },
+			.pImageMemoryBarriers		{ &imageBarrier }
+		};
+
+		commandBuffer.pipelineBarrier(dependencyInfo);
 	}
 }

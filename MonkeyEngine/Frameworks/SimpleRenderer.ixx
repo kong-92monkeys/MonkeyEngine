@@ -23,9 +23,7 @@ namespace Frameworks
 	public:
 		virtual ~SimpleRenderer() noexcept override;
 
-		[[nodiscard]]
-		virtual Engine::RenderPassType getRenderPassType() const noexcept override;
-		virtual void bind(Graphics::CommandBuffer &commandBuffer) const noexcept override;
+		virtual void begin(Graphics::CommandBuffer &commandBuffer, const BeginInfo &beginInfo) const noexcept override;
 
 	protected:
 		virtual void _onInit() override;
@@ -56,13 +54,34 @@ namespace Frameworks
 		__pDescriptorSetLayout = nullptr;
 	}
 
-	Engine::RenderPassType SimpleRenderer::getRenderPassType() const noexcept
+	void SimpleRenderer::begin(Graphics::CommandBuffer &commandBuffer, const BeginInfo &beginInfo) const noexcept
 	{
-		return Engine::RenderPassType::COLOR;
-	}
+		const auto &renderPass		{ _getRenderPass(Engine::RenderPassType::COLOR) };
+		const auto &framebuffer		{ beginInfo.pFramebufferFactory->getInstance(Engine::RenderPassType::COLOR) };
 
-	void SimpleRenderer::bind(Graphics::CommandBuffer &commandBuffer) const noexcept
-	{
+		const VkRenderPassAttachmentBeginInfo attachmentInfo
+		{
+			.sType				{ VkStructureType::VK_STRUCTURE_TYPE_RENDER_PASS_ATTACHMENT_BEGIN_INFO },
+			.attachmentCount	{ 1U },
+			.pAttachments		{ &(beginInfo.pSwapchainImageView->getHandle()) }
+		};
+
+		const VkRenderPassBeginInfo renderPassBeginInfo
+		{
+			.sType			{ VkStructureType::VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO },
+			.pNext			{ &attachmentInfo },
+			.renderPass		{ renderPass.getHandle() },
+			.framebuffer	{ framebuffer.getHandle() },
+			.renderArea		{ *(beginInfo.pRenderArea) }
+		};
+
+		const VkSubpassBeginInfo subpassBeginInfo
+		{
+			.sType		{ VkStructureType::VK_STRUCTURE_TYPE_SUBPASS_BEGIN_INFO },
+			.contents	{ VkSubpassContents::VK_SUBPASS_CONTENTS_INLINE }
+		};
+
+		commandBuffer.beginRenderPass(renderPassBeginInfo, subpassBeginInfo);
 		commandBuffer.bindPipeline(VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, __pPipeline->getHandle());
 	}
 
@@ -208,7 +227,7 @@ namespace Frameworks
 		const Graphics::LogicalDevice::GraphicsPipelineCreateInfo createInfo
 		{
 			.hPipelineLayout		{ __pPipelineLayout->getHandle() },
-			.hRenderPass			{ _getRenderPass().getHandle() },
+			.hRenderPass			{ _getRenderPass(Engine::RenderPassType::COLOR).getHandle() },
 			.subpassIndex			{ 0U },
 			.stageCount				{ static_cast<uint32_t>(stages.size()) },
 			.pStages				{ stages.data() },

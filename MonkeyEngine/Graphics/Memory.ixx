@@ -38,7 +38,7 @@ namespace Graphics
 		void *getMappedMemory() noexcept;
 
 		[[nodiscard]]
-		constexpr const VkDeviceMemory &getHandle() noexcept;
+		constexpr const VkDeviceMemory &getHandle() const noexcept;
 
 	private:
 		const VK::DeviceProc &__deviceProc;
@@ -62,7 +62,7 @@ namespace Graphics
 		return __typeIndex;
 	}
 
-	constexpr const VkDeviceMemory &Memory::getHandle() noexcept
+	constexpr const VkDeviceMemory &Memory::getHandle() const noexcept
 	{
 		return __handle;
 	}

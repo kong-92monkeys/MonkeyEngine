@@ -29,7 +29,7 @@ namespace Graphics
 		VkResult reset();
 
 		[[nodiscard]]
-		constexpr const VkFence &getHandle() noexcept;
+		constexpr const VkFence &getHandle() const noexcept;
 
 	private:
 		const VK::DeviceProc &__deviceProc;
@@ -40,7 +40,7 @@ namespace Graphics
 		void __create(const CreateInfo &createInfo);
 	};
 
-	constexpr const VkFence &Fence::getHandle() noexcept
+	constexpr const VkFence &Fence::getHandle() const noexcept
 	{
 		return __handle;
 	}

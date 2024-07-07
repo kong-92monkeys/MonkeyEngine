@@ -40,6 +40,9 @@ namespace Graphics
 			const VkImageSubresourceRange &subresourceRange,
 			const VkImageUsageFlags usage);
 
+		[[nodiscard]]
+		constexpr const VkImage &getHandle() const noexcept;
+
 	private:
 		const VK::DeviceProc &__deviceProc;
 		const VkDevice __hDevice;
@@ -48,6 +51,11 @@ namespace Graphics
 		VkImage __handle{ };
 		bool __ownHandle{ };
 	};
+
+	constexpr const VkImage &Image::getHandle() const noexcept
+	{
+		return __handle;
+	}
 }
 
 module: private;

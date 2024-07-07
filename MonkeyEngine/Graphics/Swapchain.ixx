@@ -45,10 +45,13 @@ namespace Graphics
 		constexpr size_t getImageCount() const noexcept;
 
 		[[nodiscard]]
-		constexpr ImageView &getImageViewOf(const uint32_t index) noexcept;
+		constexpr const Image &getImageOf(const uint32_t index) const noexcept;
 
 		[[nodiscard]]
-		constexpr const VkSwapchainKHR &getHandle() noexcept;
+		constexpr const ImageView &getImageViewOf(const uint32_t index) const noexcept;
+
+		[[nodiscard]]
+		constexpr const VkSwapchainKHR &getHandle() const noexcept;
 
 	private:
 		const VK::DeviceProc &__deviceProc;
@@ -69,12 +72,17 @@ namespace Graphics
 		return __images.size();
 	}
 
-	constexpr ImageView &Swapchain::getImageViewOf(const uint32_t index) noexcept
+	constexpr const Image &Swapchain::getImageOf(const uint32_t index) const noexcept
+	{
+		return *(__images[index]);
+	}
+
+	constexpr const ImageView &Swapchain::getImageViewOf(const uint32_t index) const noexcept
 	{
 		return *(__imageViews[index]);
 	}
 
-	constexpr const VkSwapchainKHR &Swapchain::getHandle() noexcept
+	constexpr const VkSwapchainKHR &Swapchain::getHandle() const noexcept
 	{
 		return __handle;
 	}
