@@ -15,6 +15,7 @@ import ntmonkeys.com.Graphics.DescriptorSetLayout;
 import ntmonkeys.com.Graphics.PipelineLayout;
 import ntmonkeys.com.Graphics.RenderPass;
 import ntmonkeys.com.Graphics.Pipeline;
+import ntmonkeys.com.Engine.Material;
 import ntmonkeys.com.Engine.ShaderIncluder;
 import ntmonkeys.com.Engine.RenderPassFactory;
 import <vector>;
@@ -42,7 +43,11 @@ namespace Engine
 		void init(const InitInfo &info);
 
 		[[nodiscard]]
+		virtual bool isValidMaterialPack(const MaterialPack *const pMaterialPack) const noexcept;
+
+		[[nodiscard]]
 		virtual RenderPassType getRenderPassType() const noexcept = 0;
+
 		virtual void bind(Graphics::CommandBuffer &commandBuffer) const noexcept = 0;
 
 	protected:
@@ -91,6 +96,11 @@ namespace Engine
 		__pRenderPassFactory	= info.pRenderPassFactory;
 
 		_onInit();
+	}
+
+	bool Renderer::isValidMaterialPack(const MaterialPack *const pMaterialPack) const noexcept
+	{
+		return true;
 	}
 
 	std::unique_ptr<Graphics::DescriptorSetLayout> Renderer::_createDescriptorSetLayout(

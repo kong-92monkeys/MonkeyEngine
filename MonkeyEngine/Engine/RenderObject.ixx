@@ -19,23 +19,30 @@ namespace Engine
 	public:
 		[[nodiscard]]
 		const Renderer *getRenderer() const noexcept;
-		void setRenderer(const std::shared_ptr<const Renderer> &pRenderer) noexcept;
+		void setRenderer(const std::shared_ptr<const Renderer> &pRenderer);
 
 		[[nodiscard]]
 		const Mesh *getMesh() const noexcept;
-		void setMesh(const std::shared_ptr<const Mesh> &pMesh) noexcept;
+		void setMesh(const std::shared_ptr<const Mesh> &pMesh);
 
 		[[nodiscard]]
 		const DrawParam *getDrawParam() const noexcept;
-		void setDrawParam(const std::shared_ptr<const DrawParam> &pDrawParam) noexcept;
+		void setDrawParam(const std::shared_ptr<const DrawParam> &pDrawParam);
 
 		[[nodiscard]]
 		const MaterialPack *getMaterialPack(const uint32_t instanceIndex) const noexcept;
-		void setMaterialPack(const uint32_t instanceIndex, const std::shared_ptr<const MaterialPack> &pMaterialPack) noexcept;
+		void setMaterialPack(const uint32_t instanceIndex, const std::shared_ptr<const MaterialPack> &pMaterialPack);
 
 		[[nodiscard]]
 		uint32_t getInstanceCount() const noexcept;
-		void setInstanceCount(const uint32_t count) noexcept;
+		void setInstanceCount(const uint32_t count);
+
+		[[nodiscard]]
+		constexpr bool isVisible() const noexcept;
+		void setVisible(const bool visible);
+
+		[[nodiscard]]
+		constexpr bool isDrawable() const noexcept;
 
 		void draw(Graphics::CommandBuffer &commandBuffer) const noexcept;
 
@@ -57,12 +64,25 @@ namespace Engine
 		std::shared_ptr<const DrawParam> __pDrawParam;
 		std::vector<std::shared_ptr<const MaterialPack>> __materialPacks;
 
+		bool __visible{ true };
+		bool __drawable{ };
+
 		mutable Lib::Event<const RenderObject *, const Renderer *, const Renderer *> __rendererChangeEvent;
 		mutable Lib::Event<const RenderObject *, const Mesh *, const Mesh *> __meshChangeEvent;
 		mutable Lib::Event<const RenderObject *, const DrawParam *, const DrawParam *> __drawParamChangeEvent;
 		mutable Lib::Event<const RenderObject *, uint32_t, const MaterialPack *, const MaterialPack *> __materialPackChangeEvent;
 		mutable Lib::Event<const RenderObject *, uint32_t, uint32_t> __instanceCountChangeEvent;
+		mutable Lib::Event<const RenderObject *, bool, bool> __drawableChangeEvent;
+
+		[[nodiscard]]
+		bool __resolveDrawable() const noexcept;
+		void __validateDrawable();
 	};
+
+	constexpr bool RenderObject::isVisible() const noexcept
+	{
+		return __visible;
+	}
 
 	constexpr Lib::EventView<const RenderObject *, const Renderer *, const Renderer *> &RenderObject::getRendererChangeEvent() const noexcept
 	{
@@ -94,7 +114,7 @@ namespace Engine
 		return __pRenderer.get();
 	}
 
-	void RenderObject::setRenderer(const std::shared_ptr<const Renderer> &pRenderer) noexcept
+	void RenderObject::setRenderer(const std::shared_ptr<const Renderer> &pRenderer)
 	{
 		if (__pRenderer == pRenderer)
 			return;
@@ -103,6 +123,9 @@ namespace Engine
 		__pRenderer = pRenderer;
 
 		__rendererChangeEvent.invoke(this, pPrevRenderer, pRenderer.get());
+
+		if (pRenderer)
+			__validateDrawable();
 	}
 
 	const Mesh *RenderObject::getMesh() const noexcept
@@ -110,7 +133,7 @@ namespace Engine
 		return __pMesh.get();
 	}
 
-	void RenderObject::setMesh(const std::shared_ptr<const Mesh> &pMesh) noexcept
+	void RenderObject::setMesh(const std::shared_ptr<const Mesh> &pMesh)
 	{
 		if (__pMesh == pMesh)
 			return;
@@ -119,6 +142,9 @@ namespace Engine
 		__pMesh = pMesh;
 
 		__meshChangeEvent.invoke(this, pPrevMesh, pMesh.get());
+
+		if (pMesh)
+			__validateDrawable();
 	}
 
 	const DrawParam *RenderObject::getDrawParam() const noexcept
@@ -126,7 +152,7 @@ namespace Engine
 		return __pDrawParam.get();
 	}
 
-	void RenderObject::setDrawParam(const std::shared_ptr<const DrawParam> &pDrawParam) noexcept
+	void RenderObject::setDrawParam(const std::shared_ptr<const DrawParam> &pDrawParam)
 	{
 		if (__pDrawParam == pDrawParam)
 			return;
@@ -135,6 +161,9 @@ namespace Engine
 		__pDrawParam = pDrawParam;
 
 		__drawParamChangeEvent.invoke(this, pPrevDrawParam, pDrawParam.get());
+
+		if (pDrawParam)
+			__validateDrawable();
 	}
 
 	const MaterialPack *RenderObject::getMaterialPack(const uint32_t instanceIndex) const noexcept
@@ -142,7 +171,7 @@ namespace Engine
 		return __materialPacks[instanceIndex].get();
 	}
 
-	void RenderObject::setMaterialPack(const uint32_t instanceIndex, const std::shared_ptr<const MaterialPack> &pMaterialPack) noexcept
+	void RenderObject::setMaterialPack(const uint32_t instanceIndex, const std::shared_ptr<const MaterialPack> &pMaterialPack)
 	{
 		auto &holder{ __materialPacks[instanceIndex] };
 
@@ -153,6 +182,9 @@ namespace Engine
 		holder = pMaterialPack;
 
 		__materialPackChangeEvent.invoke(this, instanceIndex, pPrevMaterialPack, pMaterialPack.get());
+
+		if (pMaterialPack)
+			__validateDrawable();
 	}
 
 	uint32_t RenderObject::getInstanceCount() const noexcept
@@ -160,7 +192,7 @@ namespace Engine
 		return static_cast<uint32_t>(__materialPacks.size());
 	}
 
-	void RenderObject::setInstanceCount(const uint32_t count) noexcept
+	void RenderObject::setInstanceCount(const uint32_t count)
 	{
 		const uint32_t prevCount{ getInstanceCount() };
 		if (prevCount == count)
@@ -177,10 +209,37 @@ namespace Engine
 			__materialPackChangeEvent.invoke(this, instanceIndex, expiredPack.get(), nullptr);
 
 		__instanceCountChangeEvent.invoke(this, prevCount, count);
+
+		if (prevCount < count)
+			__validateDrawable();
 	}
 
 	void RenderObject::draw(Graphics::CommandBuffer &commandBuffer) const noexcept
 	{
 		__pDrawParam->draw(commandBuffer, 1U, 0U);
+	}
+
+	bool RenderObject::__resolveDrawable() const noexcept
+	{
+		if (!__pRenderer || !__pMesh || !__pDrawParam || !__visible)
+			return false;
+
+		for (const auto &pMaterialPack : __materialPacks)
+		{
+			if (__pRenderer->isValidMaterialPack(pMaterialPack.get()))
+				return false;
+		}
+
+		return true;
+	}
+
+	void RenderObject::__validateDrawable()
+	{
+		const bool curDrawable{ __resolveDrawable() };
+		if (__drawable == curDrawable)
+			return;
+
+		__drawable = curDrawable;
+		__drawableChangeEvent.invoke(this, !curDrawable, curDrawable);
 	}
 }
