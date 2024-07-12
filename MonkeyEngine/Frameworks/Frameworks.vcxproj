@@ -19,7 +19,6 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="HostBuffer.ixx" />
     <ClCompile Include="SimpleRenderer.ixx" />
     <ClCompile Include="Vertex.ixx" />
     <ClCompile Include="VertexAttribute.ixx" />

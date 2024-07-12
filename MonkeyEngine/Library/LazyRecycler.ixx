@@ -69,7 +69,7 @@ namespace Lib
 
 		for (auto iter{ __pResourceContainer->begin() }; iter != __pResourceContainer->end(); ++iter)
 		{
-			if (!(test(*iter)))
+			if (!(test(*(*iter))))
 				continue;
 
 			pRetVal = std::move(*iter);

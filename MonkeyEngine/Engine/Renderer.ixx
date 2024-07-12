@@ -23,8 +23,10 @@ import ntmonkeys.com.Engine.FramebufferFactory;
 import <vector>;
 import <string>;
 import <memory>;
+import <typeindex>;
 import <stdexcept>;
 import <format>;
+import <optional>;
 
 namespace Engine
 {
@@ -54,6 +56,9 @@ namespace Engine
 
 		[[nodiscard]]
 		virtual bool isValidMaterialPack(const MaterialPack *const pMaterialPack) const noexcept;
+
+		[[nodiscard]]
+		virtual std::optional<uint32_t> getDescriptorLocationOf(const std::type_index &materialType) const noexcept;
 
 		virtual void begin(Graphics::CommandBuffer &commandBuffer, const BeginInfo &beginInfo) const noexcept = 0;
 		virtual void end(Graphics::CommandBuffer &commandBuffer) const noexcept;
@@ -109,6 +114,11 @@ namespace Engine
 	bool Renderer::isValidMaterialPack(const MaterialPack *const pMaterialPack) const noexcept
 	{
 		return true;
+	}
+
+	std::optional<uint32_t> Renderer::getDescriptorLocationOf(const std::type_index &materialType) const noexcept
+	{
+		return std::nullopt;
 	}
 
 	void Renderer::end(Graphics::CommandBuffer &commandBuffer) const noexcept

@@ -10,7 +10,6 @@
     </ClCompile>
     <ClCompile Include="Renderer.ixx" />
     <ClCompile Include="FramebufferFactory.ixx" />
-    <ClCompile Include="Layer.ixx" />
     <ClCompile Include="CommandBufferCirculator.ixx">
       <Filter>Circulator</Filter>
     </ClCompile>
@@ -28,6 +27,16 @@
     <ClCompile Include="EngineContext.ixx" />
     <ClCompile Include="DrawParam.ixx" />
     <ClCompile Include="Material.ixx" />
+    <ClCompile Include="Layer.ixx">
+      <Filter>Layer</Filter>
+    </ClCompile>
+    <ClCompile Include="SubLayer.ixx">
+      <Filter>Layer</Filter>
+    </ClCompile>
+    <ClCompile Include="LayerResourcePool.ixx">
+      <Filter>Layer</Filter>
+    </ClCompile>
+    <ClCompile Include="ShaderDataStructures.ixx" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Util">
@@ -35,6 +44,9 @@
     </Filter>
     <Filter Include="Circulator">
       <UniqueIdentifier>{654302a8-7940-4ee7-98a6-d9821f04df0e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Layer">
+      <UniqueIdentifier>{90aa7994-9bb5-4c39-9bda-e1acf5a74dc3}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

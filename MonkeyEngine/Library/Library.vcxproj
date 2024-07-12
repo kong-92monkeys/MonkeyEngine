@@ -21,6 +21,8 @@
   <ItemGroup>
     <ClCompile Include="AssetManager.ixx" />
     <ClCompile Include="Event.ixx" />
+    <ClCompile Include="GenericBuffer.ixx" />
+    <ClCompile Include="IdAllocator.ixx" />
     <ClCompile Include="LazyDeleter.ixx" />
     <ClCompile Include="LazyRecycler.ixx" />
     <ClCompile Include="Logger.ixx">
@@ -28,6 +30,7 @@
     </ClCompile>
     <ClCompile Include="MathUtil.ixx" />
     <ClCompile Include="RegionAllocator.ixx" />
+    <ClCompile Include="Stateful.ixx" />
     <ClCompile Include="TimelineIdAllocator.ixx">
       <FileType>Document</FileType>
     </ClCompile>

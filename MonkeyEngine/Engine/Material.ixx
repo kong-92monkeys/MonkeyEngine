@@ -1,6 +1,7 @@
 export module ntmonkeys.com.Engine.Material;
 
 import ntmonkeys.com.Lib.Unique;
+import ntmonkeys.com.Lib.Stateful;
 import ntmonkeys.com.Lib.Event;
 import <memory>;
 import <unordered_set>;
@@ -9,7 +10,7 @@ import <typeindex>;
 
 namespace Engine
 {
-	export class Material : public Lib::Unique
+	export class Material : public Lib::Unique, public Lib::Stateful<Material>
 	{
 	public:
 		[[nodiscard]]
@@ -17,15 +18,6 @@ namespace Engine
 
 		[[nodiscard]]
 		virtual size_t getSize() const noexcept = 0;
-
-		[[nodiscard]]
-		constexpr Lib::EventView<const Material *> &getInvalidateEvent() const noexcept;
-
-	protected:
-		void _invokeInvalidateEvent() noexcept;
-
-	private:
-		mutable Lib::Event<const Material *> __invalidateEvent;
 	};
 
 	export template <typename $Data>
@@ -53,17 +45,21 @@ namespace Engine
 		void setMaterial(const std::shared_ptr<const $M> &pMaterial) noexcept;
 		void setMaterial(const std::type_index &type, const std::shared_ptr<const Material> &pMaterial) noexcept;
 
+		[[nodiscard]]
+		std::unordered_set<const Material *>::const_iterator begin() const noexcept;
+
+		[[nodiscard]]
+		std::unordered_set<const Material *>::const_iterator end() const noexcept;
+
+		[[nodiscard]]
+		constexpr Lib::EventView<const MaterialPack *, std::type_index, const Material *, const Material *> &getMaterialChangeEvent() const noexcept;
+
 	private:
 		std::unordered_map<std::type_index, std::shared_ptr<const Material>> __materialMap;
 		std::unordered_set<const Material *> __materials;
 
-		Lib::Event<const MaterialPack *, std::type_index, const Material *, const Material *> __materialChangeEvent;
+		mutable Lib::Event<const MaterialPack *, std::type_index, const Material *, const Material *> __materialChangeEvent;
 	};
-
-	constexpr Lib::EventView<const Material *> &Material::getInvalidateEvent() const noexcept
-	{
-		return __invalidateEvent;
-	}
 
 	template <typename $Data>
 	const std::byte *TypedMaterial<$Data>::getData() const noexcept override final
@@ -85,7 +81,12 @@ namespace Engine
 	template <std::derived_from<Material> $M>
 	void MaterialPack::setMaterial(const std::shared_ptr<const $M> &pMaterial) noexcept
 	{
-		setMaterial(typeid($M), pMaterial);
+		setMaterial(typeid(*pMaterial), pMaterial);
+	}
+
+	constexpr Lib::EventView<const MaterialPack *, std::type_index, const Material *, const Material *> &MaterialPack::getMaterialChangeEvent() const noexcept
+	{
+		return __materialChangeEvent;
 	}
 }
 
@@ -93,11 +94,6 @@ module: private;
 
 namespace Engine
 {
-	void Material::_invokeInvalidateEvent() noexcept
-	{
-		__invalidateEvent.invoke(this);
-	}
-
 	void MaterialPack::setMaterial(const std::type_index &type, const std::shared_ptr<const Material> &pMaterial) noexcept
 	{
 		auto &holder{ __materialMap[type] };
@@ -117,5 +113,15 @@ namespace Engine
 			__materials.emplace(holder.get());
 
 		__materialChangeEvent.invoke(this, type, pPrevMaterial, pMaterial.get());
+	}
+
+	std::unordered_set<const Material *>::const_iterator MaterialPack::begin() const noexcept
+	{
+		return __materials.begin();
+	}
+
+	std::unordered_set<const Material *>::const_iterator MaterialPack::end() const noexcept
+	{
+		return __materials.end();
 	}
 }

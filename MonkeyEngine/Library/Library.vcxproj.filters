@@ -12,6 +12,9 @@
     <ClCompile Include="MathUtil.ixx" />
     <ClCompile Include="LazyDeleter.ixx" />
     <ClCompile Include="LazyRecycler.ixx" />
+    <ClCompile Include="IdAllocator.ixx" />
+    <ClCompile Include="GenericBuffer.ixx" />
+    <ClCompile Include="Stateful.ixx" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GLM.h" />

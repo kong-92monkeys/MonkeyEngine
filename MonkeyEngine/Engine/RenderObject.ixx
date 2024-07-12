@@ -10,13 +10,16 @@ import ntmonkeys.com.Engine.DrawParam;
 import <vector>;
 import <memory>;
 import <unordered_set>;
-import <concepts>;
+import <unordered_map>;
+import <typeindex>;
 
 namespace Engine
 {
 	export class RenderObject : public Lib::Unique
 	{
 	public:
+		RenderObject() noexcept;
+
 		[[nodiscard]]
 		const Renderer *getRenderer() const noexcept;
 		void setRenderer(const std::shared_ptr<const Renderer> &pRenderer);
@@ -58,6 +61,12 @@ namespace Engine
 		[[nodiscard]]
 		constexpr Lib::EventView<const RenderObject *, uint32_t, const MaterialPack *, const MaterialPack *> &getMaterialPackChangeEvent() const noexcept;
 
+		[[nodiscard]]
+		constexpr Lib::EventView<const RenderObject *, uint32_t, uint32_t> &getInstanceCountChangeEvent() const noexcept;
+
+		[[nodiscard]]
+		constexpr Lib::EventView<const RenderObject *, bool, bool> &getDrawableChangeEvent() const noexcept;
+
 	private:
 		std::shared_ptr<const Renderer> __pRenderer;
 		std::shared_ptr<const Mesh> __pMesh;
@@ -66,6 +75,10 @@ namespace Engine
 
 		bool __visible{ true };
 		bool __drawable{ };
+
+		std::unordered_map<const MaterialPack *, size_t> __materialPack2InstanceIndex;
+
+		Lib::EventListenerPtr<const MaterialPack *, std::type_index, const Material *, const Material *> __pMaterialPackMaterialChangeListener;
 
 		mutable Lib::Event<const RenderObject *, const Renderer *, const Renderer *> __rendererChangeEvent;
 		mutable Lib::Event<const RenderObject *, const Mesh *, const Mesh *> __meshChangeEvent;
@@ -77,11 +90,18 @@ namespace Engine
 		[[nodiscard]]
 		bool __resolveDrawable() const noexcept;
 		void __validateDrawable();
+
+		void __onMaterialPackMaterialChanged() noexcept;
 	};
 
 	constexpr bool RenderObject::isVisible() const noexcept
 	{
 		return __visible;
+	}
+
+	constexpr bool RenderObject::isDrawable() const noexcept
+	{
+		return __drawable;
 	}
 
 	constexpr Lib::EventView<const RenderObject *, const Renderer *, const Renderer *> &RenderObject::getRendererChangeEvent() const noexcept
@@ -103,12 +123,29 @@ namespace Engine
 	{
 		return __materialPackChangeEvent;
 	}
+
+	constexpr Lib::EventView<const RenderObject *, uint32_t, uint32_t> &RenderObject::getInstanceCountChangeEvent() const noexcept
+	{
+		return __instanceCountChangeEvent;
+	}
+
+	constexpr Lib::EventView<const RenderObject *, bool, bool> &RenderObject::getDrawableChangeEvent() const noexcept
+	{
+		return __drawableChangeEvent;
+	}
 }
 
 module: private;
 
 namespace Engine
 {
+	RenderObject::RenderObject() noexcept
+	{
+		__pMaterialPackMaterialChangeListener = 
+			Lib::EventListener<const MaterialPack *, std::type_index, const Material *, const Material *>::bind(
+				&RenderObject::__onMaterialPackMaterialChanged, this);
+	}
+
 	const Renderer *RenderObject::getRenderer() const noexcept
 	{
 		return __pRenderer.get();
@@ -123,9 +160,7 @@ namespace Engine
 		__pRenderer = pRenderer;
 
 		__rendererChangeEvent.invoke(this, pPrevRenderer, pRenderer.get());
-
-		if (pRenderer)
-			__validateDrawable();
+		__validateDrawable();
 	}
 
 	const Mesh *RenderObject::getMesh() const noexcept
@@ -142,9 +177,7 @@ namespace Engine
 		__pMesh = pMesh;
 
 		__meshChangeEvent.invoke(this, pPrevMesh, pMesh.get());
-
-		if (pMesh)
-			__validateDrawable();
+		__validateDrawable();
 	}
 
 	const DrawParam *RenderObject::getDrawParam() const noexcept
@@ -161,9 +194,7 @@ namespace Engine
 		__pDrawParam = pDrawParam;
 
 		__drawParamChangeEvent.invoke(this, pPrevDrawParam, pDrawParam.get());
-
-		if (pDrawParam)
-			__validateDrawable();
+		__validateDrawable();
 	}
 
 	const MaterialPack *RenderObject::getMaterialPack(const uint32_t instanceIndex) const noexcept
@@ -179,12 +210,21 @@ namespace Engine
 			return;
 
 		const auto pPrevMaterialPack{ holder.get() };
+		if (pPrevMaterialPack)
+		{
+			pPrevMaterialPack->getMaterialChangeEvent() -= __pMaterialPackMaterialChangeListener;
+			__materialPack2InstanceIndex.erase(pPrevMaterialPack);
+		}
+
 		holder = pMaterialPack;
+		if (pMaterialPack)
+		{
+			pMaterialPack->getMaterialChangeEvent() += __pMaterialPackMaterialChangeListener;
+			__materialPack2InstanceIndex[pMaterialPack.get()] = instanceIndex;
+		}
 
 		__materialPackChangeEvent.invoke(this, instanceIndex, pPrevMaterialPack, pMaterialPack.get());
-
-		if (pMaterialPack)
-			__validateDrawable();
+		__validateDrawable();
 	}
 
 	uint32_t RenderObject::getInstanceCount() const noexcept
@@ -201,7 +241,14 @@ namespace Engine
 		std::vector<std::pair<uint32_t, std::shared_ptr<const MaterialPack>>> expiredPacks;
 
 		for (uint32_t instanceIndex{ prevCount - 1U }; instanceIndex >= count; --instanceIndex)
-			expiredPacks.emplace_back(instanceIndex, std::move(__materialPacks[instanceIndex]));
+		{
+			auto &pMaterialPack{ __materialPacks[instanceIndex] };
+
+			pMaterialPack->getMaterialChangeEvent() -= __pMaterialPackMaterialChangeListener;
+			__materialPack2InstanceIndex.erase(pMaterialPack.get());
+
+			expiredPacks.emplace_back(instanceIndex, std::move(pMaterialPack));
+		}
 
 		__materialPacks.resize(count);
 
@@ -212,6 +259,15 @@ namespace Engine
 
 		if (prevCount < count)
 			__validateDrawable();
+	}
+
+	void RenderObject::setVisible(const bool visible)
+	{
+		if (__visible == visible)
+			return;
+
+		__visible = visible;
+		__validateDrawable();
 	}
 
 	void RenderObject::draw(Graphics::CommandBuffer &commandBuffer) const noexcept
@@ -241,5 +297,10 @@ namespace Engine
 
 		__drawable = curDrawable;
 		__drawableChangeEvent.invoke(this, !curDrawable, curDrawable);
+	}
+
+	void RenderObject::__onMaterialPackMaterialChanged() noexcept
+	{
+		__validateDrawable();
 	}
 }

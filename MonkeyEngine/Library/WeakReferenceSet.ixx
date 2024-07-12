@@ -30,6 +30,8 @@ namespace Lib
 			Container::iterator __iter;
 		};
 
+		[[nodiscard]]
+		bool contains(const std::shared_ptr<$T> &ptr) const noexcept;
 		void emplace(const std::shared_ptr<$T> &ptr);
 		void erase(const std::shared_ptr<$T> &ptr);
 
@@ -42,6 +44,12 @@ namespace Lib
 	private:
 		Container __references;
 	};
+
+	template <typename $T>
+	bool WeakReferenceSet<$T>::contains(const std::shared_ptr<$T> &ptr) const noexcept
+	{
+		return __references.contains(ptr.get());
+	}
 
 	template <typename $T>
 	void WeakReferenceSet<$T>::emplace(const std::shared_ptr<$T> &ptr)

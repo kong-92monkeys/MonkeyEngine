@@ -170,6 +170,7 @@
     <ClCompile Include="FenceCirculator.ixx" />
     <ClCompile Include="FramebufferFactory.ixx" />
     <ClCompile Include="Layer.ixx" />
+    <ClCompile Include="LayerResourcePool.ixx" />
     <ClCompile Include="Material.ixx" />
     <ClCompile Include="MemoryAllocator.ixx" />
     <ClCompile Include="Mesh.ixx" />
@@ -179,7 +180,9 @@
     <ClCompile Include="RenderPassFactory.ixx" />
     <ClCompile Include="RenderTarget.ixx" />
     <ClCompile Include="SemaphoreCirculator.ixx" />
+    <ClCompile Include="ShaderDataStructures.ixx" />
     <ClCompile Include="ShaderIncluder.ixx" />
+    <ClCompile Include="SubLayer.ixx" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Graphics\Graphics.vcxproj">

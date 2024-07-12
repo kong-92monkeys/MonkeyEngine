@@ -18,6 +18,5 @@
     <ClCompile Include="VertexAttribute.ixx">
       <Filter>Vertex</Filter>
     </ClCompile>
-    <ClCompile Include="HostBuffer.ixx" />
   </ItemGroup>
 </Project>

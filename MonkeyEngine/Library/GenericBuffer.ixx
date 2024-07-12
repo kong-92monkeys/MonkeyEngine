@@ -1,12 +1,12 @@
-export module ntmonkeys.com.Frameworks.HostBuffer;
+export module ntmonkeys.com.Lib.GenericBuffer;
 
 import <vector>;
 import <cstddef>;
 import <initializer_list>;
 
-namespace Frameworks
+namespace Lib
 {
-	export class HostBuffer
+	export class GenericBuffer
 	{
 	public:
 		void add(const void *const pData, const size_t size) noexcept;
@@ -77,100 +77,100 @@ namespace Frameworks
 	};
 
 	template <typename $T>
-	void HostBuffer::typedAdd(const $T *const pData, const size_t size) noexcept
+	void GenericBuffer::typedAdd(const $T *const pData, const size_t size) noexcept
 	{
 		add(pData, size * sizeof($T));
 	}
 
 	template <typename $T>
-	void HostBuffer::typedAdd(const $T &data) noexcept
+	void GenericBuffer::typedAdd(const $T &data) noexcept
 	{
 		typedAdd<$T>(&data, 1ULL);
 	}
 
 	template <typename $T>
-	void HostBuffer::typedAdd(const std::initializer_list<$T> &data) noexcept
+	void GenericBuffer::typedAdd(const std::initializer_list<$T> &data) noexcept
 	{
 		typedAdd<$T>(data.begin(), data.size());
 	}
 
 	template <typename $T>
-	void HostBuffer::typedAdd(const std::vector<$T> &data) noexcept
+	void GenericBuffer::typedAdd(const std::vector<$T> &data) noexcept
 	{
 		typedAdd<$T>(data.data(), data.size());
 	}
 
 	template <typename $T>
-	void HostBuffer::typedInsert(const size_t index, const $T *const pData, const size_t size) noexcept
+	void GenericBuffer::typedInsert(const size_t index, const $T *const pData, const size_t size) noexcept
 	{
 		insert(index * sizeof($T), pData, size * sizeof($T));
 	}
 
 	template <typename $T>
-	void HostBuffer::typedInsert(const size_t index, const $T &data) noexcept
+	void GenericBuffer::typedInsert(const size_t index, const $T &data) noexcept
 	{
 		typedInsert<$T>(index, &data, 1ULL);
 	}
 
 	template <typename $T>
-	void HostBuffer::typedInsert(const size_t index, const std::initializer_list<$T> &data) noexcept
+	void GenericBuffer::typedInsert(const size_t index, const std::initializer_list<$T> &data) noexcept
 	{
 		typedInsert<$T>(index, data.begin(), data.size());
 	}
 
 	template <typename $T>
-	void HostBuffer::typedInsert(const size_t index, const std::vector<$T> &data) noexcept
+	void GenericBuffer::typedInsert(const size_t index, const std::vector<$T> &data) noexcept
 	{
 		typedInsert<$T>(index, data.data(), data.size());
 	}
 
 	template <typename $T>
-	void HostBuffer::typedSet(const size_t index, const $T *const pData, const size_t size) noexcept
+	void GenericBuffer::typedSet(const size_t index, const $T *const pData, const size_t size) noexcept
 	{
 		set(index * sizeof($T), pData, size * sizeof($T));
 	}
 
 	template <typename $T>
-	void HostBuffer::typedSet(const size_t index, const $T &data) noexcept
+	void GenericBuffer::typedSet(const size_t index, const $T &data) noexcept
 	{
 		typedSet<$T>(index, &data, 1ULL);
 	}
 
-	constexpr std::byte *HostBuffer::getData() noexcept
+	constexpr std::byte *GenericBuffer::getData() noexcept
 	{
 		return __buffer.data();
 	}
 
-	constexpr const std::byte *HostBuffer::getData() const noexcept
+	constexpr const std::byte *GenericBuffer::getData() const noexcept
 	{
 		return __buffer.data();
 	}
 
 	template <typename $T>
-	constexpr $T *HostBuffer::getTypedData() noexcept
+	constexpr $T *GenericBuffer::getTypedData() noexcept
 	{
 		return reinterpret_cast<$T *>(getData());
 	}
 
 	template <typename $T>
-	constexpr const $T *HostBuffer::getTypedData() const noexcept
+	constexpr const $T *GenericBuffer::getTypedData() const noexcept
 	{
 		return reinterpret_cast<const $T *>(getData());
 	}
 
-	constexpr size_t HostBuffer::getSize() const noexcept
+	constexpr size_t GenericBuffer::getSize() const noexcept
 	{
 		return __buffer.size();
 	}
 
 	template <typename $T>
-	constexpr size_t HostBuffer::getTypedSize() const noexcept
+	constexpr size_t GenericBuffer::getTypedSize() const noexcept
 	{
 		return (getSize() / sizeof($T));
 	}
 
 	template <typename $T>
-	void HostBuffer::typedResize(const size_t size) noexcept
+	void GenericBuffer::typedResize(const size_t size) noexcept
 	{
 		resize(size * sizeof($T));
 	}
@@ -178,9 +178,9 @@ namespace Frameworks
 
 module: private;
 
-namespace Frameworks
+namespace Lib
 {
-	void HostBuffer::add(const void *const pData, const size_t size) noexcept
+	void GenericBuffer::add(const void *const pData, const size_t size) noexcept
 	{
 		const size_t prevSize{ __buffer.size() };
 		__buffer.resize(prevSize + size);
@@ -188,24 +188,24 @@ namespace Frameworks
 		std::memcpy(__buffer.data() + prevSize, pData, size);
 	}
 
-	void HostBuffer::insert(const size_t offset, const void *const pData, const size_t size) noexcept
+	void GenericBuffer::insert(const size_t offset, const void *const pData, const size_t size) noexcept
 	{
 		const auto iter{ __buffer.begin() + offset };
 		const auto pSrc{ static_cast<const std::byte *>(pData) };
 		__buffer.insert(iter, pSrc, pSrc + size);
 	}
 
-	void HostBuffer::set(const size_t offset, const void *const pData, const size_t size) noexcept
+	void GenericBuffer::set(const size_t offset, const void *const pData, const size_t size) noexcept
 	{
 		std::memcpy(__buffer.data() + offset, pData, size);
 	}
 
-	void HostBuffer::clear() noexcept
+	void GenericBuffer::clear() noexcept
 	{
 		__buffer.clear();
 	}
 
-	void HostBuffer::resize(const size_t size) noexcept
+	void GenericBuffer::resize(const size_t size) noexcept
 	{
 		__buffer.resize(size);
 	}

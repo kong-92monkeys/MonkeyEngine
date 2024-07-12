@@ -20,9 +20,9 @@ BEGIN_MESSAGE_MAP(CApp, CWinApp)
 END_MESSAGE_MAP()
 
 import ntmonkeys.com.Lib.Logger;
+import ntmonkeys.com.Lib.GenericBuffer;
 import ntmonkeys.com.Engine.Mesh;
 import ntmonkeys.com.Engine.DrawParam;
-import ntmonkeys.com.Frameworks.HostBuffer;
 import ntmonkeys.com.Frameworks.Vertex;
 
 // CApp construction
@@ -121,19 +121,19 @@ void CApp::__onInitBeforeMainFrame()
 
 	__pRenderer = std::shared_ptr<Frameworks::SimpleRenderer>{ __pRenderingEngine->createRenderer<Frameworks::SimpleRenderer>() };
 
-	Frameworks::HostBuffer posBuffer;
+	Lib::GenericBuffer posBuffer;
 	posBuffer.typedAdd<glm::vec3>({ -0.5f, -0.5f, 0.5f });
 	posBuffer.typedAdd<glm::vec3>({ -0.5f, 0.5f, 0.5f });
 	posBuffer.typedAdd<glm::vec3>({ 0.5f, 0.5f, 0.5f });
 	posBuffer.typedAdd<glm::vec3>({ 0.5f, -0.5f, 0.5f });
 
-	Frameworks::HostBuffer colorBuffer;
+	Lib::GenericBuffer colorBuffer;
 	colorBuffer.typedAdd<glm::vec4>({ 1.0f, 0.0f, 0.0f, 1.0f });
 	colorBuffer.typedAdd<glm::vec4>({ 0.0f, 1.0f, 0.0f, 1.0f });
 	colorBuffer.typedAdd<glm::vec4>({ 0.0f, 0.0f, 1.0f, 1.0f });
 	colorBuffer.typedAdd<glm::vec4>({ 1.0f, 0.0f, 1.0f, 1.0f });
 
-	Frameworks::HostBuffer indexBuffer;
+	Lib::GenericBuffer indexBuffer;
 	indexBuffer.typedAdd<uint16_t>({ 0U, 1U, 2U, 0U, 2U, 3U });
 
 	auto pMesh = std::shared_ptr<Engine::Mesh>{ __pRenderingEngine->createMesh() };

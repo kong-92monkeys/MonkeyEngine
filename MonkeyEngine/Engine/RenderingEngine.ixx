@@ -20,6 +20,7 @@ import ntmonkeys.com.Graphics.ConversionUtil;
 import ntmonkeys.com.Engine.EngineContext;
 import ntmonkeys.com.Engine.RenderTarget;
 import ntmonkeys.com.Engine.MemoryAllocator;
+import ntmonkeys.com.Engine.LayerResourcePool;
 import ntmonkeys.com.Engine.CommandExecutor;
 import ntmonkeys.com.Engine.Renderer;
 import ntmonkeys.com.Engine.Layer;
@@ -81,6 +82,7 @@ namespace Engine
 
 		std::unique_ptr<Graphics::LogicalDevice> __pLogicalDevice;
 		std::unique_ptr<MemoryAllocator> __pMemoryAllocator;
+		std::unique_ptr<LayerResourcePool> __pLayerResourcePool;
 		std::unique_ptr<RenderPassFactory> __pRenderPassFactory;
 
 		std::unique_ptr<CommandBufferCirculator> __pCBCirculator;
@@ -127,6 +129,7 @@ namespace Engine
 			Constants::DEFAULT_MEMORY_BLOCK_SIZE, Constants::DEFAULT_BUFFER_BLOCK_SIZE,
 			deviceLimits.minUniformBufferOffsetAlignment, deviceLimits.minStorageBufferOffsetAlignment);
 		
+		__pLayerResourcePool = std::make_unique<LayerResourcePool>(__lazyDeleter, *__pMemoryAllocator);
 		__pRenderPassFactory = std::make_unique<RenderPassFactory>(*__pLogicalDevice);
 
 		__pCBCirculator = std::make_unique<CommandBufferCirculator>(
@@ -139,6 +142,7 @@ namespace Engine
 		__context.pLazyDeleter			= &__lazyDeleter;
 		__context.pCommandExecutor		= &__commandExecutor;
 		__context.pMemoryAllocator		= __pMemoryAllocator.get();
+		__context.pRenderPassFactory	= __pRenderPassFactory.get();
 	}
 
 	RenderingEngine::~RenderingEngine() noexcept
@@ -150,6 +154,7 @@ namespace Engine
 		__pSubmitFenceCirculator = nullptr;
 		__pCBCirculator = nullptr;
 		__pRenderPassFactory = nullptr;
+		__pLayerResourcePool = nullptr;
 		__pMemoryAllocator = nullptr;
 		__pLogicalDevice = nullptr;
 	}
@@ -169,7 +174,7 @@ namespace Engine
 
 	Layer *RenderingEngine::createLayer()
 	{
-		return new Layer{ *__pRenderPassFactory };
+		return new Layer{ __context };
 	}
 
 	Mesh *RenderingEngine::createMesh() noexcept
