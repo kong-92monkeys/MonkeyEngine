@@ -47,7 +47,7 @@ namespace Engine
 		[[nodiscard]]
 		constexpr bool isDrawable() const noexcept;
 
-		void draw(Graphics::CommandBuffer &commandBuffer) const noexcept;
+		void draw(Graphics::CommandBuffer &commandBuffer, const uint32_t baseId) const noexcept;
 
 		[[nodiscard]]
 		constexpr Lib::EventView<const RenderObject *, const Renderer *, const Renderer *> &getRendererChangeEvent() const noexcept;
@@ -144,6 +144,8 @@ namespace Engine
 		__pMaterialPackMaterialChangeListener = 
 			Lib::EventListener<const MaterialPack *, std::type_index, const Material *, const Material *>::bind(
 				&RenderObject::__onMaterialPackMaterialChanged, this);
+
+		__materialPacks.emplace_back();
 	}
 
 	const Renderer *RenderObject::getRenderer() const noexcept
@@ -270,9 +272,9 @@ namespace Engine
 		__validateDrawable();
 	}
 
-	void RenderObject::draw(Graphics::CommandBuffer &commandBuffer) const noexcept
+	void RenderObject::draw(Graphics::CommandBuffer &commandBuffer, const uint32_t baseId) const noexcept
 	{
-		__pDrawParam->draw(commandBuffer, 1U, 0U);
+		__pDrawParam->draw(commandBuffer, getInstanceCount(), baseId);
 	}
 
 	bool RenderObject::__resolveDrawable() const noexcept
@@ -282,7 +284,7 @@ namespace Engine
 
 		for (const auto &pMaterialPack : __materialPacks)
 		{
-			if (__pRenderer->isValidMaterialPack(pMaterialPack.get()))
+			if (!(__pRenderer->isValidMaterialPack(pMaterialPack.get())))
 				return false;
 		}
 

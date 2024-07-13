@@ -277,11 +277,33 @@ namespace Engine
 
 	void SubLayer::draw(Graphics::CommandBuffer &commandBuffer)
 	{
+		if (isEmpty())
+			return;
 
+		// TODO: bind descriptor set
+
+		const Mesh *pBoundMesh{ };
+		for (const auto &[pMesh, objects] : __mesh2Objects)
+		{
+			if (pBoundMesh != pMesh)
+			{
+				pBoundMesh = pMesh;
+				pMesh->bind(commandBuffer);
+			}
+
+			for (const auto pObject : objects)
+			{
+				const uint32_t baseId{ static_cast<uint32_t>(__object2Region.at(pObject)->getOffset()) };
+				pObject->draw(commandBuffer, baseId);
+			}
+		}
 	}
 
 	void SubLayer::_onValidate()
 	{
+		if (isEmpty())
+			return;
+
 		__validateInstanceInfoDataBuffer();
 		__validateMaterialDependencies();
 	}
@@ -298,7 +320,13 @@ namespace Engine
 		__registerMesh(pObject, pObject->getMesh());
 
 		for (uint32_t instanceIter{ }; instanceIter < instanceCount; ++instanceIter)
-			__registerMaterialPack(pObject, pObject->getMaterialPack(instanceIter), instanceIter);
+		{
+			const auto pMaterialPack{ pObject->getMaterialPack(instanceIter) };
+			if (!pMaterialPack)
+				continue;
+
+			__registerMaterialPack(pObject, pMaterialPack, instanceIter);
+		}
 
 		__validateInstanceInfoHostBuffer(pObject);
 		__instanceInfoInvalidated = true;
