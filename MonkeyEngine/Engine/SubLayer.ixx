@@ -26,10 +26,10 @@ import <typeindex>;
 
 namespace Engine
 {
-	class MaterialDependencies : public Lib::Unique, public Lib::Stateful<MaterialDependencies>
+	class MaterialDataBufferBuilder : public Lib::Unique, public Lib::Stateful<MaterialDataBufferBuilder>
 	{
 	public:
-		MaterialDependencies(LayerResourcePool &resourcePool) noexcept;
+		MaterialDataBufferBuilder(LayerResourcePool &resourcePool) noexcept;
 
 		void registerMaterial(const Material *const pMaterial) noexcept;
 		void unregisterMaterial(const Material *const pMaterial) noexcept;
@@ -93,7 +93,7 @@ namespace Engine
 		std::vector<InstanceInfo> __instanceInfoHostBuffer;
 		std::shared_ptr<BufferChunk> __pInstanceInfoDataBuffer;
 
-		std::unordered_map<std::type_index, std::unique_ptr<MaterialDependencies>> __materialDependencies;
+		std::unordered_map<std::type_index, std::unique_ptr<MaterialDataBufferBuilder>> __materialDataBufferBuilders;
 
 		Lib::EventListenerPtr<const RenderObject *, const Mesh *, const Mesh *> __pObjectMeshChangeListener;
 		Lib::EventListenerPtr<const RenderObject *, const DrawParam *, const DrawParam *> __pObjectDrawParamChangeListener;
@@ -102,7 +102,7 @@ namespace Engine
 		Lib::EventListenerPtr<const RenderObject *, bool, bool> __pObjectDrawableChangeListener;
 
 		Lib::EventListenerPtr<const MaterialPack *, std::type_index, const Material *, const Material *> __pMaterialPackMaterialChangeListener;
-		Lib::EventListenerPtr<const MaterialDependencies *> __pMaterialDependenciesInvalidateListener;
+		Lib::EventListenerPtr<const MaterialDataBufferBuilder *> __pMaterialDataBufferBuilderInvalidateListener;
 
 		void __registerObject(const RenderObject *const pObject);
 		void __unregisterObject(const RenderObject *const pObject);
@@ -122,7 +122,7 @@ namespace Engine
 			const std::type_index &materialType, const Material *const pMaterial);
 
 		void __validateInstanceInfoDataBuffer();
-		void __validateMaterialDependencies();
+		void __validateMaterialDataBufferBuilders();
 
 		void __onObjectMeshChanged(
 			const RenderObject *const pObject,
@@ -144,17 +144,17 @@ namespace Engine
 			const MaterialPack *const pMaterialPack, const std::type_index &type,
 			const Material *const pPrev, const Material *const pCur) noexcept;
 
-		void __onMaterialDependenciesInvalidated() noexcept;
+		void __onMaterialDataBufferBuilderInvalidated() noexcept;
 	};
 
-	MaterialDependencies::MaterialDependencies(LayerResourcePool &resourcePool) noexcept :
+	MaterialDataBufferBuilder::MaterialDataBufferBuilder(LayerResourcePool &resourcePool) noexcept :
 		__resourcePool{ resourcePool }
 	{
 		__pMaterialInvalidateListener =
-			Lib::EventListener<const Material *>::bind(&MaterialDependencies::__onMaterialInvalidated, this, std::placeholders::_1);
+			Lib::EventListener<const Material *>::bind(&MaterialDataBufferBuilder::__onMaterialInvalidated, this, std::placeholders::_1);
 	}
 
-	void MaterialDependencies::registerMaterial(const Material *const pMaterial) noexcept
+	void MaterialDataBufferBuilder::registerMaterial(const Material *const pMaterial) noexcept
 	{
 		pMaterial->getInvalidateEvent() += __pMaterialInvalidateListener;
 		
@@ -169,7 +169,7 @@ namespace Engine
 		++ref;
 	}
 
-	void MaterialDependencies::unregisterMaterial(const Material *const pMaterial) noexcept
+	void MaterialDataBufferBuilder::unregisterMaterial(const Material *const pMaterial) noexcept
 	{
 		pMaterial->getInvalidateEvent() -= __pMaterialInvalidateListener;
 
@@ -183,22 +183,22 @@ namespace Engine
 		}
 	}
 
-	uint32_t MaterialDependencies::getIdOf(const Material *const pMaterial) const noexcept
+	uint32_t MaterialDataBufferBuilder::getIdOf(const Material *const pMaterial) const noexcept
 	{
 		return __refIdMap.at(pMaterial).second;
 	}
 
-	const BufferChunk &MaterialDependencies::getDataBuffer() const noexcept
+	const BufferChunk &MaterialDataBufferBuilder::getDataBuffer() const noexcept
 	{
 		return *__pDataBuffer;
 	}
 
-	void MaterialDependencies::_onValidate()
+	void MaterialDataBufferBuilder::_onValidate()
 	{
 		__validateDataBuffer();
 	}
 
-	void MaterialDependencies::__validateHostBuffer(const Material *const pMaterial) noexcept
+	void MaterialDataBufferBuilder::__validateHostBuffer(const Material *const pMaterial) noexcept
 	{
 		const uint32_t materialId	{ __refIdMap.at(pMaterial).second };
 
@@ -211,7 +211,7 @@ namespace Engine
 		__hostBuffer.set(memOffset, pMaterial->getData(), materialSize);
 	}
 
-	void MaterialDependencies::__validateDataBuffer()
+	void MaterialDataBufferBuilder::__validateDataBuffer()
 	{
 		const size_t bufferSize{ __hostBuffer.getSize() };
 
@@ -222,7 +222,7 @@ namespace Engine
 		std::memcpy(__pDataBuffer->getMappedMemory(), __hostBuffer.getData(), bufferSize);
 	}
 
-	void MaterialDependencies::__onMaterialInvalidated(const Material *const pMaterial) noexcept
+	void MaterialDataBufferBuilder::__onMaterialInvalidated(const Material *const pMaterial) noexcept
 	{
 		__validateHostBuffer(pMaterial);
 		_invalidate();
@@ -255,8 +255,8 @@ namespace Engine
 			Lib::EventListener<const MaterialPack *, std::type_index, const Material *, const Material *>::bind(
 				&SubLayer::__onMaterialPackMaterialChanged, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
 
-		__pMaterialDependenciesInvalidateListener =
-			Lib::EventListener<const MaterialDependencies *>::bind(&SubLayer::__onMaterialDependenciesInvalidated, this);
+		__pMaterialDataBufferBuilderInvalidateListener =
+			Lib::EventListener<const MaterialDataBufferBuilder *>::bind(&SubLayer::__onMaterialDataBufferBuilderInvalidated, this);
 	}
 
 	constexpr const Renderer *SubLayer::getRenderer() const noexcept
@@ -313,7 +313,7 @@ namespace Engine
 			return;
 
 		__validateInstanceInfoDataBuffer();
-		__validateMaterialDependencies();
+		__validateMaterialDataBufferBuilders();
 	}
 
 	void SubLayer::__registerObject(const RenderObject *const pObject)
@@ -387,7 +387,6 @@ namespace Engine
 
 		for (const auto pMaterial : *pMaterialPack)
 			__registerMaterial(pMaterial);
-
 	}
 
 	void SubLayer::__unregisterMaterialPack(const RenderObject *const pObject, const MaterialPack *const pMaterialPack)
@@ -401,20 +400,20 @@ namespace Engine
 
 	void SubLayer::__registerMaterial(const Material *const pMaterial)
 	{
-		auto &pDependencies{ __materialDependencies[typeid(*pMaterial)] };
-		if (!pDependencies)
+		auto &pBufferBuilder{ __materialDataBufferBuilders[typeid(*pMaterial)] };
+		if (!pBufferBuilder)
 		{
-			pDependencies = std::make_unique<MaterialDependencies>(*(__context.pLayerResourcePool));
-			pDependencies->getInvalidateEvent() += __pMaterialDependenciesInvalidateListener;
+			pBufferBuilder = std::make_unique<MaterialDataBufferBuilder>(*(__context.pLayerResourcePool));
+			pBufferBuilder->getInvalidateEvent() += __pMaterialDataBufferBuilderInvalidateListener;
 		}
 
-		pDependencies->registerMaterial(pMaterial);
+		pBufferBuilder->registerMaterial(pMaterial);
 	}
 
 	void SubLayer::__unregisterMaterial(const Material *const pMaterial)
 	{
-		const auto &pDependencies{ __materialDependencies[typeid(*pMaterial)] };
-		pDependencies->unregisterMaterial(pMaterial);
+		const auto &pBufferBuilder{ __materialDataBufferBuilders[typeid(*pMaterial)] };
+		pBufferBuilder->unregisterMaterial(pMaterial);
 	}
 
 	void SubLayer::__validateInstanceInfoHostBuffer(const RenderObject *const pObject)
@@ -445,8 +444,8 @@ namespace Engine
 				if (descLocation.has_value())
 				{
 					const uint32_t location		{ descLocation.value() };
-					const auto &pDependencies	{ __materialDependencies.at(materialType) };
-					instanceInfo.materialIds[location] = pDependencies->getIdOf(pMaterial);
+					const auto &pBufferBuilder	{ __materialDataBufferBuilders.at(materialType) };
+					instanceInfo.materialIds[location] = pBufferBuilder->getIdOf(pMaterial);
 				}
 			}
 		}
@@ -473,8 +472,8 @@ namespace Engine
 
 			if (pMaterial)
 			{
-				const auto &pDependencies{ __materialDependencies.at(materialType) };
-				instanceInfo.materialIds[location] = pDependencies->getIdOf(pMaterial);
+				const auto &pBufferBuilder{ __materialDataBufferBuilders.at(materialType) };
+				instanceInfo.materialIds[location] = pBufferBuilder->getIdOf(pMaterial);
 			}
 			else
 				instanceInfo.materialIds[location] = -1;
@@ -499,10 +498,10 @@ namespace Engine
 		__instanceInfoInvalidated = false;
 	}
 
-	void SubLayer::__validateMaterialDependencies()
+	void SubLayer::__validateMaterialDataBufferBuilders()
 	{
-		for (const auto &[_, pDependencies] : __materialDependencies)
-			pDependencies->validate();
+		for (const auto &[_, pBuilder] : __materialDataBufferBuilders)
+			pBuilder->validate();
 	}
 
 	void SubLayer::__onObjectMeshChanged(
@@ -570,7 +569,7 @@ namespace Engine
 		_invalidate();
 	}
 
-	void SubLayer::__onMaterialDependenciesInvalidated() noexcept
+	void SubLayer::__onMaterialDataBufferBuilderInvalidated() noexcept
 	{
 		_invalidate();
 	}
