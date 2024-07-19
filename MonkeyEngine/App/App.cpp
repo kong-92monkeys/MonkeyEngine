@@ -152,12 +152,12 @@ void CApp::__onInitBeforeMainFrame()
 	pMaterialPack->setMaterial<Frameworks::SimpleMaterial>(pMaterial);
 
 	__pRenderObject = std::shared_ptr<Engine::RenderObject>{ __pRenderingEngine->createRenderObject() };
+	__pLayer->addRenderObject(__pRenderObject);
+
 	__pRenderObject->setRenderer(pRenderer);
 	__pRenderObject->setMesh(pMesh);
 	__pRenderObject->setDrawParam(pDrawParam);
 	__pRenderObject->setMaterialPack(0U, pMaterialPack);
-
-	__pLayer->addRenderObject(__pRenderObject);
 }
 
 void CApp::__createGraphicsCore()

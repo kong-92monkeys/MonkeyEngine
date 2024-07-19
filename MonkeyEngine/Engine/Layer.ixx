@@ -25,8 +25,8 @@ namespace Engine
 		Layer(const EngineContext &context) noexcept;
 		virtual ~Layer() noexcept override = default;
 
-		void addRenderObject(const std::shared_ptr<const RenderObject> &pObject) noexcept;
-		void removeRenderObject(const std::shared_ptr<const RenderObject> &pObject) noexcept;
+		void addRenderObject(const std::shared_ptr<const RenderObject> &pObject);
+		void removeRenderObject(const std::shared_ptr<const RenderObject> &pObject);
 
 		[[nodiscard]]
 		bool isEmpty() const noexcept;
@@ -52,9 +52,7 @@ namespace Engine
 		[[nodiscard]]
 		SubLayer *__getSubLayerOf(const Renderer *const pRenderer) noexcept;
 
-		void __onObjectRendererChanged(
-			const RenderObject *const pObject, const Renderer *const pPrev, const Renderer *const pCur) noexcept;
-
+		void __onObjectRendererChanged(const RenderObject *const pObject, const Renderer *const pPrev, const Renderer *const pCur) noexcept;
 		void __onSubLayerInvalidated(const SubLayer *const pSubLayer) noexcept;
 	};
 }
@@ -74,24 +72,28 @@ namespace Engine
 			Lib::EventListener<const SubLayer *>::bind(&Layer::__onSubLayerInvalidated, this, std::placeholders::_1);
 	}
 
-	void Layer::addRenderObject(const std::shared_ptr<const RenderObject> &pObject) noexcept
+	void Layer::addRenderObject(const std::shared_ptr<const RenderObject> &pObject)
 	{
 		const bool inserted{ __renderObjects.emplace(pObject).second };
 		if (!inserted)
-			return;
+			throw std::runtime_error{ "The object is already added." };
 
 		pObject->getRendererChangeEvent() += __pObjectRendererChangeListener;
-		__registerObject(pObject.get());
+
+		if (pObject->getRenderer())
+			__registerObject(pObject.get());
 	}
 
-	void Layer::removeRenderObject(const std::shared_ptr<const RenderObject> &pObject) noexcept
+	void Layer::removeRenderObject(const std::shared_ptr<const RenderObject> &pObject)
 	{
 		const bool erased{ static_cast<bool>(__renderObjects.erase(pObject)) };
 		if (!erased)
-			return;
+			throw std::runtime_error{ "The object is not added yet." };
 
 		pObject->getRendererChangeEvent() -= __pObjectRendererChangeListener;
-		__unregisterObject(pObject.get());
+
+		if (pObject->getRenderer())
+			__unregisterObject(pObject.get());
 	}
 
 	bool Layer::isEmpty() const noexcept
@@ -120,11 +122,7 @@ namespace Engine
 
 	void Layer::__registerObject(const RenderObject *const pObject) noexcept
 	{
-		const auto pRenderer{ pObject->getRenderer() };
-		if (!pRenderer)
-			return;
-
-		const auto pSubLayer{ __getSubLayerOf(pRenderer) };
+		const auto pSubLayer{ __getSubLayerOf(pObject->getRenderer()) };
 		pSubLayer->addRenderObject(pObject);
 
 		__object2SubLayerMap[pObject] = pSubLayer;
@@ -134,6 +132,9 @@ namespace Engine
 	{
 		const auto pSubLayer{ __object2SubLayerMap.extract(pObject).mapped() };
 		pSubLayer->removeRenderObject(pObject);
+
+		if (pSubLayer->isEmpty())
+			__subLayerMap.erase(pSubLayer->getRenderer());
 	}
 
 	SubLayer *Layer::__getSubLayerOf(const Renderer *const pRenderer) noexcept
@@ -151,8 +152,11 @@ namespace Engine
 	void Layer::__onObjectRendererChanged(
 		const RenderObject *const pObject, const Renderer *const pPrev, const Renderer *const pCur) noexcept
 	{
-		__unregisterObject(pObject);
-		__registerObject(pObject);
+		if (pPrev)
+			__unregisterObject(pObject);
+
+		if (pCur)
+			__registerObject(pObject);
 	}
 
 	void Layer::__onSubLayerInvalidated(const SubLayer *const pSubLayer) noexcept

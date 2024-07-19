@@ -65,6 +65,9 @@ namespace Engine
 	public:
 		SubLayer(const EngineContext &context, const Renderer *const pRenderer) noexcept;
 
+		[[nodiscard]]
+		constexpr const Renderer *getRenderer() const noexcept;
+
 		void addRenderObject(const RenderObject *const pObject) noexcept;
 		void removeRenderObject(const RenderObject *const pObject) noexcept;
 
@@ -254,6 +257,11 @@ namespace Engine
 
 		__pMaterialDependenciesInvalidateListener =
 			Lib::EventListener<const MaterialDependencies *>::bind(&SubLayer::__onMaterialDependenciesInvalidated, this);
+	}
+
+	constexpr const Renderer *SubLayer::getRenderer() const noexcept
+	{
+		return __pRenderer;
 	}
 
 	void SubLayer::addRenderObject(const RenderObject *const pObject) noexcept
