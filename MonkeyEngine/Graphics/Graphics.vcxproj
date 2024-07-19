@@ -23,6 +23,8 @@
     <ClCompile Include="CommandBuffer.ixx" />
     <ClCompile Include="CommandPool.ixx" />
     <ClCompile Include="ConversionUtil.ixx" />
+    <ClCompile Include="DescriptorPool.ixx" />
+    <ClCompile Include="DescriptorSet.ixx" />
     <ClCompile Include="DescriptorSetLayout.ixx" />
     <ClCompile Include="Fence.ixx" />
     <ClCompile Include="Framebuffer.ixx" />

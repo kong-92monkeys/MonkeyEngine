@@ -8,6 +8,7 @@ import ntmonkeys.com.Lib.Unique;
 import ntmonkeys.com.VK.VulkanProc;
 import <vector>;
 import <stdexcept>;
+import <unordered_map>;
 
 namespace Graphics
 {
@@ -19,6 +20,7 @@ namespace Graphics
 		public:
 			const VK::DeviceProc *pDeviceProc{ };
 			VkDevice hDevice{ };
+			VkDescriptorSetLayoutCreateFlags flags{ };
 			uint32_t bindingCount{ };
 			const VkDescriptorSetLayoutBinding *pBindings{ };
 		};
@@ -26,14 +28,31 @@ namespace Graphics
 		explicit DescriptorSetLayout(const CreateInfo &createInfo) noexcept;
 		virtual ~DescriptorSetLayout() noexcept override;
 
+		[[nodiscard]]
+		constexpr const std::unordered_map<VkDescriptorType, uint32_t> &getDescriptorCountInfo() const noexcept;
+
+		[[nodiscard]]
+		constexpr const VkDescriptorSetLayout &getHandle() const noexcept;
+
 	private:
 		const VK::DeviceProc &__deviceProc;
 		const VkDevice __hDevice;
 
 		VkDescriptorSetLayout __handle{ };
+		std::unordered_map<VkDescriptorType, uint32_t> __descriptorCountInfo;
 
 		void __create(const CreateInfo &createInfo);
 	};
+
+	constexpr const std::unordered_map<VkDescriptorType, uint32_t> &DescriptorSetLayout::getDescriptorCountInfo() const noexcept
+	{
+		return __descriptorCountInfo;
+	}
+
+	constexpr const VkDescriptorSetLayout &DescriptorSetLayout::getHandle() const noexcept
+	{
+		return __handle;
+	}
 }
 
 module: private;
@@ -45,6 +64,12 @@ namespace Graphics
 		__hDevice		{ createInfo.hDevice }
 	{
 		__create(createInfo);
+
+		for (uint32_t bindingIter{ }; bindingIter < createInfo.bindingCount; ++bindingIter)
+		{
+			const auto &binding{ createInfo.pBindings[bindingIter] };
+			__descriptorCountInfo[binding.descriptorType] += binding.descriptorCount;
+		}
 	}
 
 	DescriptorSetLayout::~DescriptorSetLayout() noexcept
@@ -57,6 +82,7 @@ namespace Graphics
 		const VkDescriptorSetLayoutCreateInfo vkCreateInfo
 		{
 			.sType			{ VkStructureType::VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO },
+			.flags			{ createInfo.flags },
 			.bindingCount	{ createInfo.bindingCount },
 			.pBindings		{ createInfo.pBindings }
 		};

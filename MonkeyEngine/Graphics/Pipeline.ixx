@@ -24,6 +24,7 @@ namespace Graphics
 			VkRenderPass hRenderPass{ };
 			uint32_t subpassIndex{ };
 
+			VkPipelineCreateFlags flags{ };
 			uint32_t stageCount{ };
 			const VkPipelineShaderStageCreateInfo *pStages{ };
 			const VkPipelineVertexInputStateCreateInfo *pVertexInputState{ };
@@ -79,6 +80,7 @@ namespace Graphics
 		const VkGraphicsPipelineCreateInfo vkCreateInfo
 		{
 			.sType						{ VkStructureType::VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO },
+			.flags						{ createInfo.flags },
 			.stageCount					{ createInfo.stageCount },
 			.pStages					{ createInfo.pStages },
 			.pVertexInputState			{ createInfo.pVertexInputState },

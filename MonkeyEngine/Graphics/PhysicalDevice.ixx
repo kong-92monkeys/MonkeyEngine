@@ -54,9 +54,6 @@ namespace Graphics
 		constexpr const VkPhysicalDeviceRobustness2PropertiesEXT &getRobustness2Props() const noexcept;
 
 		[[nodiscard]]
-		constexpr const VkPhysicalDeviceDescriptorBufferPropertiesEXT &getDescriptorBufferProps() const noexcept;
-
-		[[nodiscard]]
 		constexpr const VkPhysicalDeviceFeatures &get10Features() const noexcept;
 
 		[[nodiscard]]
@@ -70,9 +67,6 @@ namespace Graphics
 
 		[[nodiscard]]
 		constexpr const VkPhysicalDeviceRobustness2FeaturesEXT &getRobustness2Features() const noexcept;
-
-		[[nodiscard]]
-		constexpr const VkPhysicalDeviceDescriptorBufferFeaturesEXT &getDescriptorBufferFeatures() const noexcept;
 
 		[[nodiscard]]
 		constexpr const std::unordered_map<std::string_view, const VkExtensionProperties *> &getExtensions() const noexcept;
@@ -105,14 +99,12 @@ namespace Graphics
 		VkPhysicalDeviceVulkan12Properties __12Props{ };
 		VkPhysicalDeviceVulkan13Properties __13Props{ };
 		VkPhysicalDeviceRobustness2PropertiesEXT __robustness2Props{ };
-		VkPhysicalDeviceDescriptorBufferPropertiesEXT __descriptorBufferProps{ };
 
 		VkPhysicalDeviceFeatures2 __features{ };
 		VkPhysicalDeviceVulkan11Features __11Features{ };
 		VkPhysicalDeviceVulkan12Features __12Features{ };
 		VkPhysicalDeviceVulkan13Features __13Features{ };
 		VkPhysicalDeviceRobustness2FeaturesEXT __robustness2Features{ };
-		VkPhysicalDeviceDescriptorBufferFeaturesEXT __descriptorBufferFeatures{ };
 
 		std::vector<VkExtensionProperties> __extensions;
 		std::unordered_map<std::string_view, const VkExtensionProperties *> __extensionMap;
@@ -160,11 +152,6 @@ namespace Graphics
 		return __robustness2Props;
 	}
 
-	constexpr const VkPhysicalDeviceDescriptorBufferPropertiesEXT &PhysicalDevice::getDescriptorBufferProps() const noexcept
-	{
-		return __descriptorBufferProps;
-	}
-
 	constexpr const VkPhysicalDeviceFeatures &PhysicalDevice::get10Features() const noexcept
 	{
 		return __features.features;
@@ -188,11 +175,6 @@ namespace Graphics
 	constexpr const VkPhysicalDeviceRobustness2FeaturesEXT &PhysicalDevice::getRobustness2Features() const noexcept
 	{
 		return __robustness2Features;
-	}
-
-	constexpr const VkPhysicalDeviceDescriptorBufferFeaturesEXT &PhysicalDevice::getDescriptorBufferFeatures() const noexcept
-	{
-		return __descriptorBufferFeatures;
 	}
 
 	constexpr const std::unordered_map<std::string_view, const VkExtensionProperties *> &PhysicalDevice::getExtensions() const noexcept
@@ -258,14 +240,12 @@ namespace Graphics
 			.p12Props					{ &__12Props },
 			.p13Props					{ &__13Props },
 			.pRobustness2Props			{ &__robustness2Props },
-			.pDescriptorBufferProps		{ &__descriptorBufferProps },
 
 			.p10Features				{ &(__features.features) },
 			.p11Features				{ &__11Features },
 			.p12Features				{ &__12Features },
 			.p13Features				{ &__13Features },
 			.pRobustness2Features		{ &__robustness2Features },
-			.pDescriptorBufferFeatures	{ &__descriptorBufferFeatures },
 
 			.pExtensionMap				{ &__extensionMap }
 		};
@@ -288,10 +268,7 @@ namespace Graphics
 		__13Props.pNext = &__robustness2Props;
 
 		__robustness2Props.sType = VkStructureType::VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ROBUSTNESS_2_PROPERTIES_EXT;
-		__robustness2Props.pNext = &__descriptorBufferProps;
-
-		__descriptorBufferProps.sType = VkStructureType::VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_BUFFER_PROPERTIES_EXT;
-		__descriptorBufferProps.pNext = nullptr;
+		__robustness2Props.pNext = nullptr;
 
 		__instanceProc.vkGetPhysicalDeviceProperties2(__handle, &__props);
 	}
@@ -311,10 +288,7 @@ namespace Graphics
 		__13Features.pNext = &__robustness2Features;
 
 		__robustness2Features.sType = VkStructureType::VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ROBUSTNESS_2_FEATURES_EXT;
-		__robustness2Features.pNext = &__descriptorBufferFeatures;
-
-		__descriptorBufferFeatures.sType = VkStructureType::VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_BUFFER_FEATURES_EXT;
-		__descriptorBufferFeatures.pNext = nullptr;
+		__robustness2Features.pNext = nullptr;
 
 		__instanceProc.vkGetPhysicalDeviceFeatures2(__handle, &__features);
 	}

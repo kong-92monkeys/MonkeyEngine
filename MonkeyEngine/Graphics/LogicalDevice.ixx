@@ -13,6 +13,7 @@ import ntmonkeys.com.Graphics.Buffer;
 import ntmonkeys.com.Graphics.Surface;
 import ntmonkeys.com.Graphics.Shader;
 import ntmonkeys.com.Graphics.DescriptorSetLayout;
+import ntmonkeys.com.Graphics.DescriptorPool;
 import ntmonkeys.com.Graphics.PipelineLayout;
 import ntmonkeys.com.Graphics.RenderPass;
 import ntmonkeys.com.Graphics.Pipeline;
@@ -44,14 +45,12 @@ namespace Graphics
 			const VkPhysicalDeviceVulkan12Properties *p12Props{ };
 			const VkPhysicalDeviceVulkan13Properties *p13Props{ };
 			const VkPhysicalDeviceRobustness2PropertiesEXT *pRobustness2Props{ };
-			const VkPhysicalDeviceDescriptorBufferPropertiesEXT *pDescriptorBufferProps{ };
 
 			const VkPhysicalDeviceFeatures *p10Features{ };
 			const VkPhysicalDeviceVulkan11Features *p11Features{ };
 			const VkPhysicalDeviceVulkan12Features *p12Features{ };
 			const VkPhysicalDeviceVulkan13Features *p13Features{ };
 			const VkPhysicalDeviceRobustness2FeaturesEXT *pRobustness2Features{ };
-			const VkPhysicalDeviceDescriptorBufferFeaturesEXT *pDescriptorBufferFeatures{ };
 
 			const std::unordered_map<std::string_view, const VkExtensionProperties *> *pExtensionMap;
 		};
@@ -62,6 +61,7 @@ namespace Graphics
 			VkPipelineLayout hPipelineLayout{ };
 			VkRenderPass hRenderPass{ };
 			uint32_t subpassIndex{ };
+			VkPipelineCreateFlags flags{ };
 			uint32_t stageCount{ };
 			const VkPipelineShaderStageCreateInfo *pStages{ };
 			const VkPipelineVertexInputStateCreateInfo *pVertexInputState{ };
@@ -99,7 +99,13 @@ namespace Graphics
 
 		[[nodiscard]]
 		DescriptorSetLayout *createDescriptorSetLayout(
+			const VkDescriptorSetLayoutCreateFlags flags,
 			const uint32_t bindingCount, const VkDescriptorSetLayoutBinding *const pBindings);
+
+		[[nodiscard]]
+		DescriptorPool *createDescriptorPool(
+			const VkDescriptorPoolCreateFlags flags, const uint32_t maxSets,
+			const uint32_t poolSizeCount, const VkDescriptorPoolSize *const pPoolSizes);
 
 		[[nodiscard]]
 		PipelineLayout *createPipelineLayout(
@@ -244,17 +250,36 @@ namespace Graphics
 	}
 
 	DescriptorSetLayout *LogicalDevice::createDescriptorSetLayout(
+		const VkDescriptorSetLayoutCreateFlags flags,
 		const uint32_t bindingCount, const VkDescriptorSetLayoutBinding *const pBindings)
 	{
 		const DescriptorSetLayout::CreateInfo createInfo
 		{
 			.pDeviceProc	{ &__deviceProc },
 			.hDevice		{ __handle },
+			.flags			{ flags },
 			.bindingCount	{ bindingCount },
 			.pBindings		{ pBindings }
 		};
 
 		return new DescriptorSetLayout{ createInfo };
+	}
+
+	DescriptorPool *LogicalDevice::createDescriptorPool(
+		const VkDescriptorPoolCreateFlags flags, const uint32_t maxSets,
+		const uint32_t poolSizeCount, const VkDescriptorPoolSize *const pPoolSizes)
+	{
+		const DescriptorPool::CreateInfo createInfo
+		{
+			.pDeviceProc	{ &__deviceProc },
+			.hDevice		{ __handle },
+			.flags			{ flags },
+			.maxSets		{ maxSets },
+			.poolSizeCount	{ poolSizeCount },
+			.pPoolSizes		{ pPoolSizes }
+		};
+
+		return new DescriptorPool{ createInfo };
 	}
 
 	PipelineLayout *LogicalDevice::createPipelineLayout(
@@ -306,6 +331,7 @@ namespace Graphics
 			.hPipelineLayout		{ createInfo.hPipelineLayout },
 			.hRenderPass			{ createInfo.hRenderPass },
 			.subpassIndex			{ createInfo.subpassIndex },
+			.flags					{ createInfo.flags },
 			.stageCount				{ createInfo.stageCount },
 			.pStages				{ createInfo.pStages },
 			.pVertexInputState		{ createInfo.pVertexInputState },
@@ -393,8 +419,7 @@ namespace Graphics
 			createInfo.p12Features->timelineSemaphore &&
 			createInfo.p13Features->pipelineCreationCacheControl &&
 			createInfo.p13Features->synchronization2 &&
-			createInfo.pRobustness2Features->nullDescriptor &&
-			createInfo.pDescriptorBufferFeatures->descriptorBuffer
+			createInfo.pRobustness2Features->nullDescriptor
 		};
 
 		if (!featureSupported)
@@ -408,7 +433,6 @@ namespace Graphics
 		VkPhysicalDeviceVulkan12Features features12{ };
 		VkPhysicalDeviceVulkan13Features features13{ };
 		VkPhysicalDeviceRobustness2FeaturesEXT featuresRobustness{ };
-		VkPhysicalDeviceDescriptorBufferFeaturesEXT featuresDescriptorBuffer{ };
 
 		features.sType = VkStructureType::VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
 		features.features.samplerAnisotropy = VK_TRUE;
@@ -431,17 +455,12 @@ namespace Graphics
 
 		featuresRobustness.sType = VkStructureType::VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ROBUSTNESS_2_FEATURES_EXT;
 		featuresRobustness.nullDescriptor = VK_TRUE;
-		featuresRobustness.pNext = &featuresDescriptorBuffer;
-
-		featuresDescriptorBuffer.sType = VkStructureType::VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_BUFFER_FEATURES_EXT;
-		featuresDescriptorBuffer.descriptorBuffer = VK_TRUE;
-		featuresDescriptorBuffer.pNext = nullptr;
+		featuresRobustness.pNext = nullptr;
 
 		std::vector<const char *> extensions;
 		extensions.emplace_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
 		extensions.emplace_back(VK_KHR_MAINTENANCE_5_EXTENSION_NAME);
 		extensions.emplace_back(VK_EXT_ROBUSTNESS_2_EXTENSION_NAME);
-		extensions.emplace_back(VK_EXT_DESCRIPTOR_BUFFER_EXTENSION_NAME);
 		//extensions.emplace_back(VK_EXT_IMAGE_COMPRESSION_CONTROL_EXTENSION_NAME);
 
 		for (const auto extension : extensions)
@@ -482,7 +501,7 @@ namespace Graphics
 		// Device
 		LOAD_DEVICE_PROC(vkDeviceWaitIdle);
 		LOAD_DEVICE_PROC(vkDestroyDevice);
-
+		
 		// Queue
 		LOAD_DEVICE_PROC(vkGetDeviceQueue2);
 		LOAD_DEVICE_PROC(vkQueueWaitIdle);
@@ -492,7 +511,7 @@ namespace Graphics
 		// Descriptor set layout
 		LOAD_DEVICE_PROC(vkCreateDescriptorSetLayout);
 		LOAD_DEVICE_PROC(vkDestroyDescriptorSetLayout);
-
+		
 		// Shader module;
 		LOAD_DEVICE_PROC(vkCreateShaderModule);
 		LOAD_DEVICE_PROC(vkDestroyShaderModule);

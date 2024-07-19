@@ -23,6 +23,8 @@ namespace Frameworks
 	public:
 		virtual ~SimpleRenderer() noexcept override;
 
+		[[nodiscard]]
+		virtual const Graphics::PipelineLayout &getPipelineLayout() const noexcept override;
 		virtual void begin(Graphics::CommandBuffer &commandBuffer, const BeginInfo &beginInfo) const noexcept override;
 
 	protected:
@@ -52,6 +54,11 @@ namespace Frameworks
 		__pVertexShader = nullptr;
 		__pPipelineLayout = nullptr;
 		__pDescriptorSetLayout = nullptr;
+	}
+
+	const Graphics::PipelineLayout &SimpleRenderer::getPipelineLayout() const noexcept
+	{
+		return *__pPipelineLayout;
 	}
 
 	void SimpleRenderer::begin(Graphics::CommandBuffer &commandBuffer, const BeginInfo &beginInfo) const noexcept

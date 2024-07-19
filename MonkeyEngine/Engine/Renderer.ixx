@@ -60,12 +60,16 @@ namespace Engine
 		[[nodiscard]]
 		virtual std::optional<uint32_t> getDescriptorLocationOf(const std::type_index &materialType) const noexcept;
 
+		[[nodiscard]]
+		virtual const Graphics::PipelineLayout &getPipelineLayout() const noexcept = 0;
+
 		virtual void begin(Graphics::CommandBuffer &commandBuffer, const BeginInfo &beginInfo) const noexcept = 0;
 		virtual void end(Graphics::CommandBuffer &commandBuffer) const noexcept;
 
 	protected:
 		[[nodiscard]]
 		std::unique_ptr<Graphics::DescriptorSetLayout> _createDescriptorSetLayout(
+			const VkDescriptorSetLayoutCreateFlags flags,
 			const uint32_t bindingCount, const VkDescriptorSetLayoutBinding *const pBindings);
 
 		[[nodiscard]]
@@ -132,11 +136,12 @@ namespace Engine
 	}
 
 	std::unique_ptr<Graphics::DescriptorSetLayout> Renderer::_createDescriptorSetLayout(
+		const VkDescriptorSetLayoutCreateFlags flags,
 		const uint32_t bindingCount, const VkDescriptorSetLayoutBinding *const pBindings)
 	{
 		return std::unique_ptr<Graphics::DescriptorSetLayout>
 		{
-			__pDevice->createDescriptorSetLayout(bindingCount, pBindings)
+			__pDevice->createDescriptorSetLayout(flags, bindingCount, pBindings)
 		};
 	}
 

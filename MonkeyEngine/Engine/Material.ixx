@@ -32,7 +32,13 @@ namespace Engine
 
 	protected:
 		[[nodiscard]]
-		virtual $Data &_getTypedData() noexcept = 0;
+		constexpr $Data &_getTypedData() noexcept;
+
+		[[nodiscard]]
+		constexpr const $Data &_getTypedData() const noexcept;
+
+	private:
+		$Data __data{ };
 	};
 
 	export class MaterialPack : public Lib::Unique
@@ -62,15 +68,27 @@ namespace Engine
 	};
 
 	template <typename $Data>
-	const std::byte *TypedMaterial<$Data>::getData() const noexcept override final
+	const std::byte *TypedMaterial<$Data>::getData() const noexcept
 	{
-		return reinterpret_cast<std::byte *>(&(const_cast<TypedMaterial<$Data> *>(this)->_getTypedData()));
+		return reinterpret_cast<const std::byte *>(&__data);
 	}
 
 	template <typename $Data>
-	size_t TypedMaterial<$Data>::getSize() const noexcept override final
+	size_t TypedMaterial<$Data>::getSize() const noexcept
 	{
 		return sizeof($Data);
+	}
+
+	template <typename $Data>
+	constexpr $Data &TypedMaterial<$Data>::_getTypedData() noexcept
+	{
+		return __data;
+	}
+
+	template <typename $Data>
+	constexpr const $Data &TypedMaterial<$Data>::_getTypedData() const noexcept
+	{
+		return __data;
 	}
 
 	constexpr const std::unordered_set<const Material *> &MaterialPack::getMaterials() const noexcept

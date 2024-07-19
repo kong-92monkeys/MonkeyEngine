@@ -22,5 +22,7 @@
     <ClCompile Include="Fence.ixx" />
     <ClCompile Include="Memory.ixx" />
     <ClCompile Include="Buffer.ixx" />
+    <ClCompile Include="DescriptorPool.ixx" />
+    <ClCompile Include="DescriptorSet.ixx" />
   </ItemGroup>
 </Project>

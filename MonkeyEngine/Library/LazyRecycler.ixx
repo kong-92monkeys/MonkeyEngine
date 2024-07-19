@@ -21,6 +21,7 @@ namespace Lib
 		std::shared_ptr<$T> retrieveWhere(std::function<bool(const $T &)> &&test) noexcept;
 
 		void recycle(std::shared_ptr<$T> &&pResource) noexcept;
+		void standby(std::shared_ptr<$T> &&pResource) noexcept;
 
 	private:
 		using __ResourceContainer = std::deque<std::shared_ptr<$T>>;
@@ -84,6 +85,12 @@ namespace Lib
 	void LazyRecycler<$T>::recycle(std::shared_ptr<$T> &&pResource) noexcept
 	{
 		__deleter.reserve(std::make_shared<__ResourceHolder>(__pResourceContainer, std::move(pResource)));
+	}
+
+	template <typename $T>
+	void LazyRecycler<$T>::standby(std::shared_ptr<$T> &&pResource) noexcept
+	{
+		__pResourceContainer->emplace_back(std::move(pResource));
 	}
 
 	template <typename $T>
