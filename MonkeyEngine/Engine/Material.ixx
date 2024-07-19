@@ -10,7 +10,7 @@ import <typeindex>;
 
 namespace Engine
 {
-	export class Material : public Lib::Unique, public Lib::Stateful<Material>
+	export class Material : public Lib::Unique
 	{
 	public:
 		[[nodiscard]]
@@ -18,6 +18,15 @@ namespace Engine
 
 		[[nodiscard]]
 		virtual size_t getSize() const noexcept = 0;
+
+		[[nodiscard]]
+		constexpr Lib::EventView<const Material *> &getUpdateEvent() const noexcept;
+
+	protected:
+		void _invokeUpdateEvent() const noexcept;
+
+	private:
+		mutable Lib::Event<const Material *> __updateEvent;
 	};
 
 	export template <typename $Data>
@@ -73,6 +82,11 @@ namespace Engine
 		mutable Lib::Event<const MaterialPack *, std::type_index, const Material *, const Material *> __materialChangeEvent;
 	};
 
+	constexpr Lib::EventView<const Material *> &Material::getUpdateEvent() const noexcept
+	{
+		return __updateEvent;
+	}
+
 	template <typename $Data>
 	const std::byte *TypedMaterial<$Data>::getData() const noexcept
 	{
@@ -124,6 +138,11 @@ module: private;
 
 namespace Engine
 {
+	void Material::_invokeUpdateEvent() const noexcept
+	{
+		__updateEvent.invoke(this);
+	}
+
 	bool MaterialPack::hasMaterialOf(const std::type_index &type) const noexcept
 	{
 		const auto foundIt{ __materialMap.find(type) };

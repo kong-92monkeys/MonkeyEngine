@@ -43,8 +43,10 @@ namespace Engine
 		std::unordered_map<const Renderer *, std::unique_ptr<SubLayer>> __subLayerMap;
 		std::unordered_map<const RenderObject *, SubLayer *> __object2SubLayerMap;
 
+		std::unordered_set<SubLayer *> __invalidatedSubLayers;
+
 		Lib::EventListenerPtr<const RenderObject *, const Renderer *, const Renderer *> __pObjectRendererChangeListener;
-		Lib::EventListenerPtr<const SubLayer *> __pSubLayerInvalidatedListener;
+		Lib::EventListenerPtr<SubLayer *> __pSubLayerInvalidatedListener;
 
 		void __registerObject(const RenderObject *const pObject) noexcept;
 		void __unregisterObject(const RenderObject *const pObject) noexcept;
@@ -53,7 +55,7 @@ namespace Engine
 		SubLayer *__getSubLayerOf(const Renderer *const pRenderer) noexcept;
 
 		void __onObjectRendererChanged(const RenderObject *const pObject, const Renderer *const pPrev, const Renderer *const pCur) noexcept;
-		void __onSubLayerInvalidated(const SubLayer *const pSubLayer) noexcept;
+		void __onSubLayerInvalidated(SubLayer *const pSubLayer) noexcept;
 	};
 }
 
@@ -69,7 +71,7 @@ namespace Engine
 				&Layer::__onObjectRendererChanged, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
 
 		__pSubLayerInvalidatedListener =
-			Lib::EventListener<const SubLayer *>::bind(&Layer::__onSubLayerInvalidated, this, std::placeholders::_1);
+			Lib::EventListener<SubLayer *>::bind(&Layer::__onSubLayerInvalidated, this, std::placeholders::_1);
 	}
 
 	void Layer::addRenderObject(const std::shared_ptr<const RenderObject> &pObject)
@@ -116,8 +118,10 @@ namespace Engine
 
 	void Layer::_onValidate()
 	{
-		for (const auto &[_, pSubLayer] : __subLayerMap)
+		for (const auto pSubLayer : __invalidatedSubLayers)
 			pSubLayer->validate();
+
+		__invalidatedSubLayers.clear();
 	}
 
 	void Layer::__registerObject(const RenderObject *const pObject) noexcept
@@ -134,7 +138,10 @@ namespace Engine
 		pSubLayer->removeRenderObject(pObject);
 
 		if (pSubLayer->isEmpty())
+		{
+			__invalidatedSubLayers.erase(pSubLayer);
 			__subLayerMap.erase(pSubLayer->getRenderer());
+		}
 	}
 
 	SubLayer *Layer::__getSubLayerOf(const Renderer *const pRenderer) noexcept
@@ -159,8 +166,9 @@ namespace Engine
 			__registerObject(pObject);
 	}
 
-	void Layer::__onSubLayerInvalidated(const SubLayer *const pSubLayer) noexcept
+	void Layer::__onSubLayerInvalidated(SubLayer *const pSubLayer) noexcept
 	{
+		__invalidatedSubLayers.emplace(pSubLayer);
 		_invalidate();
 	}
 }

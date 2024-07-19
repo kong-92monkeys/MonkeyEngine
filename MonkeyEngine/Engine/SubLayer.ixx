@@ -52,12 +52,12 @@ namespace Engine
 		Lib::GenericBuffer __hostBuffer;
 		std::shared_ptr<BufferChunk> __pDataBuffer;
 
-		Lib::EventListenerPtr<const Material *> __pMaterialInvalidateListener;
+		Lib::EventListenerPtr<const Material *> __pMaterialUpdateListener;
 
 		void __validateHostBuffer(const Material *const pMaterial) noexcept;
 		void __validateDataBuffer();
 
-		void __onMaterialInvalidated(const Material *const pMaterial) noexcept;
+		void __onMaterialUpdated(const Material *const pMaterial) noexcept;
 	};
 
 	export class SubLayer : public Lib::Unique, public Lib::Stateful<SubLayer>
@@ -94,15 +94,15 @@ namespace Engine
 		std::shared_ptr<BufferChunk> __pInstanceInfoDataBuffer;
 
 		std::unordered_map<std::type_index, std::unique_ptr<MaterialDataBufferBuilder>> __materialDataBufferBuilders;
+		std::unordered_set<MaterialDataBufferBuilder *> __invalidatedMaterialDataBufferBuilders;
 
 		Lib::EventListenerPtr<const RenderObject *, const Mesh *, const Mesh *> __pObjectMeshChangeListener;
-		Lib::EventListenerPtr<const RenderObject *, const DrawParam *, const DrawParam *> __pObjectDrawParamChangeListener;
 		Lib::EventListenerPtr<const RenderObject *, uint32_t, const MaterialPack *, const MaterialPack *> __pObjectMaterialPackChangeListener;
 		Lib::EventListenerPtr<const RenderObject *, uint32_t, uint32_t> __pObjectInstanceCountChangeListener;
 		Lib::EventListenerPtr<const RenderObject *, bool, bool> __pObjectDrawableChangeListener;
 
 		Lib::EventListenerPtr<const MaterialPack *, std::type_index, const Material *, const Material *> __pMaterialPackMaterialChangeListener;
-		Lib::EventListenerPtr<const MaterialDataBufferBuilder *> __pMaterialDataBufferBuilderInvalidateListener;
+		Lib::EventListenerPtr<MaterialDataBufferBuilder *> __pMaterialDataBufferBuilderInvalidateListener;
 
 		void __registerObject(const RenderObject *const pObject);
 		void __unregisterObject(const RenderObject *const pObject);
@@ -128,8 +128,6 @@ namespace Engine
 			const RenderObject *const pObject,
 			const Mesh *const pPrev, const Mesh *const pCur) noexcept;
 
-		void __onObjectDrawParamChanged() noexcept;
-		
 		void __onObjectMaterialPackChanged(
 			const RenderObject *const pObject, const uint32_t instanceIndex,
 			const MaterialPack *const pPrev, const MaterialPack *const pCur) noexcept;
@@ -144,19 +142,19 @@ namespace Engine
 			const MaterialPack *const pMaterialPack, const std::type_index &type,
 			const Material *const pPrev, const Material *const pCur) noexcept;
 
-		void __onMaterialDataBufferBuilderInvalidated() noexcept;
+		void __onMaterialDataBufferBuilderInvalidated(MaterialDataBufferBuilder *const pBuilder) noexcept;
 	};
 
 	MaterialDataBufferBuilder::MaterialDataBufferBuilder(LayerResourcePool &resourcePool) noexcept :
 		__resourcePool{ resourcePool }
 	{
-		__pMaterialInvalidateListener =
-			Lib::EventListener<const Material *>::bind(&MaterialDataBufferBuilder::__onMaterialInvalidated, this, std::placeholders::_1);
+		__pMaterialUpdateListener =
+			Lib::EventListener<const Material *>::bind(&MaterialDataBufferBuilder::__onMaterialUpdated, this, std::placeholders::_1);
 	}
 
 	void MaterialDataBufferBuilder::registerMaterial(const Material *const pMaterial) noexcept
 	{
-		pMaterial->getInvalidateEvent() += __pMaterialInvalidateListener;
+		pMaterial->getUpdateEvent() += __pMaterialUpdateListener;
 		
 		auto &[ref, id]{ __refIdMap[pMaterial] };
 		if (!ref)
@@ -171,7 +169,7 @@ namespace Engine
 
 	void MaterialDataBufferBuilder::unregisterMaterial(const Material *const pMaterial) noexcept
 	{
-		pMaterial->getInvalidateEvent() -= __pMaterialInvalidateListener;
+		pMaterial->getUpdateEvent() -= __pMaterialUpdateListener;
 
 		auto &[ref, id] { __refIdMap[pMaterial] };
 		--ref;
@@ -222,7 +220,7 @@ namespace Engine
 		std::memcpy(__pDataBuffer->getMappedMemory(), __hostBuffer.getData(), bufferSize);
 	}
 
-	void MaterialDataBufferBuilder::__onMaterialInvalidated(const Material *const pMaterial) noexcept
+	void MaterialDataBufferBuilder::__onMaterialUpdated(const Material *const pMaterial) noexcept
 	{
 		__validateHostBuffer(pMaterial);
 		_invalidate();
@@ -234,10 +232,6 @@ namespace Engine
 		__pObjectMeshChangeListener =
 			Lib::EventListener<const RenderObject *, const Mesh *, const Mesh *>::bind(
 				&SubLayer::__onObjectMeshChanged, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
-
-		__pObjectDrawParamChangeListener =
-			Lib::EventListener<const RenderObject *, const DrawParam *, const DrawParam *>::bind(
-				&SubLayer::__onObjectDrawParamChanged, this);
 
 		__pObjectMaterialPackChangeListener =
 			Lib::EventListener<const RenderObject *, uint32_t, const MaterialPack *, const MaterialPack *>::bind(
@@ -256,7 +250,7 @@ namespace Engine
 				&SubLayer::__onMaterialPackMaterialChanged, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
 
 		__pMaterialDataBufferBuilderInvalidateListener =
-			Lib::EventListener<const MaterialDataBufferBuilder *>::bind(&SubLayer::__onMaterialDataBufferBuilderInvalidated, this);
+			Lib::EventListener<MaterialDataBufferBuilder *>::bind(&SubLayer::__onMaterialDataBufferBuilderInvalidated, this, std::placeholders::_1);
 	}
 
 	constexpr const Renderer *SubLayer::getRenderer() const noexcept
@@ -500,23 +494,19 @@ namespace Engine
 
 	void SubLayer::__validateMaterialDataBufferBuilders()
 	{
-		for (const auto &[_, pBuilder] : __materialDataBufferBuilders)
+		for (const auto pBuilder : __invalidatedMaterialDataBufferBuilders)
 			pBuilder->validate();
+
+		__invalidatedMaterialDataBufferBuilders.clear();
 	}
 
-	void SubLayer::__onObjectMeshChanged(
-		const RenderObject *const pObject, const Mesh *const pPrev, const Mesh *const pCur) noexcept
+	void SubLayer::__onObjectMeshChanged(const RenderObject *const pObject, const Mesh *const pPrev, const Mesh *const pCur) noexcept
 	{
 		if (pPrev)
 			__unregisterMesh(pObject, pPrev);
 
 		if (pCur)
 			__registerMesh(pObject, pCur);
-	}
-
-	void SubLayer::__onObjectDrawParamChanged() noexcept
-	{
-		_invalidate();
 	}
 
 	void SubLayer::__onObjectMaterialPackChanged(
@@ -569,8 +559,9 @@ namespace Engine
 		_invalidate();
 	}
 
-	void SubLayer::__onMaterialDataBufferBuilderInvalidated() noexcept
+	void SubLayer::__onMaterialDataBufferBuilderInvalidated(MaterialDataBufferBuilder *const pBuilder) noexcept
 	{
+		__invalidatedMaterialDataBufferBuilders.emplace(pBuilder);
 		_invalidate();
 	}
 }

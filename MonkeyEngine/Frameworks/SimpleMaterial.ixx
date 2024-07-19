@@ -28,6 +28,6 @@ namespace Frameworks
 	void SimpleMaterial::setColor(const glm::vec4 &color)
 	{
 		_getTypedData().color = color;
-		_invalidate();
+		_invokeUpdateEvent();
 	}
 }

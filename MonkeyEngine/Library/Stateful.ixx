@@ -11,7 +11,7 @@ namespace Lib
 		void validate();
 
 		[[nodiscard]]
-		constexpr Lib::EventView<const $T *> &getInvalidateEvent() const noexcept;
+		constexpr Lib::EventView<$T *> &getInvalidateEvent() noexcept;
 
 	protected:
 		void _invalidate() noexcept;
@@ -20,7 +20,7 @@ namespace Lib
 	private:
 		bool __invalidated{ };
 
-		mutable Lib::Event<const $T *> __invalidateEvent;
+		Lib::Event<$T *> __invalidateEvent;
 	};
 
 	template <typename $T>
@@ -34,7 +34,7 @@ namespace Lib
 	}
 
 	template <typename $T>
-	constexpr Lib::EventView<const $T *> &Stateful<$T>::getInvalidateEvent() const noexcept
+	constexpr Lib::EventView<$T *> &Stateful<$T>::getInvalidateEvent() noexcept
 	{
 		return __invalidateEvent;
 	}
