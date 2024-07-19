@@ -7,6 +7,9 @@
     <Filter Include="Vertex">
       <UniqueIdentifier>{75b25bc3-44ea-4e19-9e3d-d50dfaa4cb3d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Material">
+      <UniqueIdentifier>{a2c68016-71ee-413e-8ebc-3301adebfd2e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="SimpleRenderer.ixx">
@@ -17,6 +20,9 @@
     </ClCompile>
     <ClCompile Include="VertexAttribute.ixx">
       <Filter>Vertex</Filter>
+    </ClCompile>
+    <ClCompile Include="SimpleMaterial.ixx">
+      <Filter>Material</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

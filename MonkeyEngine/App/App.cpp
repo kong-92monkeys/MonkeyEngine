@@ -23,7 +23,10 @@ import ntmonkeys.com.Lib.Logger;
 import ntmonkeys.com.Lib.GenericBuffer;
 import ntmonkeys.com.Engine.Mesh;
 import ntmonkeys.com.Engine.DrawParam;
+import ntmonkeys.com.Engine.Material;
 import ntmonkeys.com.Frameworks.Vertex;
+import ntmonkeys.com.Frameworks.SimpleRenderer;
+import ntmonkeys.com.Frameworks.SimpleMaterial;
 
 // CApp construction
 
@@ -88,7 +91,6 @@ BOOL CApp::InitInstance()
 int CApp::ExitInstance()
 {
 	//TODO: handle additional resources you may have added
-	__pRenderer = nullptr;
 	__pRenderObject = nullptr;
 	__pLayer = nullptr;
 
@@ -119,7 +121,7 @@ void CApp::__onInitBeforeMainFrame()
 
 	__pLayer = std::shared_ptr<Engine::Layer>{ __pRenderingEngine->createLayer() };
 
-	__pRenderer = std::shared_ptr<Frameworks::SimpleRenderer>{ __pRenderingEngine->createRenderer<Frameworks::SimpleRenderer>() };
+	const auto pRenderer{ std::shared_ptr<Frameworks::SimpleRenderer>{ __pRenderingEngine->createRenderer<Frameworks::SimpleRenderer>() } };
 
 	Lib::GenericBuffer posBuffer;
 	posBuffer.typedAdd<glm::vec3>({ -0.5f, -0.5f, 0.5f });
@@ -136,17 +138,24 @@ void CApp::__onInitBeforeMainFrame()
 	Lib::GenericBuffer indexBuffer;
 	indexBuffer.typedAdd<uint16_t>({ 0U, 1U, 2U, 0U, 2U, 3U });
 
-	auto pMesh = std::shared_ptr<Engine::Mesh>{ __pRenderingEngine->createMesh() };
+	const auto pMesh{ std::shared_ptr<Engine::Mesh>{ __pRenderingEngine->createMesh() } };
 	pMesh->createVertexBuffer(Frameworks::VertexAttrib::POS_LOCATION, posBuffer.getData(), posBuffer.getSize());
 	pMesh->createVertexBuffer(Frameworks::VertexAttrib::COLOR_LOCATION, colorBuffer.getData(), colorBuffer.getSize());
 	pMesh->createIndexBuffer(VkIndexType::VK_INDEX_TYPE_UINT16, indexBuffer.getData(), indexBuffer.getSize());
 
-	auto pDrawParam{ std::make_shared<Engine::DrawParamIndexed>(6U, 0U, 0) };
+	const auto pDrawParam{ std::make_shared<Engine::DrawParamIndexed>(6U, 0U, 0) };
+
+	const auto pMaterial{ std::make_shared<Frameworks::SimpleMaterial>() };
+	pMaterial->setColor({ 1.0f, 0.0f, 1.0f, 1.0f });
+
+	const auto pMaterialPack{ std::make_shared<Engine::MaterialPack>() };
+	pMaterialPack->setMaterial<Frameworks::SimpleMaterial>(pMaterial);
 
 	__pRenderObject = std::shared_ptr<Engine::RenderObject>{ __pRenderingEngine->createRenderObject() };
-	__pRenderObject->setRenderer(__pRenderer);
+	__pRenderObject->setRenderer(pRenderer);
 	__pRenderObject->setMesh(pMesh);
 	__pRenderObject->setDrawParam(pDrawParam);
+	__pRenderObject->setMaterialPack(0U, pMaterialPack);
 
 	__pLayer->addRenderObject(__pRenderObject);
 }

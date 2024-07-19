@@ -48,6 +48,12 @@ namespace Engine
 		constexpr const std::unordered_set<const Material *> &getMaterials() const noexcept;
 
 		template <std::derived_from<Material> $M>
+		bool hasMaterialOf() const noexcept;
+
+		[[nodiscard]]
+		bool hasMaterialOf(const std::type_index &type) const noexcept;
+
+		template <std::derived_from<Material> $M>
 		void setMaterial(const std::shared_ptr<const $M> &pMaterial) noexcept;
 		void setMaterial(const std::type_index &type, const std::shared_ptr<const Material> &pMaterial) noexcept;
 
@@ -97,6 +103,12 @@ namespace Engine
 	}
 
 	template <std::derived_from<Material> $M>
+	bool MaterialPack::hasMaterialOf() const noexcept
+	{
+		return hasMaterialOf(typeid($M));
+	}
+
+	template <std::derived_from<Material> $M>
 	void MaterialPack::setMaterial(const std::shared_ptr<const $M> &pMaterial) noexcept
 	{
 		setMaterial(typeid(*pMaterial), pMaterial);
@@ -112,6 +124,15 @@ module: private;
 
 namespace Engine
 {
+	bool MaterialPack::hasMaterialOf(const std::type_index &type) const noexcept
+	{
+		const auto foundIt{ __materialMap.find(type) };
+		if (foundIt == __materialMap.end())
+			return false;
+
+		return foundIt->second.get();
+	}
+
 	void MaterialPack::setMaterial(const std::type_index &type, const std::shared_ptr<const Material> &pMaterial) noexcept
 	{
 		auto &holder{ __materialMap[type] };

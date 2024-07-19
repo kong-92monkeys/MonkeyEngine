@@ -16,7 +16,6 @@ import ntmonkeys.com.Engine.RenderingEngine;
 import ntmonkeys.com.Engine.RenderTarget;
 import ntmonkeys.com.Engine.Layer;
 import ntmonkeys.com.Engine.RenderObject;
-import ntmonkeys.com.Frameworks.SimpleRenderer;
 import <memory>;
 
 // CApp:
@@ -58,7 +57,6 @@ private:
 
 	std::shared_ptr<Engine::Layer> __pLayer;
 	std::shared_ptr<Engine::RenderObject> __pRenderObject;
-	std::shared_ptr<Frameworks::SimpleRenderer> __pRenderer;
 
 	mutable Lib::Event<> __idleEvent;
 

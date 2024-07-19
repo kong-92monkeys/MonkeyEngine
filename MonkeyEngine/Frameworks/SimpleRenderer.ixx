@@ -9,9 +9,12 @@ import ntmonkeys.com.Graphics.RenderPass;
 import ntmonkeys.com.Graphics.Shader;
 import ntmonkeys.com.Graphics.Pipeline;
 import ntmonkeys.com.Graphics.LogicalDevice;
+import ntmonkeys.com.Engine.Constants;
 import ntmonkeys.com.Engine.Renderer;
+import ntmonkeys.com.Engine.Material;
 import ntmonkeys.com.Engine.RenderPassFactory;
 import ntmonkeys.com.Frameworks.Vertex;
+import ntmonkeys.com.Frameworks.SimpleMaterial;
 import <memory>;
 import <array>;
 import <vector>;
@@ -24,13 +27,22 @@ namespace Frameworks
 		virtual ~SimpleRenderer() noexcept override;
 
 		[[nodiscard]]
+		virtual bool isValidMaterialPack(const Engine::MaterialPack *const pMaterialPack) const noexcept override;
+
+		[[nodiscard]]
+		virtual std::optional<uint32_t> getDescriptorLocationOf(const std::type_index &materialType) const noexcept override;
+
+		[[nodiscard]]
 		virtual const Graphics::PipelineLayout &getPipelineLayout() const noexcept override;
+
 		virtual void begin(Graphics::CommandBuffer &commandBuffer, const BeginInfo &beginInfo) const noexcept override;
 
 	protected:
 		virtual void _onInit() override;
 
 	private:
+		static constexpr uint32_t __SIMPLE_MATERIAL_DESC_LOCATION{ Engine::Constants::SUB_LAYER_MATERIAL_DESC_LOCATION0 };
+
 		std::unique_ptr<Graphics::DescriptorSetLayout> __pDescriptorSetLayout;
 		std::unique_ptr<Graphics::PipelineLayout> __pPipelineLayout;
 		std::unique_ptr<Graphics::Shader> __pVertexShader;
@@ -54,6 +66,22 @@ namespace Frameworks
 		__pVertexShader = nullptr;
 		__pPipelineLayout = nullptr;
 		__pDescriptorSetLayout = nullptr;
+	}
+
+	bool SimpleRenderer::isValidMaterialPack(const Engine::MaterialPack *const pMaterialPack) const noexcept
+	{
+		if (!pMaterialPack)
+			return false;
+
+		return pMaterialPack->hasMaterialOf<SimpleMaterial>();
+	}
+
+	std::optional<uint32_t> SimpleRenderer::getDescriptorLocationOf(const std::type_index &materialType) const noexcept
+	{
+		if (materialType == typeid(SimpleMaterial))
+			return __SIMPLE_MATERIAL_DESC_LOCATION;
+
+		return std::nullopt;
 	}
 
 	const Graphics::PipelineLayout &SimpleRenderer::getPipelineLayout() const noexcept
