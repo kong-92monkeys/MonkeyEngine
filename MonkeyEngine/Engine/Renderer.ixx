@@ -61,6 +61,9 @@ namespace Engine
 		virtual std::optional<uint32_t> getDescriptorLocationOf(const std::type_index &materialType) const noexcept;
 
 		[[nodiscard]]
+		virtual const Graphics::DescriptorSetLayout *getSubLayerDescSetLayout() const noexcept;
+
+		[[nodiscard]]
 		virtual const Graphics::PipelineLayout &getPipelineLayout() const noexcept = 0;
 
 		virtual void begin(Graphics::CommandBuffer &commandBuffer, const BeginInfo &beginInfo) const noexcept = 0;
@@ -123,6 +126,11 @@ namespace Engine
 	std::optional<uint32_t> Renderer::getDescriptorLocationOf(const std::type_index &materialType) const noexcept
 	{
 		return std::nullopt;
+	}
+
+	const Graphics::DescriptorSetLayout *Renderer::getSubLayerDescSetLayout() const noexcept
+	{
+		return nullptr;
 	}
 
 	void Renderer::end(Graphics::CommandBuffer &commandBuffer) const noexcept

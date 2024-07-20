@@ -166,7 +166,6 @@
     <ClCompile Include="Constants.ixx" />
     <ClCompile Include="Core.ixx" />
     <ClCompile Include="DescriptorSetCirculator.ixx" />
-    <ClCompile Include="DescriptorSetFactory.ixx" />
     <ClCompile Include="DrawParam.ixx" />
     <ClCompile Include="EngineContext.ixx" />
     <ClCompile Include="FenceCirculator.ixx" />

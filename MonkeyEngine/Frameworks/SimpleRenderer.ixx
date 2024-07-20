@@ -33,6 +33,9 @@ namespace Frameworks
 		virtual std::optional<uint32_t> getDescriptorLocationOf(const std::type_index &materialType) const noexcept override;
 
 		[[nodiscard]]
+		virtual const Graphics::DescriptorSetLayout *getSubLayerDescSetLayout() const noexcept override;
+
+		[[nodiscard]]
 		virtual const Graphics::PipelineLayout &getPipelineLayout() const noexcept override;
 
 		virtual void begin(Graphics::CommandBuffer &commandBuffer, const BeginInfo &beginInfo) const noexcept override;
@@ -43,12 +46,13 @@ namespace Frameworks
 	private:
 		static constexpr uint32_t __SIMPLE_MATERIAL_DESC_LOCATION{ Engine::Constants::SUB_LAYER_MATERIAL_DESC_LOCATION0 };
 
-		std::unique_ptr<Graphics::DescriptorSetLayout> __pDescriptorSetLayout;
+		std::unique_ptr<Graphics::DescriptorSetLayout> __pSubLayerDescSetLayout;
 		std::unique_ptr<Graphics::PipelineLayout> __pPipelineLayout;
 		std::unique_ptr<Graphics::Shader> __pVertexShader;
 		std::unique_ptr<Graphics::Shader> __pFragmentShader;
 		std::unique_ptr<Graphics::Pipeline> __pPipeline;
 
+		void __createSubLayerDescSetLayout();
 		void __createPipelineLayout();
 		void __createShaders();
 		void __createPipeline();
@@ -65,7 +69,7 @@ namespace Frameworks
 		__pFragmentShader = nullptr;
 		__pVertexShader = nullptr;
 		__pPipelineLayout = nullptr;
-		__pDescriptorSetLayout = nullptr;
+		__pSubLayerDescSetLayout = nullptr;
 	}
 
 	bool SimpleRenderer::isValidMaterialPack(const Engine::MaterialPack &materialPack) const noexcept
@@ -79,6 +83,11 @@ namespace Frameworks
 			return __SIMPLE_MATERIAL_DESC_LOCATION;
 
 		return std::nullopt;
+	}
+
+	const Graphics::DescriptorSetLayout *SimpleRenderer::getSubLayerDescSetLayout() const noexcept
+	{
+		return __pSubLayerDescSetLayout.get();
 	}
 
 	const Graphics::PipelineLayout &SimpleRenderer::getPipelineLayout() const noexcept
@@ -119,14 +128,34 @@ namespace Frameworks
 
 	void SimpleRenderer::_onInit()
 	{
+		__createSubLayerDescSetLayout();
 		__createPipelineLayout();
 		__createShaders();
 		__createPipeline();
 	}
 
+	void SimpleRenderer::__createSubLayerDescSetLayout()
+	{
+		std::vector<VkDescriptorSetLayoutBinding> bindings;
+
+		auto &instanceInfoBinding				{ bindings.emplace_back() };
+		instanceInfoBinding.binding				= Engine::Constants::SUB_LAYER_INSTANCE_INFO_LOCATION;
+		instanceInfoBinding.descriptorType		= VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+		instanceInfoBinding.descriptorCount		= 1U;
+		instanceInfoBinding.stageFlags			= VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT;
+
+		auto &materialBinding					{ bindings.emplace_back() };
+		materialBinding.binding					= __SIMPLE_MATERIAL_DESC_LOCATION;
+		materialBinding.descriptorType			= VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+		materialBinding.descriptorCount			= 1U;
+		materialBinding.stageFlags				= VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT;
+
+		__pSubLayerDescSetLayout = _createDescriptorSetLayout(0U, static_cast<uint32_t>(bindings.size()), bindings.data());
+	}
+
 	void SimpleRenderer::__createPipelineLayout()
 	{
-		__pPipelineLayout = _createPipelineLayout(0U, nullptr, 0U, nullptr);
+		__pPipelineLayout = _createPipelineLayout(1U, &(__pSubLayerDescSetLayout->getHandle()), 0U, nullptr);
 	}
 
 	void SimpleRenderer::__createShaders()

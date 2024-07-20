@@ -40,7 +40,6 @@
     <ClCompile Include="DescriptorSetCirculator.ixx">
       <Filter>Circulator</Filter>
     </ClCompile>
-    <ClCompile Include="DescriptorSetFactory.ixx" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Util">

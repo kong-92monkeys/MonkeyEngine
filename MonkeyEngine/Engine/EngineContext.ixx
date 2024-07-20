@@ -5,7 +5,6 @@ import ntmonkeys.com.Engine.CommandExecutor;
 import ntmonkeys.com.Engine.MemoryAllocator;
 import ntmonkeys.com.Engine.LayerResourcePool;
 import ntmonkeys.com.Engine.RenderPassFactory;
-import ntmonkeys.com.Engine.DescriptorSetFactory;
 
 namespace Engine
 {
@@ -17,6 +16,5 @@ namespace Engine
 		MemoryAllocator *pMemoryAllocator{ };
 		LayerResourcePool *pLayerResourcePool{ };
 		RenderPassFactory *pRenderPassFactory{ };
-		DescriptorSetFactory *pDescriptorSetFactory{ };
 	};
 }

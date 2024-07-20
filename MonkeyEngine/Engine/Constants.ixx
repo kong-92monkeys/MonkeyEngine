@@ -13,10 +13,7 @@ export namespace Engine::Constants
 	constexpr uint32_t RENDER_TARGET_DESC_SET_LOCATION		{ 0U };
 	// TODO: render target descriptors
 
-	constexpr uint32_t RENDERER_DESC_SET_LOCATION			{ 1U };
-	// TODO: renderer descriptors
-
-	constexpr uint32_t SUB_LAYER_DESC_SET_LOCATION			{ 2U };
+	constexpr uint32_t SUB_LAYER_DESC_SET_LOCATION			{ 1U };
 	constexpr uint32_t SUB_LAYER_INSTANCE_INFO_LOCATION		{ 0U };
 	constexpr uint32_t SUB_LAYER_MATERIAL_DESC_LOCATION0	{ 1U };
 	constexpr uint32_t SUB_LAYER_MATERIAL_DESC_LOCATION1	{ 2U };

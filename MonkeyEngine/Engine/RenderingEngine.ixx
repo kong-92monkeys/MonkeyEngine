@@ -27,7 +27,6 @@ import ntmonkeys.com.Engine.Layer;
 import ntmonkeys.com.Engine.Mesh;
 import ntmonkeys.com.Engine.RenderObject;
 import ntmonkeys.com.Engine.RenderPassFactory;
-import ntmonkeys.com.Engine.DescriptorSetFactory;
 import ntmonkeys.com.Engine.CommandBufferCirculator;
 import ntmonkeys.com.Engine.FenceCirculator;
 import ntmonkeys.com.Engine.SemaphoreCirculator;
@@ -85,7 +84,6 @@ namespace Engine
 		std::unique_ptr<MemoryAllocator> __pMemoryAllocator;
 		std::unique_ptr<LayerResourcePool> __pLayerResourcePool;
 		std::unique_ptr<RenderPassFactory> __pRenderPassFactory;
-		std::unique_ptr<DescriptorSetFactory> __pDescriptorSetFactory;
 
 		std::unique_ptr<CommandBufferCirculator> __pCBCirculator;
 		std::unique_ptr<FenceCirculator> __pSubmitFenceCirculator;
@@ -133,7 +131,6 @@ namespace Engine
 		
 		__pLayerResourcePool = std::make_unique<LayerResourcePool>(__lazyDeleter, *__pMemoryAllocator);
 		__pRenderPassFactory = std::make_unique<RenderPassFactory>(*__pLogicalDevice);
-		__pDescriptorSetFactory = std::make_unique<DescriptorSetFactory>(*__pLogicalDevice, 10U);
 
 		__pCBCirculator = std::make_unique<CommandBufferCirculator>(
 			*__pLogicalDevice, VkCommandBufferLevel::VK_COMMAND_BUFFER_LEVEL_PRIMARY, 2U, 30U);
@@ -146,7 +143,6 @@ namespace Engine
 		__context.pCommandExecutor			= &__commandExecutor;
 		__context.pMemoryAllocator			= __pMemoryAllocator.get();
 		__context.pRenderPassFactory		= __pRenderPassFactory.get();
-		__context.pDescriptorSetFactory		= __pDescriptorSetFactory.get();
 	}
 
 	RenderingEngine::~RenderingEngine() noexcept
@@ -157,7 +153,6 @@ namespace Engine
 		__pSubmitSemaphoreCirculator = nullptr;
 		__pSubmitFenceCirculator = nullptr;
 		__pCBCirculator = nullptr;
-		__pDescriptorSetFactory = nullptr;
 		__pRenderPassFactory = nullptr;
 		__pLayerResourcePool = nullptr;
 		__pMemoryAllocator = nullptr;
