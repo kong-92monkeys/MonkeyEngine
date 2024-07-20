@@ -26,6 +26,7 @@ import ntmonkeys.com.Engine.Renderer;
 import ntmonkeys.com.Engine.Layer;
 import ntmonkeys.com.Engine.Mesh;
 import ntmonkeys.com.Engine.RenderObject;
+import ntmonkeys.com.Engine.Texture;
 import ntmonkeys.com.Engine.RenderPassFactory;
 import ntmonkeys.com.Engine.CommandBufferCirculator;
 import ntmonkeys.com.Engine.FenceCirculator;
@@ -67,6 +68,11 @@ namespace Engine
 
 		[[nodiscard]]
 		RenderObject *createRenderObject() noexcept;
+
+		[[nodiscard]]
+		Texture *createTexture(
+			const VkImageType imageType, const VkFormat format,
+			const VkExtent3D &extent, const bool useMipmaps);
 
 		void setMaxInFlightFrameCount(const size_t count);
 
@@ -195,6 +201,13 @@ namespace Engine
 	RenderObject *RenderingEngine::createRenderObject() noexcept
 	{
 		return new RenderObject{ };
+	}
+
+	Texture *RenderingEngine::createTexture(
+		const VkImageType imageType, const VkFormat format,
+		const VkExtent3D &extent, const bool useMipmaps)
+	{
+		return new Texture{ __context, imageType, format, extent, useMipmaps };
 	}
 
 	void RenderingEngine::setMaxInFlightFrameCount(const size_t count)

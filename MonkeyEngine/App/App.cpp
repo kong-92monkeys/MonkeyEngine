@@ -25,6 +25,7 @@ import ntmonkeys.com.Lib.Bitmap;
 import ntmonkeys.com.Engine.Mesh;
 import ntmonkeys.com.Engine.DrawParam;
 import ntmonkeys.com.Engine.Material;
+import ntmonkeys.com.Engine.Texture;
 import ntmonkeys.com.Frameworks.Vertex;
 import ntmonkeys.com.Frameworks.SimpleRenderer;
 import ntmonkeys.com.Frameworks.SimpleMaterial;
@@ -127,6 +128,21 @@ void CApp::__onInitBeforeMainFrame()
 
 	const auto imageData{ __pAssetManager->readBinary("Images/wall.jpg") };
 	const Lib::Bitmap bitmap{ imageData.data(), imageData.size(), 4ULL };
+
+	const VkExtent3D vkExtent
+	{
+		.width		{ static_cast<uint32_t>(bitmap.getWidth()) },
+		.height		{ static_cast<uint32_t>(bitmap.getHeight()) },
+		.depth		{ 1U },
+	};
+
+	const std::unique_ptr<Engine::Texture> pTexture
+	{
+		__pRenderingEngine->createTexture(
+			VkImageType::VK_IMAGE_TYPE_2D,
+			VkFormat::VK_FORMAT_R8G8B8A8_SRGB,
+			vkExtent, false)
+	};
 }
 
 void CApp::__createGraphicsCore()

@@ -106,6 +106,10 @@ namespace VK
 		DECLARE_PROC(vkGetSwapchainImagesKHR);
 		DECLARE_PROC(vkAcquireNextImage2KHR);
 
+		// Image
+		DECLARE_PROC(vkCreateImage);
+		DECLARE_PROC(vkDestroyImage);
+
 		// ImageView
 		DECLARE_PROC(vkCreateImageView);
 		DECLARE_PROC(vkDestroyImageView);

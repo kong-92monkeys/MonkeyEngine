@@ -18,7 +18,17 @@ namespace Graphics
 		struct CreateInfo
 		{
 		public:
-			// TODO
+			const VK::DeviceProc *pDeviceProc{ };
+			VkDevice hDevice{ };
+			VkImageCreateFlags flags{ };
+			VkImageType imageType{ };
+			VkFormat format{ };
+			VkExtent3D extent{ };
+			uint32_t mipLevels{ };
+			uint32_t arrayLayers{ };
+			VkSampleCountFlagBits samples{ };
+			VkImageTiling tiling{ };
+			VkImageUsageFlags usage{ };
 		};
 
 		struct PlaceholderInfo
@@ -30,7 +40,9 @@ namespace Graphics
 			VkFormat format{ };
 		};
 
+		explicit Image(const CreateInfo &createInfo) noexcept;
 		explicit Image(const PlaceholderInfo &placeholderInfo) noexcept;
+
 		virtual ~Image() noexcept override;
 
 		[[nodiscard]]
@@ -50,6 +62,8 @@ namespace Graphics
 
 		VkImage __handle{ };
 		bool __ownHandle{ };
+
+		void __create(const CreateInfo &createInfo);
 	};
 
 	constexpr const VkImage &Image::getHandle() const noexcept
@@ -62,6 +76,15 @@ module: private;
 
 namespace Graphics
 {
+	Image::Image(const CreateInfo &createInfo) noexcept :
+		__deviceProc	{ *(createInfo.pDeviceProc) },
+		__hDevice		{ createInfo.hDevice },
+		__ownHandle		{ true },
+		__format		{ createInfo.format }
+	{
+		__create(createInfo);
+	}
+
 	Image::Image(const PlaceholderInfo &placeholderInfo) noexcept :
 		__deviceProc	{ *(placeholderInfo.pDeviceProc) },
 		__hDevice		{ placeholderInfo.hDevice },
@@ -74,6 +97,8 @@ namespace Graphics
 	{
 		if (!__ownHandle)
 			return;
+
+		__deviceProc.vkDestroyImage(__hDevice, __handle, nullptr);
 	}
 
 	std::unique_ptr<ImageView> Image::createImageView(
@@ -95,5 +120,28 @@ namespace Graphics
 		};
 
 		return std::make_unique<ImageView>(createInfo);
+	}
+
+	void Image::__create(const CreateInfo &createInfo)
+	{
+		const VkImageCreateInfo vkCreateInfo
+		{
+			.sType					{ VkStructureType::VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO },
+			.flags					{ createInfo.flags },
+			.imageType				{ createInfo.imageType },
+			.format					{ createInfo.format },
+			.extent					{ createInfo.extent },
+			.mipLevels				{ createInfo.mipLevels },
+			.arrayLayers			{ createInfo.arrayLayers },
+			.samples				{ createInfo.samples },
+			.tiling					{ createInfo.tiling },
+			.usage					{ createInfo.usage },
+			.sharingMode			{ VkSharingMode::VK_SHARING_MODE_EXCLUSIVE },
+			.initialLayout			{ VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED }
+		};
+
+		__deviceProc.vkCreateImage(__hDevice, &vkCreateInfo, nullptr, &__handle);
+		if (!__handle)
+			throw std::runtime_error{ "Cannot create a Image." };
 	}
 }

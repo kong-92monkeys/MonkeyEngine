@@ -21,6 +21,7 @@ import ntmonkeys.com.Graphics.Framebuffer;
 import ntmonkeys.com.Graphics.Semaphore;
 import ntmonkeys.com.Graphics.Fence;
 import ntmonkeys.com.Graphics.CommandPool;
+import ntmonkeys.com.Graphics.Image;
 import <vector>;
 import <memory>;
 import <stdexcept>;
@@ -73,6 +74,20 @@ namespace Graphics
 			const VkPipelineDepthStencilStateCreateInfo *pDepthStencilState{ };
 			const VkPipelineColorBlendStateCreateInfo *pColorBlendState{ };
 			const VkPipelineDynamicStateCreateInfo *pDynamicState{ };
+		};
+
+		struct ImageCreateInfo
+		{
+		public:
+			VkImageCreateFlags flags{ };
+			VkImageType imageType{ };
+			VkFormat format{ };
+			VkExtent3D extent{ };
+			uint32_t mipLevels{ };
+			uint32_t arrayLayers{ };
+			VkSampleCountFlagBits samples{ };
+			VkImageTiling tiling{ };
+			VkImageUsageFlags usage{ };
 		};
 
 		explicit LogicalDevice(const CreateInfo &createInfo) noexcept;
@@ -134,6 +149,9 @@ namespace Graphics
 
 		[[nodiscard]]
 		CommandPool *createCommandPool(const VkCommandPoolCreateFlags flags);
+
+		[[nodiscard]]
+		Image *createImage(const ImageCreateInfo &createInfo);
 
 		void updateDescriptorSets(
 			const uint32_t descriptorWriteCount, const VkWriteDescriptorSet *const pDescriptorWrites,
@@ -408,6 +426,26 @@ namespace Graphics
 		return new CommandPool{ createInfo };
 	}
 
+	Image *LogicalDevice::createImage(const ImageCreateInfo &createInfo)
+	{
+		const Image::CreateInfo innerCreateInfo
+		{
+			.pDeviceProc	{ &__deviceProc },
+			.hDevice		{ __handle },
+			.flags			{ createInfo.flags },
+			.imageType		{ createInfo.imageType },
+			.format			{ createInfo.format },
+			.extent			{ createInfo.extent },
+			.mipLevels		{ createInfo.mipLevels },
+			.arrayLayers	{ createInfo.arrayLayers },
+			.samples		{ createInfo.samples },
+			.tiling			{ createInfo.tiling },
+			.usage			{ createInfo.usage }
+		};
+
+		return new Image{ innerCreateInfo };
+	}
+
 	void LogicalDevice::updateDescriptorSets(
 		const uint32_t descriptorWriteCount, const VkWriteDescriptorSet *const pDescriptorWrites,
 		const uint32_t descriptorCopyCount, const VkCopyDescriptorSet *const pDescriptorCopies)
@@ -559,6 +597,10 @@ namespace Graphics
 		LOAD_DEVICE_PROC(vkDestroySwapchainKHR);
 		LOAD_DEVICE_PROC(vkGetSwapchainImagesKHR);
 		LOAD_DEVICE_PROC(vkAcquireNextImage2KHR);
+
+		// Image
+		LOAD_DEVICE_PROC(vkCreateImage);
+		LOAD_DEVICE_PROC(vkDestroyImage);
 
 		// Image view
 		LOAD_DEVICE_PROC(vkCreateImageView);
