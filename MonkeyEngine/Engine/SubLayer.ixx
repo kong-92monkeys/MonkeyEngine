@@ -87,7 +87,6 @@ namespace Engine
 
 		std::unordered_map<const RenderObject *, std::unique_ptr<Lib::Region>> __object2Region;
 		std::unordered_map<const Mesh *, std::unordered_set<const RenderObject *>> __mesh2Objects;
-		std::unordered_map<const MaterialPack *, std::unordered_map<const RenderObject *, std::unordered_set<uint32_t>>> __materialPackReferenceMap;
 
 		bool __instanceInfoBufferInvalidated{ };
 		std::vector<InstanceInfo> __instanceInfoHostBuffer;
@@ -97,11 +96,10 @@ namespace Engine
 		std::unordered_set<MaterialBufferBuilder *> __invalidatedMaterialBufferBuilders;
 
 		Lib::EventListenerPtr<const RenderObject *, const Mesh *, const Mesh *> __pObjectMeshChangeListener;
-		Lib::EventListenerPtr<const RenderObject *, uint32_t, const MaterialPack *, const MaterialPack *> __pObjectMaterialPackChangeListener;
+		Lib::EventListenerPtr<const RenderObject *, uint32_t, std::type_index, const Material *, const Material *> __pObjectMaterialChangeListener;
 		Lib::EventListenerPtr<const RenderObject *, uint32_t, uint32_t> __pObjectInstanceCountChangeListener;
-		Lib::EventListenerPtr<const RenderObject *, bool, bool> __pObjectDrawableChangeListener;
+		Lib::EventListenerPtr<const RenderObject *, bool> __pObjectDrawableChangeListener;
 
-		Lib::EventListenerPtr<const MaterialPack *, std::type_index, const Material *, const Material *> __pMaterialPackMaterialChangeListener;
 		Lib::EventListenerPtr<MaterialBufferBuilder *> __pMaterialBufferBuilderInvalidateListener;
 
 		void __registerObject(const RenderObject *const pObject);
@@ -110,14 +108,10 @@ namespace Engine
 		void __registerMesh(const RenderObject *const pObject, const Mesh *const pMesh);
 		void __unregisterMesh(const RenderObject *const pObject, const Mesh *const pMesh);
 
-		void __registerMaterialPack(const RenderObject *const pObject, const MaterialPack *const pMaterialPack, const uint32_t instanceIndex);
-		void __unregisterMaterialPack(const RenderObject *const pObject, const MaterialPack *const pMaterialPack, const uint32_t instanceIndex);
-
 		void __registerMaterial(const Material *const pMaterial);
 		void __unregisterMaterial(const Material *const pMaterial);
 
 		void __validateInstanceInfoHostBuffer(const RenderObject *const pObject);
-		void __validateInstanceInfoHostBuffer(const RenderObject *const pObject, const uint32_t instanceIndex);
 		void __validateInstanceInfoHostBuffer(
 			const RenderObject *const pObject, const uint32_t instanceIndex,
 			const std::type_index &materialType, const Material *const pMaterial);
@@ -129,19 +123,14 @@ namespace Engine
 			const RenderObject *const pObject,
 			const Mesh *const pPrev, const Mesh *const pCur) noexcept;
 
-		void __onObjectMaterialPackChanged(
+		void __onObjectMaterialChanged(
 			const RenderObject *const pObject, const uint32_t instanceIndex,
-			const MaterialPack *const pPrev, const MaterialPack *const pCur) noexcept;
+			const std::type_index &type, const Material *const pPrev, const Material *const pCur) noexcept;
 		
 		void __onObjectInstanceCountChanged(
 			const RenderObject *const pObject, const uint32_t prev, const uint32_t cur) noexcept;
 
-		void __onObjectDrawableChanged(
-			const RenderObject *const pObject, const bool prev, const bool cur) noexcept;
-
-		void __onMaterialPackMaterialChanged(
-			const MaterialPack *const pMaterialPack, const std::type_index &type,
-			const Material *const pPrev, const Material *const pCur) noexcept;
+		void __onObjectDrawableChanged(const RenderObject *const pObject, const bool cur) noexcept;
 
 		void __onMaterialBufferBuilderInvalidated(MaterialBufferBuilder *const pBuilder) noexcept;
 	};
@@ -234,21 +223,18 @@ namespace Engine
 			Lib::EventListener<const RenderObject *, const Mesh *, const Mesh *>::bind(
 				&SubLayer::__onObjectMeshChanged, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
 
-		__pObjectMaterialPackChangeListener =
-			Lib::EventListener<const RenderObject *, uint32_t, const MaterialPack *, const MaterialPack *>::bind(
-				&SubLayer::__onObjectMaterialPackChanged, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
+		__pObjectMaterialChangeListener =
+			Lib::EventListener<const RenderObject *, uint32_t, std::type_index, const Material *, const Material *>::bind(
+				&SubLayer::__onObjectMaterialChanged, this,
+				std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4, std::placeholders::_5);
 
 		__pObjectInstanceCountChangeListener =
 			Lib::EventListener<const RenderObject *, uint32_t, uint32_t>::bind(
 				&SubLayer::__onObjectInstanceCountChanged, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
 
 		__pObjectDrawableChangeListener = 
-			Lib::EventListener<const RenderObject *, bool, bool>::bind(
-				&SubLayer::__onObjectDrawableChanged, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
-
-		__pMaterialPackMaterialChangeListener =
-			Lib::EventListener<const MaterialPack *, std::type_index, const Material *, const Material *>::bind(
-				&SubLayer::__onMaterialPackMaterialChanged, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
+			Lib::EventListener<const RenderObject *, bool>::bind(
+				&SubLayer::__onObjectDrawableChanged, this, std::placeholders::_1, std::placeholders::_2);
 
 		__pMaterialBufferBuilderInvalidateListener =
 			Lib::EventListener<MaterialBufferBuilder *>::bind(&SubLayer::__onMaterialBufferBuilderInvalidated, this, std::placeholders::_1);
@@ -314,7 +300,7 @@ namespace Engine
 	void SubLayer::__registerObject(const RenderObject *const pObject)
 	{
 		pObject->getMeshChangeEvent() += __pObjectMeshChangeListener;
-		pObject->getMaterialPackChangeEvent() += __pObjectMaterialPackChangeListener;
+		pObject->getMaterialChangeEvent() += __pObjectMaterialChangeListener;
 		pObject->getInstanceCountChangeEvent() += __pObjectInstanceCountChangeListener;
 
 		const uint32_t instanceCount{ pObject->getInstanceCount() };
@@ -324,11 +310,8 @@ namespace Engine
 
 		for (uint32_t instanceIter{ }; instanceIter < instanceCount; ++instanceIter)
 		{
-			const auto pMaterialPack{ pObject->getMaterialPack(instanceIter) };
-			if (!pMaterialPack)
-				continue;
-
-			__registerMaterialPack(pObject, pMaterialPack, instanceIter);
+			for (const auto pMaterial : pObject->getMaterialPack(instanceIter))
+				__registerMaterial(pMaterial);
 		}
 
 		__validateInstanceInfoHostBuffer(pObject);
@@ -340,7 +323,7 @@ namespace Engine
 	void SubLayer::__unregisterObject(const RenderObject *const pObject)
 	{
 		pObject->getMeshChangeEvent() -= __pObjectMeshChangeListener;
-		pObject->getMaterialPackChangeEvent() -= __pObjectMaterialPackChangeListener;
+		pObject->getMaterialChangeEvent() -= __pObjectMaterialChangeListener;
 		pObject->getInstanceCountChangeEvent() -= __pObjectInstanceCountChangeListener;
 
 		__object2Region.erase(pObject);
@@ -351,11 +334,8 @@ namespace Engine
 
 		for (uint32_t instanceIter{ }; instanceIter < pObject->getInstanceCount(); ++instanceIter)
 		{
-			const auto pMaterialPack{ pObject->getMaterialPack(instanceIter) };
-			if (!pMaterialPack)
-				continue;
-
-			__unregisterMaterialPack(pObject, pMaterialPack, instanceIter);
+			for (const auto pMaterial : pObject->getMaterialPack(instanceIter))
+				__unregisterMaterial(pMaterial);
 		}
 
 		_invalidate();
@@ -373,33 +353,6 @@ namespace Engine
 
 		if (objects.empty())
 			__mesh2Objects.erase(pMesh);
-	}
-
-	void SubLayer::__registerMaterialPack(const RenderObject *const pObject, const MaterialPack *const pMaterialPack, const uint32_t instanceIndex)
-	{
-		pMaterialPack->getMaterialChangeEvent() += __pMaterialPackMaterialChangeListener;
-		__materialPackReferenceMap[pMaterialPack][pObject].emplace(instanceIndex);
-
-		for (const auto pMaterial : *pMaterialPack)
-			__registerMaterial(pMaterial);
-	}
-
-	void SubLayer::__unregisterMaterialPack(const RenderObject *const pObject, const MaterialPack *const pMaterialPack, const uint32_t instanceIndex)
-	{
-		pMaterialPack->getMaterialChangeEvent() -= __pMaterialPackMaterialChangeListener;
-
-		auto &objectInstanceMap	{ __materialPackReferenceMap[pMaterialPack] };
-		auto &instanceIndices	{ objectInstanceMap[pObject] };
-
-		instanceIndices.erase(instanceIndex);
-		if (instanceIndices.empty())
-			objectInstanceMap.erase(pObject);
-
-		if (objectInstanceMap.empty())
-			__materialPackReferenceMap.erase(pMaterialPack);
-
-		for (const auto pMaterial : *pMaterialPack)
-			__unregisterMaterial(pMaterial);
 	}
 
 	void SubLayer::__registerMaterial(const Material *const pMaterial)
@@ -424,23 +377,19 @@ namespace Engine
 	{
 		const auto &pRegion{ __object2Region.at(pObject) };
 
-		const size_t instanceCount	{ pObject->getInstanceCount() };
-		const size_t baseId			{ pRegion->getOffset() };
-		const size_t maxId			{ baseId + instanceCount };
+		const uint32_t instanceCount	{ pObject->getInstanceCount() };
+		const size_t baseId				{ pRegion->getOffset() };
+		const size_t maxId				{ baseId + instanceCount };
 
 		if (maxId >= __instanceInfoHostBuffer.size())
 			__instanceInfoHostBuffer.resize(maxId);
 
-		for (size_t instanceIter{ }; instanceIter < instanceCount; ++instanceIter)
+		for (uint32_t instanceIter{ }; instanceIter < instanceCount; ++instanceIter)
 		{
 			auto &instanceInfo{ __instanceInfoHostBuffer[baseId + instanceIter] };
 			instanceInfo.reset();
 
-			const auto pMaterialPack{ pObject->getMaterialPack(static_cast<uint32_t>(instanceIter)) };
-			if (!pMaterialPack)
-				continue;
-
-			for (const auto pMaterial : *pMaterialPack)
+			for (const auto pMaterial : pObject->getMaterialPack(instanceIter))
 			{
 				const std::type_index materialType{ typeid(*pMaterial) };
 
@@ -451,37 +400,6 @@ namespace Engine
 					const auto &pBufferBuilder	{ __materialDataBufferBuilders.at(materialType) };
 					instanceInfo.materialIds[location] = pBufferBuilder->getIdOf(pMaterial);
 				}
-			}
-		}
-	}
-
-	void SubLayer::__validateInstanceInfoHostBuffer(const RenderObject *const pObject, const uint32_t instanceIndex)
-	{
-		const auto &pRegion{ __object2Region.at(pObject) };
-
-		const size_t baseId{ pRegion->getOffset() };
-		const size_t instanceId{ baseId + instanceIndex };
-
-		if (instanceId >= __instanceInfoHostBuffer.size())
-			__instanceInfoHostBuffer.resize(instanceId);
-
-		auto &instanceInfo{ __instanceInfoHostBuffer[instanceId] };
-		instanceInfo.reset();
-
-		const auto pMaterialPack{ pObject->getMaterialPack(instanceIndex) };
-		if (!pMaterialPack)
-			return;
-
-		for (const auto pMaterial : *pMaterialPack)
-		{
-			const std::type_index materialType{ typeid(*pMaterial) };
-
-			const auto descLocation{ __pRenderer->getDescriptorLocationOf(materialType) };
-			if (descLocation.has_value())
-			{
-				const uint32_t location		{ descLocation.value() };
-				const auto &pBufferBuilder	{ __materialDataBufferBuilders.at(materialType) };
-				instanceInfo.materialIds[location] = pBufferBuilder->getIdOf(pMaterial);
 			}
 		}
 	}
@@ -550,17 +468,17 @@ namespace Engine
 			__registerMesh(pObject, pCur);
 	}
 
-	void SubLayer::__onObjectMaterialPackChanged(
+	void SubLayer::__onObjectMaterialChanged(
 		const RenderObject *const pObject, const uint32_t instanceIndex,
-		const MaterialPack *const pPrev, const MaterialPack *const pCur) noexcept
+		const std::type_index &type, const Material *const pPrev, const Material *const pCur) noexcept
 	{
 		if (pPrev)
-			__unregisterMaterialPack(pObject, pPrev, instanceIndex);
+			__unregisterMaterial(pPrev);
 
 		if (pCur)
 		{
-			__registerMaterialPack(pObject, pCur, instanceIndex);
-			__validateInstanceInfoHostBuffer(pObject, instanceIndex);
+			__registerMaterial(pCur);
+			__validateInstanceInfoHostBuffer(pObject, instanceIndex, type, pCur);
 
 			__instanceInfoBufferInvalidated = true;
 			_invalidate();
@@ -575,35 +493,12 @@ namespace Engine
 		pRegion = std::make_unique<Lib::Region>(__objectRegionAllocator, 1U, cur);
 	}
 
-	void SubLayer::__onObjectDrawableChanged(
-		const RenderObject *pObject, const bool prev, const bool cur) noexcept
+	void SubLayer::__onObjectDrawableChanged(const RenderObject *const pObject, const bool cur) noexcept
 	{
 		if (cur)
 			__registerObject(pObject);
 		else
 			__unregisterObject(pObject);
-	}
-
-	void SubLayer::__onMaterialPackMaterialChanged(
-		const MaterialPack *const pMaterialPack, const std::type_index &type,
-		const Material *const pPrev, const Material *const pCur) noexcept
-	{
-		if (pPrev)
-			__unregisterMaterial(pPrev);
-
-		if (pCur)
-		{
-			__registerMaterial(pCur);
-
-			for (const auto &[pObject, instanceIndices] : __materialPackReferenceMap[pMaterialPack])
-			{
-				for (const uint32_t instanceIndex : instanceIndices)
-					__validateInstanceInfoHostBuffer(pObject, instanceIndex, type, pCur);
-			}
-
-			__instanceInfoBufferInvalidated = true;
-			_invalidate();
-		}
 	}
 
 	void SubLayer::__onMaterialBufferBuilderInvalidated(MaterialBufferBuilder *const pBuilder) noexcept

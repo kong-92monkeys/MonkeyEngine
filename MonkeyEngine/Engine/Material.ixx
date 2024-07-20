@@ -53,9 +53,6 @@ namespace Engine
 	export class MaterialPack : public Lib::Unique
 	{
 	public:
-		[[nodiscard]]
-		constexpr const std::unordered_set<const Material *> &getMaterials() const noexcept;
-
 		template <std::derived_from<Material> $M>
 		bool hasMaterialOf() const noexcept;
 
@@ -63,7 +60,11 @@ namespace Engine
 		bool hasMaterialOf(const std::type_index &type) const noexcept;
 
 		template <std::derived_from<Material> $M>
+		void setMaterial(const std::shared_ptr<$M> &pMaterial) noexcept;
+
+		template <std::derived_from<Material> $M>
 		void setMaterial(const std::shared_ptr<const $M> &pMaterial) noexcept;
+
 		void setMaterial(const std::type_index &type, const std::shared_ptr<const Material> &pMaterial) noexcept;
 
 		[[nodiscard]]
@@ -111,15 +112,16 @@ namespace Engine
 		return __data;
 	}
 
-	constexpr const std::unordered_set<const Material *> &MaterialPack::getMaterials() const noexcept
-	{
-		return __materials;
-	}
-
 	template <std::derived_from<Material> $M>
 	bool MaterialPack::hasMaterialOf() const noexcept
 	{
 		return hasMaterialOf(typeid($M));
+	}
+
+	template <std::derived_from<Material> $M>
+	void MaterialPack::setMaterial(const std::shared_ptr<$M> &pMaterial) noexcept
+	{
+		setMaterial(typeid(*pMaterial), pMaterial);
 	}
 
 	template <std::derived_from<Material> $M>

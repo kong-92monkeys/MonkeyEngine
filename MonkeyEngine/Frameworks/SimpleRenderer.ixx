@@ -27,7 +27,7 @@ namespace Frameworks
 		virtual ~SimpleRenderer() noexcept override;
 
 		[[nodiscard]]
-		virtual bool isValidMaterialPack(const Engine::MaterialPack *const pMaterialPack) const noexcept override;
+		virtual bool isValidMaterialPack(const Engine::MaterialPack &materialPack) const noexcept override;
 
 		[[nodiscard]]
 		virtual std::optional<uint32_t> getDescriptorLocationOf(const std::type_index &materialType) const noexcept override;
@@ -68,12 +68,9 @@ namespace Frameworks
 		__pDescriptorSetLayout = nullptr;
 	}
 
-	bool SimpleRenderer::isValidMaterialPack(const Engine::MaterialPack *const pMaterialPack) const noexcept
+	bool SimpleRenderer::isValidMaterialPack(const Engine::MaterialPack &materialPack) const noexcept
 	{
-		if (!pMaterialPack)
-			return false;
-
-		return pMaterialPack->hasMaterialOf<SimpleMaterial>();
+		return materialPack.hasMaterialOf<SimpleMaterial>();
 	}
 
 	std::optional<uint32_t> SimpleRenderer::getDescriptorLocationOf(const std::type_index &materialType) const noexcept

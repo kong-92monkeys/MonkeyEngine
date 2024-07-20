@@ -148,16 +148,15 @@ void CApp::__onInitBeforeMainFrame()
 	const auto pMaterial{ std::make_shared<Frameworks::SimpleMaterial>() };
 	pMaterial->setColor({ 1.0f, 0.0f, 1.0f, 1.0f });
 
-	const auto pMaterialPack{ std::make_shared<Engine::MaterialPack>() };
-	pMaterialPack->setMaterial<Frameworks::SimpleMaterial>(pMaterial);
-
 	__pRenderObject = std::shared_ptr<Engine::RenderObject>{ __pRenderingEngine->createRenderObject() };
 	__pLayer->addRenderObject(__pRenderObject);
 
 	__pRenderObject->setRenderer(pRenderer);
 	__pRenderObject->setMesh(pMesh);
 	__pRenderObject->setDrawParam(pDrawParam);
-	__pRenderObject->setMaterialPack(0U, pMaterialPack);
+
+	auto &materialPack{ __pRenderObject->getMaterialPack(0U) };
+	materialPack.setMaterial(pMaterial);
 }
 
 void CApp::__createGraphicsCore()

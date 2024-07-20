@@ -55,7 +55,7 @@ namespace Engine
 		void init(const InitInfo &info);
 
 		[[nodiscard]]
-		virtual bool isValidMaterialPack(const MaterialPack *const pMaterialPack) const noexcept;
+		virtual bool isValidMaterialPack(const MaterialPack &materialPack) const noexcept;
 
 		[[nodiscard]]
 		virtual std::optional<uint32_t> getDescriptorLocationOf(const std::type_index &materialType) const noexcept;
@@ -115,7 +115,7 @@ namespace Engine
 		_onInit();
 	}
 
-	bool Renderer::isValidMaterialPack(const MaterialPack *const pMaterialPack) const noexcept
+	bool Renderer::isValidMaterialPack(const MaterialPack &materialPack) const noexcept
 	{
 		return true;
 	}
