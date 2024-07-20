@@ -50,6 +50,11 @@ namespace Graphics
 
 		void bindIndexBuffer(const VkBuffer buffer, const VkDeviceSize offset, const VkIndexType indexType) noexcept;
 
+		void bindDescriptorSets(
+			const VkPipelineBindPoint pipelineBindPoint, const VkPipelineLayout layout,
+			const uint32_t firstSet, const uint32_t descriptorSetCount, const VkDescriptorSet *const pDescriptorSets,
+			const uint32_t dynamicOffsetCount, const uint32_t *const pDynamicOffsets) noexcept;
+
 		[[nodiscard]]
 		constexpr const VkCommandBuffer &getHandle() const noexcept;
 
@@ -145,5 +150,16 @@ namespace Graphics
 		const VkBuffer buffer, const VkDeviceSize offset, const VkIndexType indexType) noexcept
 	{
 		__deviceProc.vkCmdBindIndexBuffer(__handle, buffer, offset, indexType);
+	}
+
+	void CommandBuffer::bindDescriptorSets(
+		const VkPipelineBindPoint pipelineBindPoint, const VkPipelineLayout layout,
+		const uint32_t firstSet, const uint32_t descriptorSetCount, const VkDescriptorSet *const pDescriptorSets,
+		const uint32_t dynamicOffsetCount, const uint32_t *const pDynamicOffsets) noexcept
+	{
+		__deviceProc.vkCmdBindDescriptorSets(
+			__handle, pipelineBindPoint, layout,
+			firstSet, descriptorSetCount, pDescriptorSets,
+			dynamicOffsetCount, pDynamicOffsets);
 	}
 }

@@ -520,7 +520,8 @@ namespace Graphics
 		// Descriptor set
 		LOAD_DEVICE_PROC(vkAllocateDescriptorSets);
 		LOAD_DEVICE_PROC(vkFreeDescriptorSets);
-		
+		LOAD_DEVICE_PROC(vkUpdateDescriptorSets);
+
 		// Shader module;
 		LOAD_DEVICE_PROC(vkCreateShaderModule);
 		LOAD_DEVICE_PROC(vkDestroyShaderModule);
@@ -586,6 +587,7 @@ namespace Graphics
 		LOAD_DEVICE_PROC(vkCmdPipelineBarrier2);
 		LOAD_DEVICE_PROC(vkCmdBindVertexBuffers);
 		LOAD_DEVICE_PROC(vkCmdBindIndexBuffer);
+		LOAD_DEVICE_PROC(vkCmdBindDescriptorSets);
 
 		// Memory
 		LOAD_DEVICE_PROC(vkAllocateMemory);

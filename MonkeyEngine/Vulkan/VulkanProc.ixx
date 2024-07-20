@@ -78,6 +78,7 @@ namespace VK
 		// Descriptor set
 		DECLARE_PROC(vkAllocateDescriptorSets);
 		DECLARE_PROC(vkFreeDescriptorSets);
+		DECLARE_PROC(vkUpdateDescriptorSets);
 
 		// Shader module
 		DECLARE_PROC(vkCreateShaderModule);
@@ -144,6 +145,7 @@ namespace VK
 		DECLARE_PROC(vkCmdPipelineBarrier2);
 		DECLARE_PROC(vkCmdBindVertexBuffers);
 		DECLARE_PROC(vkCmdBindIndexBuffer);
+		DECLARE_PROC(vkCmdBindDescriptorSets);
 
 		// Memory
 		DECLARE_PROC(vkAllocateMemory);

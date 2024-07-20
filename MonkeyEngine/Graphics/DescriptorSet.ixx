@@ -27,6 +27,12 @@ namespace Graphics
 		explicit DescriptorSet(const CreateInfo &createInfo) noexcept;
 		virtual ~DescriptorSet() noexcept override;
 
+		void update(
+			const uint32_t descriptorWriteCount,
+			const VkWriteDescriptorSet *const pDescriptorWrites,
+			const uint32_t descriptorCopyCount,
+			const VkCopyDescriptorSet *const pDescriptorCopies);
+
 	private:
 		const VK::DeviceProc &__deviceProc;
 		const VkDevice __hDevice;
@@ -58,6 +64,16 @@ namespace Graphics
 			return;
 
 		__deviceProc.vkFreeDescriptorSets(__hDevice, __hDescriptorPool, 1U, &__handle);
+	}
+
+	void DescriptorSet::update(
+		const uint32_t descriptorWriteCount,
+		const VkWriteDescriptorSet *const pDescriptorWrites,
+		const uint32_t descriptorCopyCount,
+		const VkCopyDescriptorSet *const pDescriptorCopies)
+	{
+		__deviceProc.vkUpdateDescriptorSets(
+			__hDevice, descriptorWriteCount, pDescriptorWrites, descriptorCopyCount, pDescriptorCopies);
 	}
 
 	void DescriptorSet::__create(const CreateInfo &createInfo)
