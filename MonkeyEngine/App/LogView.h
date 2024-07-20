@@ -1,5 +1,6 @@
 #pragma once
 
+import ntmonkeys.com.Lib.Event;
 import ntmonkeys.com.App.ListBoxLoggerImpl;
 
 // CLogView form view

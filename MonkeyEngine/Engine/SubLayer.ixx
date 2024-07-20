@@ -76,6 +76,9 @@ namespace Engine
 
 		void draw(Graphics::CommandBuffer &commandBuffer);
 
+		[[nodiscard]]
+		constexpr Lib::Event<const SubLayer *> &getNeedRedrawEvent() const noexcept;
+
 	protected:
 		virtual void _onValidate() override;
 
@@ -101,6 +104,8 @@ namespace Engine
 		Lib::EventListenerPtr<const RenderObject *, bool> __pObjectDrawableChangeListener;
 
 		Lib::EventListenerPtr<MaterialBufferBuilder *> __pMaterialBufferBuilderInvalidateListener;
+
+		mutable Lib::Event<const SubLayer *> __needRedrawEvent;
 
 		void __registerObject(const RenderObject *const pObject);
 		void __unregisterObject(const RenderObject *const pObject);
@@ -243,6 +248,11 @@ namespace Engine
 	constexpr const Renderer *SubLayer::getRenderer() const noexcept
 	{
 		return __pRenderer;
+	}
+
+	constexpr Lib::Event<const SubLayer *> &SubLayer::getNeedRedrawEvent() const noexcept
+	{
+		return __needRedrawEvent;
 	}
 
 	void SubLayer::addRenderObject(const RenderObject *const pObject) noexcept

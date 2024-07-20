@@ -2,9 +2,9 @@
 // ChildView.h : interface of the CChildView class
 //
 
-
 #pragma once
 
+import ntmonkeys.com.Lib.Event;
 import ntmonkeys.com.Engine.RenderTarget;
 
 // CChildView window
@@ -43,8 +43,11 @@ public:
 
 private:
 	std::unique_ptr<Engine::RenderTarget> __pRenderTarget;
+	Lib::EventListenerPtr<const Engine::RenderTarget *> __pRenderTargetNeedRedrawListener;
 
 	int __createRenderTarget(const HINSTANCE hInstance);
+	void __onRenderTargetRedrawNeeded() noexcept;
+
 public:
 	afx_msg BOOL OnEraseBkgnd(CDC *pDC);
 };

@@ -33,6 +33,9 @@ namespace Engine
 
 		void draw(Graphics::CommandBuffer &commandBuffer, const Renderer::BeginInfo &rendererBeginInfo);
 
+		[[nodiscard]]
+		constexpr Lib::Event<const Layer *> &getNeedRedrawEvent() const noexcept;
+
 	protected:
 		virtual void _onValidate() override;
 
@@ -47,6 +50,9 @@ namespace Engine
 
 		Lib::EventListenerPtr<const RenderObject *, const Renderer *, const Renderer *> __pObjectRendererChangeListener;
 		Lib::EventListenerPtr<SubLayer *> __pSubLayerInvalidatedListener;
+		Lib::EventListenerPtr<const SubLayer *> __pSubLayerNeedRedrawListener;
+
+		mutable Lib::Event<const Layer *> __needRedrawEvent;
 
 		void __registerObject(const RenderObject *const pObject) noexcept;
 		void __unregisterObject(const RenderObject *const pObject) noexcept;
@@ -56,7 +62,13 @@ namespace Engine
 
 		void __onObjectRendererChanged(const RenderObject *const pObject, const Renderer *const pPrev, const Renderer *const pCur) noexcept;
 		void __onSubLayerInvalidated(SubLayer *const pSubLayer) noexcept;
+		void __onSubLayerRedrawNeeded() const noexcept;
 	};
+
+	constexpr Lib::Event<const Layer *> &Layer::getNeedRedrawEvent() const noexcept
+	{
+		return __needRedrawEvent;
+	}
 }
 
 module: private;
@@ -72,6 +84,8 @@ namespace Engine
 
 		__pSubLayerInvalidatedListener =
 			Lib::EventListener<SubLayer *>::bind(&Layer::__onSubLayerInvalidated, this, std::placeholders::_1);
+
+		__pSubLayerNeedRedrawListener = Lib::EventListener<const SubLayer *>::bind(&Layer::__onSubLayerRedrawNeeded, this);
 	}
 
 	void Layer::addRenderObject(const std::shared_ptr<const RenderObject> &pObject)
@@ -151,6 +165,7 @@ namespace Engine
 		{
 			pRetVal = std::make_unique<SubLayer>(__context, pRenderer);
 			pRetVal->getInvalidateEvent() += __pSubLayerInvalidatedListener;
+			pRetVal->getNeedRedrawEvent() += __pSubLayerNeedRedrawListener;
 		}
 
 		return pRetVal.get();
@@ -170,5 +185,10 @@ namespace Engine
 	{
 		__invalidatedSubLayers.emplace(pSubLayer);
 		_invalidate();
+	}
+
+	void Layer::__onSubLayerRedrawNeeded() const noexcept
+	{
+		__needRedrawEvent.invoke(this);
 	}
 }

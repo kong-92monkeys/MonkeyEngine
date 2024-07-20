@@ -1,4 +1,4 @@
-module;
+ï»¿module;
 
 #include "../Library/GLM.h"
 #include "../Vulkan/Vulkan.h"
@@ -6,6 +6,7 @@ module;
 export module ntmonkeys.com.Engine.RenderTarget;
 
 import ntmonkeys.com.Lib.Unique;
+import ntmonkeys.com.Lib.Event;
 import ntmonkeys.com.Lib.WeakReferenceSet;
 import ntmonkeys.com.Graphics.LogicalDevice;
 import ntmonkeys.com.Graphics.Surface;
@@ -78,6 +79,9 @@ namespace Engine
 		[[nodiscard]]
 		DrawResult draw(Graphics::CommandBuffer &commandBuffer);
 
+		[[nodiscard]]
+		constexpr Lib::Event<const RenderTarget *> &getNeedRedrawEvent() const noexcept;
+
 	private:
 		Graphics::LogicalDevice &__logicalDevice;
 		const RenderPassFactory &__renderPassFactory;
@@ -92,9 +96,15 @@ namespace Engine
 
 		glm::vec4 __backgroundColor{ 0.01f, 0.01f, 0.01f, 1.0f };
 
+		Lib::EventListenerPtr<const Layer *> __pLayerNeedRedrawListener;
+
+		mutable Lib::Event<const RenderTarget *> __needRedrawEvent;
+
 		void __validateSwapchainDependencies();
 		void __clearImageColor(Graphics::CommandBuffer &commandBuffer, const Graphics::ImageView &imageView);
 		void __transitImageToPresent(Graphics::CommandBuffer &commandBuffer, const Graphics::Image &image);
+
+		void __onLayerRedrawNeeded() const noexcept;
 	};
 
 	constexpr uint32_t RenderTarget::getWidth() const noexcept
@@ -121,6 +131,11 @@ namespace Engine
 	{
 		__backgroundColor = color;
 	}
+
+	constexpr Lib::Event<const RenderTarget *> &RenderTarget::getNeedRedrawEvent() const noexcept
+	{
+		return __needRedrawEvent;
+	}
 }
 
 module: private;
@@ -131,11 +146,12 @@ namespace Engine
 		__logicalDevice		{ *(createInfo.pLogicalDevice) },
 		__renderPassFactory	{ *(createInfo.pRenderPassFactory) }
 	{
-		__pSurface = std::unique_ptr<Graphics::Surface>{ __logicalDevice.createSurface(createInfo.hinstance, createInfo.hwnd) };
+		__pLayerNeedRedrawListener = Lib::EventListener<const Layer *>::bind(&RenderTarget::__onLayerRedrawNeeded, this);
 
+		__pSurface = std::unique_ptr<Graphics::Surface>{ __logicalDevice.createSurface(createInfo.hinstance, createInfo.hwnd) };
 		__pFramebufferFactory = std::make_unique<FramebufferFactory>(__logicalDevice, __renderPassFactory);
 
-		// max in-flight µµ´Ş ÀÌÈÄ ´ÙÀ½ ÇÁ·¹ÀÓ±îÁö acquire ¿äÃ»ÇÒ ¼ö ÀÖÀ¸¹Ç·Î limit¿¡ 1 Ãß°¡ÇØ¾ß ÇÔ.
+		// max in-flight ë„ë‹¬ ì´í›„ ë‹¤ìŒ í”„ë ˆì„ê¹Œì§€ acquire ìš”ì²­í•  ìˆ˜ ìˆìœ¼ë¯€ë¡œ limitì— 1 ì¶”ê°€í•´ì•¼ í•¨.
 		__pImgAcquireSemaphoreCirculator = std::make_unique<SemaphoreCirculator>(
 			__logicalDevice, VkSemaphoreType::VK_SEMAPHORE_TYPE_BINARY, Constants::MAX_IN_FLIGHT_FRAME_COUNT_LIMIT + 1ULL);
 
@@ -156,11 +172,13 @@ namespace Engine
 	void RenderTarget::addLayer(const std::shared_ptr<Layer> &pLayer) noexcept
 	{
 		__layers.emplace(pLayer);
+		pLayer->getNeedRedrawEvent() += __pLayerNeedRedrawListener;
 	}
 
 	void RenderTarget::removeLayer(const std::shared_ptr<Layer> &pLayer) noexcept
 	{
 		__layers.erase(pLayer);
+		pLayer->getNeedRedrawEvent() -= __pLayerNeedRedrawListener;
 	}
 
 	void RenderTarget::sync()
@@ -310,5 +328,10 @@ namespace Engine
 		};
 
 		commandBuffer.pipelineBarrier(dependencyInfo);
+	}
+
+	void RenderTarget::__onLayerRedrawNeeded() const noexcept
+	{
+		__needRedrawEvent.invoke(this);
 	}
 }

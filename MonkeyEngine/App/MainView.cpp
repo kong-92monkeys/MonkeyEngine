@@ -63,6 +63,9 @@ int CMainView::OnCreate(LPCREATESTRUCT lpCreateStruct)
 		return -1;
 
 	// TODO:  Add your specialized creation code here
+	__pRenderTargetNeedRedrawListener =
+		Lib::EventListener<const Engine::RenderTarget *>::bind(&CMainView::__onRenderTargetRedrawNeeded, this);
+
 	if (__createRenderTarget(lpCreateStruct->hInstance) == -1)
 		return -1;
 
@@ -78,6 +81,8 @@ int CMainView::__createRenderTarget(const HINSTANCE hInstance)
 	try
 	{
 		__pRenderTarget = std::unique_ptr<Engine::RenderTarget>{ renderingEngine.createRenderTarget(hInstance, GetSafeHwnd()) };
+		__pRenderTarget->getNeedRedrawEvent() += __pRenderTargetNeedRedrawListener;
+
 		theApp.addRenderTarget(*__pRenderTarget);
 		return 0;
 	}
@@ -85,6 +90,11 @@ int CMainView::__createRenderTarget(const HINSTANCE hInstance)
 	{
 		return -1;
 	}
+}
+
+void CMainView::__onRenderTargetRedrawNeeded() noexcept
+{
+	Invalidate(FALSE);
 }
 
 void CMainView::OnDestroy()
