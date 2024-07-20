@@ -1,7 +1,6 @@
 export module ntmonkeys.com.Lib.AssetManager;
 
 import ntmonkeys.com.Lib.Unique;
-import ntmonkeys.com.Lib.Bitmap;
 import <filesystem>;
 import <fstream>;
 import <sstream>;
@@ -25,9 +24,6 @@ namespace Lib
 
 		[[nodiscard]]
 		std::vector<std::byte> readBinary(const std::string_view &path) const;
-
-		[[nodiscard]]
-		std::unique_ptr<Bitmap> readBitmap(const std::string_view &path) const;
 
 	private:
 		std::filesystem::path __rootPath;
@@ -84,11 +80,5 @@ namespace Lib
 
 		fin.read(reinterpret_cast<char *>(retVal.data()), memSize);
 		return retVal;
-	}
-
-	std::unique_ptr<Bitmap> AssetManager::readBitmap(const std::string_view &path) const
-	{
-		const auto data{ readBinary(path) };
-		return std::make_unique<Bitmap>(data.data(), data.size());
 	}
 }

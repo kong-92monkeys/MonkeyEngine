@@ -21,6 +21,7 @@ END_MESSAGE_MAP()
 
 import ntmonkeys.com.Lib.Logger;
 import ntmonkeys.com.Lib.GenericBuffer;
+import ntmonkeys.com.Lib.Bitmap;
 import ntmonkeys.com.Engine.Mesh;
 import ntmonkeys.com.Engine.DrawParam;
 import ntmonkeys.com.Engine.Material;
@@ -122,6 +123,10 @@ void CApp::__onInitBeforeMainFrame()
 
 	__pLayer = std::shared_ptr<Engine::Layer>{ __pRenderingEngine->createLayer() };
 	__pLayer->addRenderObject(__pRenderObject);
+
+
+	const auto imageData{ __pAssetManager->readBinary("Images/wall.jpg") };
+	const Lib::Bitmap bitmap{ imageData.data(), imageData.size(), 4ULL };
 }
 
 void CApp::__createGraphicsCore()

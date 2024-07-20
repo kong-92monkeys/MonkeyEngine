@@ -17,7 +17,9 @@ namespace Lib
 	public:
 		Bitmap(const size_t width, const size_t height, const size_t channelCount) noexcept;
 		Bitmap(const size_t width, const size_t height, const size_t channelCount, const size_t stride) noexcept;
+
 		Bitmap(const void *const pEncodedData, const size_t size);
+		Bitmap(const void *const pEncodedData, const size_t size, const size_t stride);
 
 		[[nodiscard]]
 		constexpr size_t getWidth() const noexcept;
@@ -102,7 +104,11 @@ namespace Lib
 		__data.resize(width * height * stride);
 	}
 
-	Bitmap::Bitmap(const void *const pEncodedData, const size_t size)
+	Bitmap::Bitmap(const void *const pEncodedData, const size_t size) :
+		Bitmap{ pEncodedData, size, 0ULL }
+	{}
+
+	Bitmap::Bitmap(const void *const pEncodedData, const size_t size, const size_t stride)
 	{
 		int width{ };
 		int height{ };
@@ -112,7 +118,7 @@ namespace Lib
 		{
 			stbi_load_from_memory(
 				static_cast<const stbi_uc *>(pEncodedData), static_cast<int>(size),
-				&width, &height, &channelCount, 0)
+				&width, &height, &channelCount, static_cast<int>(stride))
 		};
 
 		if (!pData)
@@ -121,7 +127,7 @@ namespace Lib
 		__width				= static_cast<size_t>(width);
 		__height			= static_cast<size_t>(height);
 		__channelCount		= static_cast<size_t>(channelCount);
-		__stride			= __channelCount;
+		__stride			= stride;
 
 		const size_t memSize{ __width * __height * __stride };
 		__data.resize(memSize);
