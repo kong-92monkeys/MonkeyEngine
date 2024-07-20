@@ -135,6 +135,10 @@ namespace Graphics
 		[[nodiscard]]
 		CommandPool *createCommandPool(const VkCommandPoolCreateFlags flags);
 
+		void updateDescriptorSets(
+			const uint32_t descriptorWriteCount, const VkWriteDescriptorSet *const pDescriptorWrites,
+			const uint32_t descriptorCopyCount, const VkCopyDescriptorSet *const pDescriptorCopies);
+
 	private:
 		const VK::InstanceProc &__instanceProc;
 		const VkInstance __hInstance;
@@ -402,6 +406,14 @@ namespace Graphics
 		}; 
 
 		return new CommandPool{ createInfo };
+	}
+
+	void LogicalDevice::updateDescriptorSets(
+		const uint32_t descriptorWriteCount, const VkWriteDescriptorSet *const pDescriptorWrites,
+		const uint32_t descriptorCopyCount, const VkCopyDescriptorSet *const pDescriptorCopies)
+	{
+		__deviceProc.vkUpdateDescriptorSets(
+			__handle, descriptorWriteCount, pDescriptorWrites, descriptorCopyCount, pDescriptorCopies);
 	}
 
 	void LogicalDevice::__createDevice(const CreateInfo &createInfo)

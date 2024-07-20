@@ -108,10 +108,10 @@ namespace Engine
 	export class BufferChunk : public Lib::Unique
 	{
 	public:
-		BufferChunk(Graphics::Buffer &buffer, AbstractMemory &memory, std::unique_ptr<Lib::Region> &&pRegion) noexcept;
+		BufferChunk(const Graphics::Buffer &buffer, AbstractMemory &memory, std::unique_ptr<Lib::Region> &&pRegion) noexcept;
 
 		[[nodiscard]]
-		constexpr Graphics::Buffer &getBuffer() noexcept;
+		constexpr const Graphics::Buffer &getBuffer() const noexcept;
 
 		[[nodiscard]]
 		constexpr size_t getSize() const noexcept;
@@ -123,7 +123,7 @@ namespace Engine
 		void *getMappedMemory() noexcept;
 
 	private:
-		Graphics::Buffer &__buffer;
+		const Graphics::Buffer &__buffer;
 		AbstractMemory &__memory;
 		std::unique_ptr<Lib::Region> __pRegion;
 	};
@@ -198,7 +198,7 @@ namespace Engine
 		return __pRegion->getOffset();
 	}
 
-	constexpr Graphics::Buffer &BufferChunk::getBuffer() noexcept
+	constexpr const Graphics::Buffer &BufferChunk::getBuffer() const noexcept
 	{
 		return __buffer;
 	}
@@ -299,7 +299,7 @@ namespace Engine
 		return __pMemoryChunk->getOffset();
 	}
 
-	BufferChunk::BufferChunk(Graphics::Buffer &buffer, AbstractMemory &memory, std::unique_ptr<Lib::Region> &&pRegion) noexcept :
+	BufferChunk::BufferChunk(const Graphics::Buffer &buffer, AbstractMemory &memory, std::unique_ptr<Lib::Region> &&pRegion) noexcept :
 		__buffer	{ buffer },
 		__memory	{ memory },
 		__pRegion	{ std::move(pRegion) }

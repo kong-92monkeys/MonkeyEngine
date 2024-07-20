@@ -1,3 +1,7 @@
+module;
+
+#include "../Vulkan/Vulkan.h"
+
 export module ntmonkeys.com.Engine.Layer:SubLayer;
 
 import ntmonkeys.com.Lib.Unique;
@@ -10,6 +14,7 @@ import ntmonkeys.com.Lib.LazyDeleter;
 import ntmonkeys.com.Lib.LazyRecycler;
 import ntmonkeys.com.Graphics.CommandBuffer;
 import ntmonkeys.com.Graphics.DescriptorSet;
+import ntmonkeys.com.Engine.Constants;
 import ntmonkeys.com.Engine.ShaderDataStructures;
 import ntmonkeys.com.Engine.EngineContext;
 import ntmonkeys.com.Engine.Mesh;
@@ -511,7 +516,48 @@ namespace Engine
 		if (!__pDescSetCirculator)
 			return;
 
+		const auto pDevice{ __context.pLogicalDevice };
+
 		__pDescSet = &(__pDescSetCirculator->getNext());
+
+		std::vector<VkWriteDescriptorSet> descWrites;
+		std::vector<std::unique_ptr<VkDescriptorBufferInfo>> bufferInfos;
+
+		auto &pInstanceInfoBufferInfo		{ bufferInfos.emplace_back(std::make_unique<VkDescriptorBufferInfo>()) };
+		pInstanceInfoBufferInfo->buffer		= __pInstanceInfoBuffer->getBuffer().getHandle();
+		pInstanceInfoBufferInfo->offset		= __pInstanceInfoBuffer->getOffset();
+		pInstanceInfoBufferInfo->range		= __pInstanceInfoBuffer->getSize();
+
+		auto &instanceInfoWrites			{ descWrites.emplace_back() };
+		instanceInfoWrites.sType			= VkStructureType::VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+		instanceInfoWrites.dstSet			= __pDescSet->getHandle();
+		instanceInfoWrites.dstBinding		= Constants::SUB_LAYER_INSTANCE_INFO_LOCATION;
+		instanceInfoWrites.dstArrayElement	= 0U;
+		instanceInfoWrites.descriptorCount	= 1U;
+		instanceInfoWrites.descriptorType	= VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+		instanceInfoWrites.pBufferInfo		= pInstanceInfoBufferInfo.get();
+
+		for (const auto &[type, pBuilder] : __materialDataBufferBuilders)
+		{
+			const auto &materialBuffer		{ pBuilder->getBuffer() };
+			const auto descLocation			{ __pRenderer->getDescriptorLocationOf(type) };
+
+			auto &pMaterialBufferInfo		{ bufferInfos.emplace_back(std::make_unique<VkDescriptorBufferInfo>()) };
+			pMaterialBufferInfo->buffer		= materialBuffer.getBuffer().getHandle();
+			pMaterialBufferInfo->offset		= materialBuffer.getOffset();
+			pMaterialBufferInfo->range		= materialBuffer.getSize();
+
+			auto &materialWrites			{ descWrites.emplace_back() };
+			materialWrites.sType			= VkStructureType::VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+			materialWrites.dstSet			= __pDescSet->getHandle();
+			materialWrites.dstBinding		= descLocation.value();
+			materialWrites.dstArrayElement	= 0U;
+			materialWrites.descriptorCount	= 1U;
+			materialWrites.descriptorType	= VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+			materialWrites.pBufferInfo		= pMaterialBufferInfo.get();
+		}
+
+		pDevice->updateDescriptorSets(static_cast<uint32_t>(descWrites.size()), descWrites.data(), 0U, nullptr);
 	}
 
 	void SubLayer::__onObjectMeshChanged(const RenderObject *const pObject, const Mesh *const pPrev, const Mesh *const pCur) noexcept
