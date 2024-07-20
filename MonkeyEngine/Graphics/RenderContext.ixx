@@ -1,4 +1,4 @@
-module;
+ï»¿module;
 
 #include "../Vulkan/Vulkan.h"
 
@@ -213,10 +213,10 @@ namespace Graphics
 
 		static constexpr std::array enabledFeatures
 		{
-			// ÆÛÆ÷¸Õ½º ¶³¾îÁö´Â ÄÚµå °æ°í
+			// í¼í¬ë¨¼ìŠ¤ ë–¨ì–´ì§€ëŠ” ì½”ë“œ ê²½ê³ 
 			VkValidationFeatureEnableEXT::VK_VALIDATION_FEATURE_ENABLE_BEST_PRACTICES_EXT,
 
-			// ¸Ş¸ğ¸® ÇØÀúµå °æ°í
+			// ë©”ëª¨ë¦¬ í•´ì €ë“œ ê²½ê³ 
 			VkValidationFeatureEnableEXT::VK_VALIDATION_FEATURE_ENABLE_SYNCHRONIZATION_VALIDATION_EXT
 		};
 

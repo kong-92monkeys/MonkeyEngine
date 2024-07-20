@@ -28,5 +28,5 @@ void main()
     gl_Position = vec4(inPos, 1.0f);
 
     const int materialIndex = instanceInfos[gl_InstanceIndex].materialIds[0];
-    outColor = simpleMaterials[materialIndex].color;
+    outColor = simpleMaterials[materialIndex].color * inColor;
 }

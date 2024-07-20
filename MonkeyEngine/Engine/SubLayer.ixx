@@ -454,9 +454,10 @@ namespace Engine
 				const auto descLocation{ __pRenderer->getDescriptorLocationOf(materialType) };
 				if (descLocation.has_value())
 				{
-					const uint32_t location		{ descLocation.value() };
+					const uint32_t slotIndex	{ descLocation.value() - Constants::SUB_LAYER_MATERIAL_DESC_LOCATION0 };
 					const auto &pBufferBuilder	{ __materialDataBufferBuilders.at(materialType) };
-					instanceInfo.materialIds[location] = pBufferBuilder->getIdOf(pMaterial);
+
+					instanceInfo.materialIds[slotIndex] = pBufferBuilder->getIdOf(pMaterial);
 				}
 			}
 		}
@@ -475,19 +476,19 @@ namespace Engine
 			__instanceInfoHostBuffer.resize(instanceId);
 
 		auto &instanceInfo{ __instanceInfoHostBuffer[instanceId] };
-		const auto descLocation{ __pRenderer->getDescriptorLocationOf(materialType) };
 
+		const auto descLocation{ __pRenderer->getDescriptorLocationOf(materialType) };
 		if (descLocation.has_value())
 		{
-			const uint32_t location{ descLocation.value() };
+			const uint32_t slotIndex{ descLocation.value() - Constants::SUB_LAYER_MATERIAL_DESC_LOCATION0 };
 
 			if (pMaterial)
 			{
 				const auto &pBufferBuilder{ __materialDataBufferBuilders.at(materialType) };
-				instanceInfo.materialIds[location] = pBufferBuilder->getIdOf(pMaterial);
+				instanceInfo.materialIds[slotIndex] = pBufferBuilder->getIdOf(pMaterial);
 			}
 			else
-				instanceInfo.materialIds[location] = -1;
+				instanceInfo.materialIds[slotIndex] = -1;
 		}
 	}
 
