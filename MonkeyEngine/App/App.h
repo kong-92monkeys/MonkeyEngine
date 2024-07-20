@@ -63,6 +63,7 @@ private:
 	void __onInitBeforeMainFrame();
 	void __createGraphicsCore();
 	void __createRenderingEngine();
+	void __createRenderObject();
 
 public:
 	virtual BOOL OnIdle(LONG lCount);

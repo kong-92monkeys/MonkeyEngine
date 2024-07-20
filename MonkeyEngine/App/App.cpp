@@ -118,45 +118,10 @@ void CApp::__onInitBeforeMainFrame()
 
 	__createGraphicsCore();
 	__createRenderingEngine();
+	__createRenderObject();
 
 	__pLayer = std::shared_ptr<Engine::Layer>{ __pRenderingEngine->createLayer() };
-
-	const auto pRenderer{ std::shared_ptr<Frameworks::SimpleRenderer>{ __pRenderingEngine->createRenderer<Frameworks::SimpleRenderer>() } };
-
-	Lib::GenericBuffer posBuffer;
-	posBuffer.typedAdd<glm::vec3>({ -0.5f, -0.5f, 0.5f });
-	posBuffer.typedAdd<glm::vec3>({ -0.5f, 0.5f, 0.5f });
-	posBuffer.typedAdd<glm::vec3>({ 0.5f, 0.5f, 0.5f });
-	posBuffer.typedAdd<glm::vec3>({ 0.5f, -0.5f, 0.5f });
-
-	Lib::GenericBuffer colorBuffer;
-	colorBuffer.typedAdd<glm::vec4>({ 1.0f, 0.0f, 0.0f, 1.0f });
-	colorBuffer.typedAdd<glm::vec4>({ 0.0f, 1.0f, 0.0f, 1.0f });
-	colorBuffer.typedAdd<glm::vec4>({ 0.0f, 0.0f, 1.0f, 1.0f });
-	colorBuffer.typedAdd<glm::vec4>({ 1.0f, 0.0f, 1.0f, 1.0f });
-
-	Lib::GenericBuffer indexBuffer;
-	indexBuffer.typedAdd<uint16_t>({ 0U, 1U, 2U, 0U, 2U, 3U });
-
-	const auto pMesh{ std::shared_ptr<Engine::Mesh>{ __pRenderingEngine->createMesh() } };
-	pMesh->createVertexBuffer(Frameworks::VertexAttrib::POS_LOCATION, posBuffer.getData(), posBuffer.getSize());
-	pMesh->createVertexBuffer(Frameworks::VertexAttrib::COLOR_LOCATION, colorBuffer.getData(), colorBuffer.getSize());
-	pMesh->createIndexBuffer(VkIndexType::VK_INDEX_TYPE_UINT16, indexBuffer.getData(), indexBuffer.getSize());
-
-	const auto pDrawParam{ std::make_shared<Engine::DrawParamIndexed>(6U, 0U, 0) };
-
-	const auto pMaterial{ std::make_shared<Frameworks::SimpleMaterial>() };
-	pMaterial->setColor({ 1.0f, 0.0f, 1.0f, 1.0f });
-
-	__pRenderObject = std::shared_ptr<Engine::RenderObject>{ __pRenderingEngine->createRenderObject() };
 	__pLayer->addRenderObject(__pRenderObject);
-
-	__pRenderObject->setRenderer(pRenderer);
-	__pRenderObject->setMesh(pMesh);
-	__pRenderObject->setDrawParam(pDrawParam);
-
-	auto &materialPack{ __pRenderObject->getMaterialPack(0U) };
-	materialPack.setMaterial(pMaterial);
 }
 
 void CApp::__createGraphicsCore()
@@ -202,6 +167,45 @@ void CApp::__createRenderingEngine()
 	}
 
 	Lib::Logger::log(Lib::Logger::Severity::INFO, "Graphics engine created.");
+}
+
+void CApp::__createRenderObject()
+{
+	const auto pRenderer{ std::shared_ptr<Frameworks::SimpleRenderer>{ __pRenderingEngine->createRenderer<Frameworks::SimpleRenderer>() } };
+
+	Lib::GenericBuffer posBuffer;
+	posBuffer.typedAdd<glm::vec3>({ -0.5f, -0.5f, 0.5f });
+	posBuffer.typedAdd<glm::vec3>({ -0.5f, 0.5f, 0.5f });
+	posBuffer.typedAdd<glm::vec3>({ 0.5f, 0.5f, 0.5f });
+	posBuffer.typedAdd<glm::vec3>({ 0.5f, -0.5f, 0.5f });
+
+	Lib::GenericBuffer colorBuffer;
+	colorBuffer.typedAdd<glm::vec4>({ 1.0f, 0.0f, 0.0f, 1.0f });
+	colorBuffer.typedAdd<glm::vec4>({ 0.0f, 1.0f, 0.0f, 1.0f });
+	colorBuffer.typedAdd<glm::vec4>({ 0.0f, 0.0f, 1.0f, 1.0f });
+	colorBuffer.typedAdd<glm::vec4>({ 1.0f, 0.0f, 1.0f, 1.0f });
+
+	Lib::GenericBuffer indexBuffer;
+	indexBuffer.typedAdd<uint16_t>({ 0U, 1U, 2U, 0U, 2U, 3U });
+
+	const auto pMesh{ std::shared_ptr<Engine::Mesh>{ __pRenderingEngine->createMesh() } };
+	pMesh->createVertexBuffer(Frameworks::VertexAttrib::POS_LOCATION, posBuffer.getData(), posBuffer.getSize());
+	pMesh->createVertexBuffer(Frameworks::VertexAttrib::COLOR_LOCATION, colorBuffer.getData(), colorBuffer.getSize());
+	pMesh->createIndexBuffer(VkIndexType::VK_INDEX_TYPE_UINT16, indexBuffer.getData(), indexBuffer.getSize());
+
+	const auto pDrawParam{ std::make_shared<Engine::DrawParamIndexed>(6U, 0U, 0) };
+
+	const auto pMaterial{ std::make_shared<Frameworks::SimpleMaterial>() };
+	pMaterial->setColor({ 1.0f, 0.0f, 1.0f, 1.0f });
+
+	__pRenderObject = std::shared_ptr<Engine::RenderObject>{ __pRenderingEngine->createRenderObject() };
+
+	__pRenderObject->setRenderer(pRenderer);
+	__pRenderObject->setMesh(pMesh);
+	__pRenderObject->setDrawParam(pDrawParam);
+
+	auto &materialPack{ __pRenderObject->getMaterialPack(0U) };
+	materialPack.setMaterial(pMaterial);
 }
 
 // CApp message handlers

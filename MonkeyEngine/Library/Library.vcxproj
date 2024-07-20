@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AssetManager.ixx" />
+    <ClCompile Include="Bitmap.ixx" />
     <ClCompile Include="Event.ixx" />
     <ClCompile Include="GenericBuffer.ixx" />
     <ClCompile Include="IdAllocator.ixx" />

@@ -184,6 +184,7 @@
     <ClCompile Include="ShaderDataStructures.ixx" />
     <ClCompile Include="ShaderIncluder.ixx" />
     <ClCompile Include="SubLayer.ixx" />
+    <ClCompile Include="Texture.ixx" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Graphics\Graphics.vcxproj">

@@ -15,6 +15,7 @@
     <ClCompile Include="IdAllocator.ixx" />
     <ClCompile Include="GenericBuffer.ixx" />
     <ClCompile Include="Stateful.ixx" />
+    <ClCompile Include="Bitmap.ixx" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GLM.h" />

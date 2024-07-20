@@ -3,6 +3,7 @@ module;
 #include "../Vulkan/Vulkan.h"
 
 export module ntmonkeys.com.Engine.Mesh;
+
 import ntmonkeys.com.Lib.Unique;
 import ntmonkeys.com.Graphics.CommandBuffer;
 import ntmonkeys.com.Engine.EngineContext;
@@ -17,6 +18,7 @@ namespace Engine
 	{
 	public:
 		Mesh(const EngineContext &context) noexcept;
+		virtual ~Mesh() noexcept override;
 
 		void createVertexBuffer(const uint32_t bindingIndex, const void *const pData, const size_t size) noexcept;
 		void updateVertexBuffer(const uint32_t bindingIndex, const void *const pData, const size_t size, const size_t offset) noexcept;
@@ -56,6 +58,20 @@ namespace Engine
 	Mesh::Mesh(const EngineContext &context) noexcept :
 		__context{ context }
 	{}
+
+	Mesh::~Mesh() noexcept
+	{
+		const auto pLazyDeleter{ __context.pLazyDeleter };
+
+		for (const auto &[_, pVertexBuffer] : __vertexBuffers)
+		{
+			if (pVertexBuffer)
+				pLazyDeleter->reserve(std::move(pVertexBuffer));
+		}
+		
+		if (__pIndexBuffer)
+			pLazyDeleter->reserve(std::move(__pIndexBuffer));
+	}
 
 	void Mesh::createVertexBuffer(const uint32_t bindingIndex, const void *const pData, const size_t size) noexcept
 	{

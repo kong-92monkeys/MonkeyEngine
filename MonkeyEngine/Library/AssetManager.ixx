@@ -1,12 +1,14 @@
 export module ntmonkeys.com.Lib.AssetManager;
 
 import ntmonkeys.com.Lib.Unique;
+import ntmonkeys.com.Lib.Bitmap;
 import <filesystem>;
 import <fstream>;
 import <sstream>;
 import <memory>;
 import <format>;
 import <string_view>;
+import <vector>;
 
 namespace Lib
 {
@@ -22,7 +24,10 @@ namespace Lib
 		std::string readString(const std::string_view &path) const;
 
 		[[nodiscard]]
-		std::unique_ptr<std::byte[]> readBinary(const std::string_view &path) const;
+		std::vector<std::byte> readBinary(const std::string_view &path) const;
+
+		[[nodiscard]]
+		std::unique_ptr<Bitmap> readBitmap(const std::string_view &path) const;
 
 	private:
 		std::filesystem::path __rootPath;
@@ -60,7 +65,7 @@ namespace Lib
 		return oss.str();
 	}
 
-	std::unique_ptr<std::byte[]> AssetManager::readBinary(const std::string_view &path) const
+	std::vector<std::byte> AssetManager::readBinary(const std::string_view &path) const
 	{
 		const auto filePath{ __rootPath / path };
 
@@ -74,9 +79,16 @@ namespace Lib
 		const auto memSize{ fin.tellg() };
 		fin.seekg(0, std::ios::beg);
 
-		auto retVal{ std::make_unique<std::byte[]>(memSize) };
-		fin.read(reinterpret_cast<char *>(retVal.get()), memSize);
+		std::vector<std::byte> retVal;
+		retVal.resize(memSize);
 
+		fin.read(reinterpret_cast<char *>(retVal.data()), memSize);
 		return retVal;
+	}
+
+	std::unique_ptr<Bitmap> AssetManager::readBitmap(const std::string_view &path) const
+	{
+		const auto data{ readBinary(path) };
+		return std::make_unique<Bitmap>(data.data(), data.size());
 	}
 }
