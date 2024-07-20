@@ -61,7 +61,7 @@ namespace Engine
 		std::vector<VkDescriptorPoolSize> poolSizes;
 
 		for (const auto &[type, count] : layout.getDescriptorCountInfo())
-			poolSizes.emplace_back(type, count);
+			poolSizes.emplace_back(type, __setCount * count);
 
 		__pPool = std::unique_ptr<Graphics::DescriptorPool>
 		{

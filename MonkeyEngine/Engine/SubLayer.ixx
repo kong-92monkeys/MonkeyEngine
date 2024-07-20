@@ -9,6 +9,7 @@ import ntmonkeys.com.Lib.RegionAllocator;
 import ntmonkeys.com.Lib.LazyDeleter;
 import ntmonkeys.com.Lib.LazyRecycler;
 import ntmonkeys.com.Graphics.CommandBuffer;
+import ntmonkeys.com.Graphics.DescriptorSet;
 import ntmonkeys.com.Engine.ShaderDataStructures;
 import ntmonkeys.com.Engine.EngineContext;
 import ntmonkeys.com.Engine.Mesh;
@@ -18,6 +19,7 @@ import ntmonkeys.com.Engine.Renderer;
 import ntmonkeys.com.Engine.RenderObject;
 import ntmonkeys.com.Engine.MemoryAllocator;
 import ntmonkeys.com.Engine.LayerResourcePool;
+import ntmonkeys.com.Engine.DescriptorSetCirculator;
 import <cstdint>;
 import <unordered_map>;
 import <unordered_set>;
@@ -30,6 +32,7 @@ namespace Engine
 	{
 	public:
 		MaterialBufferBuilder(LayerResourcePool &resourcePool) noexcept;
+		virtual ~MaterialBufferBuilder() noexcept override;
 
 		void registerMaterial(const Material *const pMaterial) noexcept;
 		void unregisterMaterial(const Material *const pMaterial) noexcept;
@@ -64,6 +67,7 @@ namespace Engine
 	{
 	public:
 		SubLayer(const EngineContext &context, const Renderer *const pRenderer) noexcept;
+		virtual ~SubLayer() noexcept override;
 
 		[[nodiscard]]
 		constexpr const Renderer *getRenderer() const noexcept;
@@ -98,6 +102,9 @@ namespace Engine
 		std::unordered_map<std::type_index, std::unique_ptr<MaterialBufferBuilder>> __materialDataBufferBuilders;
 		std::unordered_set<MaterialBufferBuilder *> __invalidatedMaterialBufferBuilders;
 
+		std::shared_ptr<DescriptorSetCirculator> __pDescSetCirculator;
+		Graphics::DescriptorSet *__pDescSet{ };
+
 		Lib::EventListenerPtr<const RenderObject *, const Mesh *, const Mesh *> __pObjectMeshChangeListener;
 		Lib::EventListenerPtr<const RenderObject *, uint32_t, std::type_index, const Material *, const Material *> __pObjectMaterialChangeListener;
 		Lib::EventListenerPtr<const RenderObject *, uint32_t, uint32_t> __pObjectInstanceCountChangeListener;
@@ -123,6 +130,7 @@ namespace Engine
 
 		void __validateInstanceInfoBuffer();
 		void __validateMaterialBufferBuilders();
+		void __validateDescriptorSet();
 
 		void __onObjectMeshChanged(
 			const RenderObject *const pObject,
@@ -145,6 +153,12 @@ namespace Engine
 	{
 		__pMaterialUpdateListener =
 			Lib::EventListener<const Material *>::bind(&MaterialBufferBuilder::__onMaterialUpdated, this, std::placeholders::_1);
+	}
+
+	MaterialBufferBuilder::~MaterialBufferBuilder() noexcept
+	{
+		if (__pBuffer)
+			__resourcePool.recycleStorageBuffer(std::move(__pBuffer));
 	}
 
 	void MaterialBufferBuilder::registerMaterial(const Material *const pMaterial) noexcept
@@ -244,6 +258,25 @@ namespace Engine
 
 		__pMaterialBufferBuilderInvalidateListener =
 			Lib::EventListener<MaterialBufferBuilder *>::bind(&SubLayer::__onMaterialBufferBuilderInvalidated, this, std::placeholders::_1);
+
+		const auto pDescSetLayout{ pRenderer->getSubLayerDescSetLayout() };
+		if (pDescSetLayout)
+		{
+			__pDescSetCirculator = std::make_shared<DescriptorSetCirculator>(
+				*(context.pLogicalDevice), *pDescSetLayout, 10U);
+		}
+	}
+
+	SubLayer::~SubLayer() noexcept
+	{
+		const auto pLayerResourcePool	{ __context.pLayerResourcePool };
+		const auto pLazyDeleter			{ __context.pLazyDeleter };
+
+		if (__pInstanceInfoBuffer)
+			pLayerResourcePool->recycleStorageBuffer(std::move(__pInstanceInfoBuffer));
+
+		if (__pDescSetCirculator)
+			pLazyDeleter->reserve(std::move(__pDescSetCirculator));
 	}
 
 	constexpr const Renderer *SubLayer::getRenderer() const noexcept
@@ -306,6 +339,7 @@ namespace Engine
 
 		__validateInstanceInfoBuffer();
 		__validateMaterialBufferBuilders();
+		__validateDescriptorSet();
 	}
 
 	void SubLayer::__registerObject(const RenderObject *const pObject)
@@ -470,6 +504,14 @@ namespace Engine
 			pBuilder->validate();
 
 		__invalidatedMaterialBufferBuilders.clear();
+	}
+
+	void SubLayer::__validateDescriptorSet()
+	{
+		if (!__pDescSetCirculator)
+			return;
+
+		__pDescSet = &(__pDescSetCirculator->getNext());
 	}
 
 	void SubLayer::__onObjectMeshChanged(const RenderObject *const pObject, const Mesh *const pPrev, const Mesh *const pCur) noexcept

@@ -64,7 +64,7 @@ namespace Graphics
 	{
 		const VkDescriptorSetAllocateInfo vkCreateInfo
 		{
-			.sType				{ VkStructureType::VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO },
+			.sType				{ VkStructureType::VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO },
 			.descriptorPool		{ createInfo.hDescriptorPool },
 			.descriptorSetCount	{ 1U },
 			.pSetLayouts		{ &(createInfo.hLayout) }

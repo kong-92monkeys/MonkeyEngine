@@ -140,6 +140,7 @@ namespace Engine
 			*__pLogicalDevice, VkSemaphoreType::VK_SEMAPHORE_TYPE_BINARY, Constants::MAX_IN_FLIGHT_FRAME_COUNT_LIMIT);
 
 		__context.pLazyDeleter				= &__lazyDeleter;
+		__context.pLogicalDevice			= __pLogicalDevice.get();
 		__context.pCommandExecutor			= &__commandExecutor;
 		__context.pMemoryAllocator			= __pMemoryAllocator.get();
 		__context.pLayerResourcePool		= __pLayerResourcePool.get();

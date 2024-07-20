@@ -511,6 +511,15 @@ namespace Graphics
 		// Descriptor set layout
 		LOAD_DEVICE_PROC(vkCreateDescriptorSetLayout);
 		LOAD_DEVICE_PROC(vkDestroyDescriptorSetLayout);
+
+		// Descriptor pool
+		LOAD_DEVICE_PROC(vkCreateDescriptorPool);
+		LOAD_DEVICE_PROC(vkDestroyDescriptorPool);
+		LOAD_DEVICE_PROC(vkResetDescriptorPool);
+
+		// Descriptor set
+		LOAD_DEVICE_PROC(vkAllocateDescriptorSets);
+		LOAD_DEVICE_PROC(vkFreeDescriptorSets);
 		
 		// Shader module;
 		LOAD_DEVICE_PROC(vkCreateShaderModule);
