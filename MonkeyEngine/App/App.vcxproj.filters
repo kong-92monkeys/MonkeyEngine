@@ -33,8 +33,11 @@
     <Filter Include="Assets\Shaders">
       <UniqueIdentifier>{91d57ade-e457-4619-8beb-1fe10fdc5133}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Assets\Shaders\simple">
+    <Filter Include="Assets\Shaders\Simple">
       <UniqueIdentifier>{44d7721c-6604-4529-bfef-641d6817ff68}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Assets\Shaders\Materials">
+      <UniqueIdentifier>{c1a5bcb2-c1a4-4fc7-a1dd-f82d82142754}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -93,13 +96,19 @@
       <Filter>Resource Files</Filter>
     </None>
     <None Include="Assets\Shaders\Simple.frag">
-      <Filter>Assets\Shaders\simple</Filter>
+      <Filter>Assets\Shaders\Simple</Filter>
     </None>
     <None Include="Assets\Shaders\Simple.vert">
-      <Filter>Assets\Shaders\simple</Filter>
+      <Filter>Assets\Shaders\Simple</Filter>
     </None>
     <None Include="Assets\Shaders\Constants.glsl">
       <Filter>Assets\Shaders</Filter>
+    </None>
+    <None Include="Assets\Shaders\ShaderDataStructures.glsl">
+      <Filter>Assets\Shaders</Filter>
+    </None>
+    <None Include="Assets\Shaders\Materials\SimpleMaterial.glsl">
+      <Filter>Assets\Shaders\Materials</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

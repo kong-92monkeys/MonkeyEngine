@@ -318,7 +318,13 @@ namespace Engine
 		if (isEmpty())
 			return;
 
-		// TODO: bind descriptor set
+		if (__pDescSet)
+		{
+			commandBuffer.bindDescriptorSets(
+				VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS,
+				__pRenderer->getPipelineLayout().getHandle(),
+				Constants::SUB_LAYER_DESC_SET_LOCATION, 1U, &(__pDescSet->getHandle()), 0U, nullptr);
+		}
 
 		const Mesh *pBoundMesh{ };
 		for (const auto &[pMesh, objects] : __mesh2Objects)

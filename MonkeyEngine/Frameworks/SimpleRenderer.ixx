@@ -155,7 +155,21 @@ namespace Frameworks
 
 	void SimpleRenderer::__createPipelineLayout()
 	{
-		__pPipelineLayout = _createPipelineLayout(1U, &(__pSubLayerDescSetLayout->getHandle()), 0U, nullptr);
+		std::unordered_map<uint32_t, VkDescriptorSetLayout> layoutMap;
+		layoutMap[Engine::Constants::RENDER_TARGET_DESC_SET_LOCATION]	= _getRenderTargetDescSetLayout().getHandle();
+		layoutMap[Engine::Constants::SUB_LAYER_DESC_SET_LOCATION]		= __pSubLayerDescSetLayout->getHandle();
+
+		std::vector<VkDescriptorSetLayout> layouts;
+
+		for (const auto &[setIndex, layout] : layoutMap)
+		{
+			if (setIndex >= layouts.size())
+				layouts.resize(setIndex + 1U);
+
+			layouts[setIndex] = layout;
+		}
+
+		__pPipelineLayout = _createPipelineLayout(static_cast<uint32_t>(layouts.size()), layouts.data(), 0U, nullptr);
 	}
 
 	void SimpleRenderer::__createShaders()
@@ -167,15 +181,14 @@ namespace Frameworks
 	void SimpleRenderer::__createPipeline()
 	{
 		std::vector<VkPipelineShaderStageCreateInfo> stages;
-		stages.resize(2ULL);
 
-		auto &vertexShaderInfo{ stages[0] };
+		auto &vertexShaderInfo{ stages.emplace_back() };
 		vertexShaderInfo.sType	= VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
 		vertexShaderInfo.stage = VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT;
 		vertexShaderInfo.module = __pVertexShader->getHandle();
 		vertexShaderInfo.pName = "main";
 
-		auto &fragShaderInfo{ stages[1] };
+		auto &fragShaderInfo{ stages.emplace_back() };
 		fragShaderInfo.sType = VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
 		fragShaderInfo.stage = VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT;
 		fragShaderInfo.module = __pFragmentShader->getHandle();

@@ -89,8 +89,12 @@ namespace Engine
 		std::unique_ptr<FenceCirculator> __pSubmitFenceCirculator;
 		std::unique_ptr<SemaphoreCirculator> __pSubmitSemaphoreCirculator;
 
+		std::unique_ptr<Graphics::DescriptorSetLayout> __pRenderTargetDescSetLayout;
+
 		size_t __maxInFlightFrameCount{ 3U };
 		std::unordered_set<Graphics::Fence *> __inFlightFences;
+
+		void __createRenderTargetDescSetLayout();
 
 		[[nodiscard]]
 		Graphics::Fence &__getSubmitFence() noexcept;
@@ -101,9 +105,10 @@ namespace Engine
 	{
 		const Renderer::InitInfo initInfo
 		{
-			.pDevice			{ __pLogicalDevice.get() },
-			.pAssetManager		{ &__assetManager },
-			.pRenderPassFactory	{ __pRenderPassFactory.get() }
+			.pDevice						{ __pLogicalDevice.get() },
+			.pAssetManager					{ &__assetManager },
+			.pRenderPassFactory				{ __pRenderPassFactory.get() },
+			.pRenderTargetDescSetLayout		{ __pRenderTargetDescSetLayout.get() }
 		};
 
 		const auto pRetVal{ new $Renderer{ std::forward<$Args>(args)... } };
@@ -139,6 +144,8 @@ namespace Engine
 		__pSubmitSemaphoreCirculator = std::make_unique<SemaphoreCirculator>(
 			*__pLogicalDevice, VkSemaphoreType::VK_SEMAPHORE_TYPE_BINARY, Constants::MAX_IN_FLIGHT_FRAME_COUNT_LIMIT);
 
+		__createRenderTargetDescSetLayout();
+
 		__context.pLazyDeleter				= &__lazyDeleter;
 		__context.pLogicalDevice			= __pLogicalDevice.get();
 		__context.pCommandExecutor			= &__commandExecutor;
@@ -152,6 +159,7 @@ namespace Engine
 		__lazyDeleter.flush();
 		__pLogicalDevice->waitIdle();
 
+		__pRenderTargetDescSetLayout = nullptr;
 		__pSubmitSemaphoreCirculator = nullptr;
 		__pSubmitFenceCirculator = nullptr;
 		__pCBCirculator = nullptr;
@@ -271,6 +279,18 @@ namespace Engine
 		};
 
 		queue.present(presentInfo);
+	}
+
+	void RenderingEngine::__createRenderTargetDescSetLayout()
+	{
+		std::vector<VkDescriptorSetLayoutBinding> bindings;
+		// TODO
+
+		__pRenderTargetDescSetLayout = std::unique_ptr<Graphics::DescriptorSetLayout>
+		{
+			__pLogicalDevice->createDescriptorSetLayout(
+				0U, static_cast<uint32_t>(bindings.size()), bindings.data())
+		};
 	}
 
 	Graphics::Fence &RenderingEngine::__getSubmitFence() noexcept

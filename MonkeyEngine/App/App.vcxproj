@@ -233,6 +233,8 @@
     <ResourceCompile Include="App.rc" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Assets\Shaders\Materials\SimpleMaterial.glsl" />
+    <None Include="Assets\Shaders\ShaderDataStructures.glsl" />
     <None Include="Assets\Shaders\Constants.glsl" />
     <None Include="Assets\Shaders\Simple.frag" />
     <None Include="Assets\Shaders\Simple.vert" />

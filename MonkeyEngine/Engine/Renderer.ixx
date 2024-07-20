@@ -39,6 +39,7 @@ namespace Engine
 			Graphics::LogicalDevice *pDevice{ };
 			const Lib::AssetManager *pAssetManager{ };
 			const RenderPassFactory *pRenderPassFactory{ };
+			const Graphics::DescriptorSetLayout *pRenderTargetDescSetLayout{ };
 		};
 
 		struct BeginInfo
@@ -90,12 +91,16 @@ namespace Engine
 		[[nodiscard]]
 		const Graphics::RenderPass &_getRenderPass(const RenderPassType type) const noexcept;
 
+		[[nodiscard]]
+		constexpr const Graphics::DescriptorSetLayout &_getRenderTargetDescSetLayout() const noexcept;
+
 		virtual void _onInit() = 0;
 
 	private:
 		Graphics::LogicalDevice *__pDevice{ };
 		const Lib::AssetManager *__pAssetManager{ };
 		const RenderPassFactory *__pRenderPassFactory{ };
+		const Graphics::DescriptorSetLayout *__pRenderTargetDescSetLayout{ };
 
 		[[nodiscard]]
 		std::vector<uint32_t> __readShaderFile(const std::string &assetPath) const;
@@ -103,6 +108,11 @@ namespace Engine
 		[[nodiscard]]
 		shaderc::CompileOptions __makeCopileOptions() const noexcept;
 	};
+
+	constexpr const Graphics::DescriptorSetLayout &Renderer::_getRenderTargetDescSetLayout() const noexcept
+	{
+		return *__pRenderTargetDescSetLayout;
+	}
 }
 
 module: private;
@@ -111,9 +121,10 @@ namespace Engine
 {
 	void Renderer::init(const InitInfo &info)
 	{
-		__pDevice				= info.pDevice;
-		__pAssetManager			= info.pAssetManager;
-		__pRenderPassFactory	= info.pRenderPassFactory;
+		__pDevice						= info.pDevice;
+		__pAssetManager					= info.pAssetManager;
+		__pRenderPassFactory			= info.pRenderPassFactory;
+		__pRenderTargetDescSetLayout	= info.pRenderTargetDescSetLayout;
 
 		_onInit();
 	}
