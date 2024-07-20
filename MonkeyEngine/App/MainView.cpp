@@ -51,10 +51,12 @@ BOOL CMainView::PreCreateWindow(CREATESTRUCT& cs)
 
 void CMainView::OnPaint() 
 {
-	ValidateRect(nullptr);
+	__pRenderTarget->validate();
 
 	auto &renderingEngine{ theApp.getRenderingEngine() };
 	renderingEngine.render(*__pRenderTarget);
+
+	ValidateRect(nullptr);
 }
 
 int CMainView::OnCreate(LPCREATESTRUCT lpCreateStruct)

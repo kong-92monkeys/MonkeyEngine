@@ -142,6 +142,7 @@ namespace Engine
 		__context.pLazyDeleter				= &__lazyDeleter;
 		__context.pCommandExecutor			= &__commandExecutor;
 		__context.pMemoryAllocator			= __pMemoryAllocator.get();
+		__context.pLayerResourcePool		= __pLayerResourcePool.get();
 		__context.pRenderPassFactory		= __pRenderPassFactory.get();
 	}
 

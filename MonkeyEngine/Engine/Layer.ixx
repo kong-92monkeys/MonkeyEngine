@@ -31,7 +31,7 @@ namespace Engine
 		[[nodiscard]]
 		bool isEmpty() const noexcept;
 
-		void draw(Graphics::CommandBuffer &commandBuffer, const Renderer::BeginInfo &rendererBeginInfo);
+		void draw(Graphics::CommandBuffer &commandBuffer, const Renderer::BeginInfo &rendererBeginInfo) const;
 
 		[[nodiscard]]
 		constexpr Lib::Event<const Layer *> &getNeedRedrawEvent() const noexcept;
@@ -117,7 +117,7 @@ namespace Engine
 		return __renderObjects.empty();
 	}
 
-	void Layer::draw(Graphics::CommandBuffer &commandBuffer, const Renderer::BeginInfo &rendererBeginInfo)
+	void Layer::draw(Graphics::CommandBuffer &commandBuffer, const Renderer::BeginInfo &rendererBeginInfo) const
 	{
 		for (const auto &[pRenderer, pSubLayer] : __subLayerMap)
 		{

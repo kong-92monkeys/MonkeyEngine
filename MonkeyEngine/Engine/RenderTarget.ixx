@@ -76,6 +76,8 @@ namespace Engine
 
 		void sync();
 
+		void validate();
+
 		[[nodiscard]]
 		DrawResult draw(Graphics::CommandBuffer &commandBuffer);
 
@@ -190,6 +192,12 @@ namespace Engine
 		__validateSwapchainDependencies();
 	}
 
+	void RenderTarget::validate()
+	{
+		for (auto &layer : __layers)
+			layer.validate();
+	}
+
 	RenderTarget::DrawResult RenderTarget::draw(Graphics::CommandBuffer &commandBuffer)
 	{
 		auto &imgAcquireSemaphore{ __pImgAcquireSemaphoreCirculator->getNext() };
@@ -231,7 +239,7 @@ namespace Engine
 			.pFramebufferFactory	{ __pFramebufferFactory.get() }
 		};
 
-		for (auto &layer : __layers)
+		for (const auto &layer : __layers)
 			layer.draw(commandBuffer, rendererBeginInfo);
 
 		__transitImageToPresent(commandBuffer, swapchainImage);

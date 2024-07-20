@@ -74,7 +74,7 @@ namespace Engine
 		[[nodiscard]]
 		bool isEmpty() const noexcept;
 
-		void draw(Graphics::CommandBuffer &commandBuffer);
+		void draw(Graphics::CommandBuffer &commandBuffer) const;
 
 		[[nodiscard]]
 		constexpr Lib::Event<const SubLayer *> &getNeedRedrawEvent() const noexcept;
@@ -274,7 +274,7 @@ namespace Engine
 		return __object2Region.empty();
 	}
 
-	void SubLayer::draw(Graphics::CommandBuffer &commandBuffer)
+	void SubLayer::draw(Graphics::CommandBuffer &commandBuffer) const
 	{
 		if (isEmpty())
 			return;
