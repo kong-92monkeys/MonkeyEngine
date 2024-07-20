@@ -156,6 +156,7 @@ namespace Engine
 		{
 			id = __idAllocator.allocate();
 			__validateHostBuffer(pMaterial);
+
 			_invalidate();
 		}
 
@@ -328,6 +329,7 @@ namespace Engine
 		__instanceInfoBufferInvalidated = true;
 
 		_invalidate();
+		__needRedrawEvent.invoke(this);
 	}
 
 	void SubLayer::__unregisterObject(const RenderObject *const pObject)
@@ -349,6 +351,7 @@ namespace Engine
 		}
 
 		_invalidate();
+		__needRedrawEvent.invoke(this);
 	}
 
 	void SubLayer::__registerMesh(const RenderObject *const pObject, const Mesh *const pMesh)
@@ -492,6 +495,7 @@ namespace Engine
 
 			__instanceInfoBufferInvalidated = true;
 			_invalidate();
+			__needRedrawEvent.invoke(this);
 		}
 	}
 
@@ -515,5 +519,6 @@ namespace Engine
 	{
 		__invalidatedMaterialBufferBuilders.emplace(pBuilder);
 		_invalidate();
+		__needRedrawEvent.invoke(this);
 	}
 }
