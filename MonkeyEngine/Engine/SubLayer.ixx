@@ -76,7 +76,7 @@ namespace Engine
 		void __validateMaterialBuffer();
 
 		void __validateTextureLUTHostBuffer(const Material *const pMaterial) noexcept;
-		void __validateTextureLUTHostBuffer(const Material *const pMaterial, const uint32_t slotIndex) noexcept;
+		void __validateTextureLUTHostBuffer(const Material *const pMaterial, const uint32_t slotIndex, const Texture *const pTexture) noexcept;
 
 		void __onMaterialUpdated(const Material *const pMaterial) noexcept;
 		void __onMaterialTextureChanged(
@@ -275,7 +275,8 @@ namespace Engine
 		}
 	}
 
-	void MaterialBufferBuilder::__validateTextureLUTHostBuffer(const Material *const pMaterial, const uint32_t slotIndex) noexcept
+	void MaterialBufferBuilder::__validateTextureLUTHostBuffer(
+		const Material *const pMaterial, const uint32_t slotIndex, const Texture *const pTexture) noexcept
 	{
 		const uint32_t slotCount{ pMaterial->getTextureSlotCount() };
 		if (!slotCount)
@@ -287,13 +288,6 @@ namespace Engine
 
 		if (slotMaxIndex >= static_cast<uint32_t>(__textureLUTHostBuffer.size()))
 			__textureLUTHostBuffer.resize(slotMaxIndex);
-
-		const auto &textures{ pMaterial->getTextures() };
-		const Texture *pTexture{ };
-
-		const auto foundIt{ textures.find(slotIndex) };
-		if (foundIt != textures.end())
-			pTexture = foundIt->second;
 
 		int &textureId{ __textureLUTHostBuffer[slotBaseIndex + slotIndex] };
 		textureId = (pTexture ? static_cast<int>(__textureRefIdMap.at(pTexture).second) : -1);
@@ -354,7 +348,13 @@ namespace Engine
 		const Material *const pMaterial, const uint32_t slotIndex,
 		const Texture *const pPrev, const Texture *const pCur) noexcept
 	{
+		if (pPrev)
+			__unregisterTexture(pPrev);
 
+		if (pCur)
+			__registerTexture(pCur);
+
+		__validateTextureLUTHostBuffer(pMaterial, slotIndex, pCur);
 	}
 
 	SubLayer::SubLayer(const EngineContext &context, const Renderer *const pRenderer) noexcept :
@@ -685,11 +685,13 @@ namespace Engine
 
 	void SubLayer::__onObjectMeshChanged(const RenderObject *const pObject, const Mesh *const pPrev, const Mesh *const pCur) noexcept
 	{
-		if (pPrev)
-			__unregisterMesh(pObject, pPrev);
+		__unregisterMesh(pObject, pPrev);
 
 		if (pCur)
+		{
 			__registerMesh(pObject, pCur);
+			__needRedrawEvent.invoke(this);
+		}
 	}
 
 	void SubLayer::__onObjectMaterialChanged(
@@ -716,6 +718,8 @@ namespace Engine
 		auto &pRegion{ __object2Region.at(pObject) };
 		pRegion.reset();
 		pRegion = std::make_unique<Lib::Region>(__objectRegionAllocator, 1U, cur);
+
+		__needRedrawEvent.invoke(this);
 	}
 
 	void SubLayer::__onObjectDrawableChanged(const RenderObject *const pObject, const bool cur) noexcept
