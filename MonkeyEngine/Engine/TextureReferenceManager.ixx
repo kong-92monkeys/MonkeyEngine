@@ -15,39 +15,37 @@ namespace Engine
 		void unregisterTexture(const Texture *const pTexture) noexcept;
 
 		[[nodiscard]]
-		int getIdOf(const Texture *const pTexture) const noexcept;
+		constexpr const std::unordered_map<const Texture *, uint32_t> &getTextures() const noexcept;
 
 	private:
 		Lib::IdAllocator<uint32_t> __idAllocator;
-		std::unordered_map<const Texture *, std::pair<size_t, uint32_t>> __refIdMap;
+		std::unordered_map<const Texture *, size_t> __refMap;
+		std::unordered_map<const Texture *, uint32_t> __idMap;
 	};
-
-	int TextureReferenceManager::getIdOf(const Texture *const pTexture) const noexcept
-	{
-		if (!pTexture)
-			return -1;
-
-		return __refIdMap.at(pTexture).second;
-	}
 
 	void TextureReferenceManager::registerTexture(const Texture *const pTexture) noexcept
 	{
-		auto &[ref, id]{ __refIdMap[pTexture] };
+		auto &ref{ __refMap[pTexture] };
 		if (!ref)
-			id = __idAllocator.allocate();
+			__idMap[pTexture] = __idAllocator.allocate();
 
 		++ref;
 	}
 
 	void TextureReferenceManager::unregisterTexture(const Texture *const pTexture) noexcept
 	{
-		auto &[ref, id] { __refIdMap[pTexture] };
+		auto &ref{ __refMap[pTexture] };
 		--ref;
 
 		if (!ref)
 		{
+			const uint32_t id{ __idMap.extract(pTexture).mapped() };
 			__idAllocator.free(id);
-			__refIdMap.erase(pTexture);
 		}
+	}
+
+	constexpr const std::unordered_map<const Texture *, uint32_t> &TextureReferenceManager::getTextures() const noexcept
+	{
+		return __idMap;
 	}
 }

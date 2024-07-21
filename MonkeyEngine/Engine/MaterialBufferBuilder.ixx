@@ -217,7 +217,8 @@ namespace Engine
 			if (foundIt != textures.end())
 				pTexture = foundIt->second;
 
-			__textureLUTHostBuffer[slotBaseIndex + slotIter] = __textureReferenceManager.getIdOf(pTexture);
+			__textureLUTHostBuffer[slotBaseIndex + slotIter] =
+				(pTexture ? static_cast<int>(__textureReferenceManager.getTextures().at(pTexture)) : -1);
 		}
 	}
 
@@ -235,7 +236,8 @@ namespace Engine
 		if (slotMaxIndex >= static_cast<uint32_t>(__textureLUTHostBuffer.size()))
 			__textureLUTHostBuffer.resize(slotMaxIndex);
 
-		__textureLUTHostBuffer[slotBaseIndex + slotIndex] = __textureReferenceManager.getIdOf(pTexture);
+		__textureLUTHostBuffer[slotBaseIndex + slotIndex] =
+			(pTexture ? static_cast<int>(__textureReferenceManager.getTextures().at(pTexture)) : -1);
 	}
 
 	void MaterialBufferBuilder::__validateTextureLUTBuffer()
