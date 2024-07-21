@@ -58,18 +58,30 @@ namespace Engine
 		Lib::IdAllocator<uint32_t> __materialIdAllocator;
 		std::unordered_map<const Material *, std::pair<size_t, uint32_t>> __materialRefIdMap;
 
-		Lib::GenericBuffer __hostBuffer;
-		std::shared_ptr<BufferChunk> __pBuffer;
+		Lib::IdAllocator<uint32_t> __textureIdAllocator;
+		std::unordered_map<const Texture *, std::pair<size_t, uint32_t>> __textureRefIdMap;
+
+		Lib::GenericBuffer __materialHostBuffer;
+		std::shared_ptr<BufferChunk> __pMaterialBuffer;
+
+		std::vector<int> __textureLUTHostBuffer;
 
 		Lib::EventListenerPtr<const Material *> __pMaterialUpdateListener;
+		Lib::EventListenerPtr<const Material *, uint32_t, const Texture *, const Texture *> __pMaterialTextureChangeListener;
 
-		void __registerTexture(const Texture *const pTexture, const uint32_t slotIndex) noexcept;
-		void __unregisterTexture(const Texture *const pTexture, const uint32_t slotIndex) noexcept;
+		void __registerTexture(const Texture *const pTexture) noexcept;
+		void __unregisterTexture(const Texture *const pTexture) noexcept;
 
-		void __validateHostBuffer(const Material *const pMaterial) noexcept;
-		void __validateBuffer();
+		void __validateMaterialHostBuffer(const Material *const pMaterial) noexcept;
+		void __validateMaterialBuffer();
+
+		void __validateTextureLUTHostBuffer(const Material *const pMaterial) noexcept;
+		void __validateTextureLUTHostBuffer(const Material *const pMaterial, const uint32_t slotIndex) noexcept;
 
 		void __onMaterialUpdated(const Material *const pMaterial) noexcept;
+		void __onMaterialTextureChanged(
+			const Material *const pMaterial, const uint32_t slotIndex,
+			const Texture *const pPrev, const Texture *const pCur) noexcept;
 	};
 
 	export class SubLayer : public Lib::Unique, public Lib::Stateful<SubLayer>
@@ -162,26 +174,36 @@ namespace Engine
 	{
 		__pMaterialUpdateListener =
 			Lib::EventListener<const Material *>::bind(&MaterialBufferBuilder::__onMaterialUpdated, this, std::placeholders::_1);
+
+		__pMaterialTextureChangeListener =
+			Lib::EventListener<const Material *, uint32_t, const Texture *, const Texture *>::bind(
+				&MaterialBufferBuilder::__onMaterialTextureChanged, this,
+				std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
 	}
 
 	MaterialBufferBuilder::~MaterialBufferBuilder() noexcept
 	{
-		if (__pBuffer)
-			__resourcePool.recycleStorageBuffer(std::move(__pBuffer));
+		if (__pMaterialBuffer)
+			__resourcePool.recycleStorageBuffer(std::move(__pMaterialBuffer));
 	}
 
 	void MaterialBufferBuilder::registerMaterial(const Material *const pMaterial) noexcept
 	{
-		pMaterial->getUpdateEvent() += __pMaterialUpdateListener;
-		
 		auto &[ref, id]{ __materialRefIdMap[pMaterial] };
 		if (!ref)
 		{
-			id = __materialIdAllocator.allocate();
-			__validateHostBuffer(pMaterial);
+			pMaterial->getUpdateEvent() += __pMaterialUpdateListener;
+			pMaterial->getTextureChangeEvent() += __pMaterialTextureChangeListener;
 
-			for (const auto &[pTexture, slotIndex] : pMaterial->getTextures())
-				__registerTexture(pTexture, slotIndex);
+			for (const auto &[_, pTexture] : pMaterial->getTextures())
+			{
+				if (pTexture)
+					__registerTexture(pTexture);
+			}
+
+			id = __materialIdAllocator.allocate();
+			__validateMaterialHostBuffer(pMaterial);
+			__validateTextureLUTHostBuffer(pMaterial);
 
 			_invalidate();
 		}
@@ -191,18 +213,22 @@ namespace Engine
 
 	void MaterialBufferBuilder::unregisterMaterial(const Material *const pMaterial) noexcept
 	{
-		pMaterial->getUpdateEvent() -= __pMaterialUpdateListener;
-
 		auto &[ref, id] { __materialRefIdMap[pMaterial] };
 		--ref;
 
 		if (!ref)
 		{
+			pMaterial->getUpdateEvent() -= __pMaterialUpdateListener;
+			pMaterial->getTextureChangeEvent() -= __pMaterialTextureChangeListener;
+
+			for (const auto &[_, pTexture] : pMaterial->getTextures())
+			{
+				if (pTexture)
+					__unregisterTexture(pTexture);
+			}
+
 			__materialIdAllocator.free(id);
 			__materialRefIdMap.erase(pMaterial);
-
-			for (const auto &[pTexture, slotIndex] : pMaterial->getTextures())
-				__unregisterTexture(pTexture, slotIndex);
 		}
 	}
 
@@ -213,52 +239,122 @@ namespace Engine
 
 	const BufferChunk &MaterialBufferBuilder::getBuffer() const noexcept
 	{
-		return *__pBuffer;
+		return *__pMaterialBuffer;
 	}
 
 	void MaterialBufferBuilder::_onValidate()
 	{
-		__validateBuffer();
+		__validateMaterialBuffer();
 	}
 
-	void MaterialBufferBuilder::__registerTexture(const Texture *const pTexture, const uint32_t slotIndex) noexcept
+	void MaterialBufferBuilder::__validateTextureLUTHostBuffer(const Material *const pMaterial) noexcept
 	{
+		const uint32_t slotCount{ pMaterial->getTextureSlotCount() };
+		if (!slotCount)
+			return;
 
+		const uint32_t materialId		{ __materialRefIdMap.at(pMaterial).second };
+		const uint32_t slotBaseIndex	{ materialId * slotCount };
+		const uint32_t slotMaxIndex		{ slotBaseIndex + slotCount };
+
+		if (slotMaxIndex >= static_cast<uint32_t>(__textureLUTHostBuffer.size()))
+			__textureLUTHostBuffer.resize(slotMaxIndex);
+
+		const auto &textures{ pMaterial->getTextures() };
+
+		for (uint32_t slotIter{ }; slotIter < slotCount; ++slotIter)
+		{
+			const Texture *pTexture{ };
+
+			const auto foundIt{ textures.find(slotIter) };
+			if (foundIt != textures.end())
+				pTexture = foundIt->second;
+
+			int &textureId{ __textureLUTHostBuffer[slotBaseIndex + slotIter] };
+			textureId = (pTexture ? static_cast<int>(__textureRefIdMap.at(pTexture).second) : -1);
+		}
 	}
 
-	void MaterialBufferBuilder::__unregisterTexture(const Texture *const pTexture, const uint32_t slotIndex) noexcept
+	void MaterialBufferBuilder::__validateTextureLUTHostBuffer(const Material *const pMaterial, const uint32_t slotIndex) noexcept
 	{
+		const uint32_t slotCount{ pMaterial->getTextureSlotCount() };
+		if (!slotCount)
+			return;
 
+		const uint32_t materialId		{ __materialRefIdMap.at(pMaterial).second };
+		const uint32_t slotBaseIndex	{ materialId * slotCount };
+		const uint32_t slotMaxIndex		{ slotBaseIndex + slotCount };
+
+		if (slotMaxIndex >= static_cast<uint32_t>(__textureLUTHostBuffer.size()))
+			__textureLUTHostBuffer.resize(slotMaxIndex);
+
+		const auto &textures{ pMaterial->getTextures() };
+		const Texture *pTexture{ };
+
+		const auto foundIt{ textures.find(slotIndex) };
+		if (foundIt != textures.end())
+			pTexture = foundIt->second;
+
+		int &textureId{ __textureLUTHostBuffer[slotBaseIndex + slotIndex] };
+		textureId = (pTexture ? static_cast<int>(__textureRefIdMap.at(pTexture).second) : -1);
 	}
 
-	void MaterialBufferBuilder::__validateHostBuffer(const Material *const pMaterial) noexcept
+	void MaterialBufferBuilder::__registerTexture(const Texture *const pTexture) noexcept
+	{
+		auto &[ref, id]{ __textureRefIdMap[pTexture] };
+		if (!ref)
+			id = __textureIdAllocator.allocate();
+
+		++ref;
+	}
+
+	void MaterialBufferBuilder::__unregisterTexture(const Texture *const pTexture) noexcept
+	{
+		auto &[ref, id] { __textureRefIdMap[pTexture] };
+		--ref;
+
+		if (!ref)
+		{
+			__textureIdAllocator.free(id);
+			__textureRefIdMap.erase(pTexture);
+		}
+	}
+
+	void MaterialBufferBuilder::__validateMaterialHostBuffer(const Material *const pMaterial) noexcept
 	{
 		const uint32_t materialId	{ __materialRefIdMap.at(pMaterial).second };
 
 		const size_t materialSize	{ pMaterial->getSize() };
 		const size_t memOffset		{ materialId * materialSize };
 
-		if (memOffset >= __hostBuffer.getSize())
-			__hostBuffer.resize(memOffset + materialSize);
+		if (memOffset >= __materialHostBuffer.getSize())
+			__materialHostBuffer.resize(memOffset + materialSize);
 
-		__hostBuffer.set(memOffset, pMaterial->getData(), materialSize);
+		__materialHostBuffer.set(memOffset, pMaterial->getData(), materialSize);
 	}
 
-	void MaterialBufferBuilder::__validateBuffer()
+	void MaterialBufferBuilder::__validateMaterialBuffer()
 	{
-		const size_t bufferSize{ __hostBuffer.getSize() };
+		const size_t bufferSize{ __materialHostBuffer.getSize() };
 
-		if (__pBuffer)
-			__resourcePool.recycleStorageBuffer(std::move(__pBuffer));
+		if (__pMaterialBuffer)
+			__resourcePool.recycleStorageBuffer(std::move(__pMaterialBuffer));
 
-		__pBuffer = __resourcePool.getStorageBuffer(bufferSize);
-		std::memcpy(__pBuffer->getMappedMemory(), __hostBuffer.getData(), bufferSize);
+		__pMaterialBuffer = __resourcePool.getStorageBuffer(bufferSize);
+		std::memcpy(__pMaterialBuffer->getMappedMemory(), __materialHostBuffer.getData(), bufferSize);
 	}
 
 	void MaterialBufferBuilder::__onMaterialUpdated(const Material *const pMaterial) noexcept
 	{
-		__validateHostBuffer(pMaterial);
+		__validateMaterialHostBuffer(pMaterial);
 		_invalidate();
+	}
+
+	void MaterialBufferBuilder::__onMaterialTextureChanged(
+		const Material *const pMaterial, const uint32_t slotIndex,
+		const Texture *const pPrev, const Texture *const pCur) noexcept
+	{
+
 	}
 
 	SubLayer::SubLayer(const EngineContext &context, const Renderer *const pRenderer) noexcept :

@@ -20,12 +20,15 @@ namespace Frameworks
 	{
 	public:
 		void setColor(const glm::vec4 &color);
-		void setTexture(const std::shared_ptr<Engine::Texture> &pTexture);
+		void setAlbedoTexture(const std::shared_ptr<Engine::Texture> &pTexture);
+
+		[[nodiscard]]
+		virtual uint32_t getTextureSlotCount() const noexcept override;
 
 	private:
-		static constexpr uint32_t __TEXTURE_SLOT_INDEX{ 0U };
+		static constexpr uint32_t __ALBEDO_TEX_SLOT_INDEX{ 0U };
 
-		std::shared_ptr<Engine::Texture> __pTexture;
+		std::shared_ptr<Engine::Texture> __pAlbedoTexture;
 	};
 }
 
@@ -39,17 +42,14 @@ namespace Frameworks
 		_invokeUpdateEvent();
 	}
 
-	void SimpleMaterial::setTexture(const std::shared_ptr<Engine::Texture> &pTexture)
+	void SimpleMaterial::setAlbedoTexture(const std::shared_ptr<Engine::Texture> &pTexture)
 	{
-		if (__pTexture == pTexture)
-			return;
+		__pAlbedoTexture = pTexture;
+		_setTexture(__ALBEDO_TEX_SLOT_INDEX, pTexture.get());
+	}
 
-		if (__pTexture)
-			_unregisterTexture(__pTexture.get());
-
-		__pTexture = pTexture;
-
-		if (pTexture)
-			_registerTexture(pTexture.get(), __TEXTURE_SLOT_INDEX);
+	uint32_t SimpleMaterial::getTextureSlotCount() const noexcept
+	{
+		return 1U;
 	}
 }

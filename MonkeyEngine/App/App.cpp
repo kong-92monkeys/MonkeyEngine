@@ -238,7 +238,7 @@ void CApp::__createRenderObject()
 
 	const auto pMaterial{ std::make_shared<Frameworks::SimpleMaterial>() };
 	pMaterial->setColor({ 1.0f, 0.0f, 1.0f, 1.0f });
-	pMaterial->setTexture(__pTexture);
+	pMaterial->setAlbedoTexture(__pTexture);
 
 	__pRenderObject = std::shared_ptr<Engine::RenderObject>{ __pRenderingEngine->createRenderObject() };
 

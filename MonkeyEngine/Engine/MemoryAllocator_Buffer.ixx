@@ -55,7 +55,7 @@ namespace Engine
 
 	private:
 		Lib::RegionAllocator __regionAllocator;
-		std::unique_ptr<Graphics::Buffer> __pBuffer;
+		std::unique_ptr<Graphics::Buffer> __pMaterialBuffer;
 		std::unique_ptr<AbstractMemory> __pBoundMemory;
 	};
 
@@ -76,7 +76,7 @@ namespace Engine
 
 	constexpr Graphics::Buffer &BufferBlock::getBuffer() noexcept
 	{
-		return *__pBuffer;
+		return *__pMaterialBuffer;
 	}
 
 	BufferChunk::BufferChunk(const Graphics::Buffer &buffer, AbstractMemory &memory, std::unique_ptr<Lib::Region> &&pRegion) noexcept :
@@ -96,12 +96,12 @@ namespace Engine
 		const VkBufferUsageFlags usage) :
 		__regionAllocator{ size }
 	{
-		__pBuffer = std::unique_ptr<Graphics::Buffer>{ device.createBuffer(size, usage) };
+		__pMaterialBuffer = std::unique_ptr<Graphics::Buffer>{ device.createBuffer(size, usage) };
 	}
 
 	void BufferBlock::bindMemory(std::unique_ptr<AbstractMemory> &&pMemory) noexcept
 	{
-		__pBuffer->bindMemory(pMemory->getMemory().getHandle(), pMemory->getOffset());
+		__pMaterialBuffer->bindMemory(pMemory->getMemory().getHandle(), pMemory->getOffset());
 		__pBoundMemory = std::move(pMemory);
 	}
 
@@ -110,7 +110,7 @@ namespace Engine
 		try
 		{
 			auto pRegion{ std::make_unique<Lib::Region>(__regionAllocator, size, alignment) };
-			return new BufferChunk{ *__pBuffer, *__pBoundMemory, std::move(pRegion) };
+			return new BufferChunk{ *__pMaterialBuffer, *__pBoundMemory, std::move(pRegion) };
 		}
 		catch (...)
 		{

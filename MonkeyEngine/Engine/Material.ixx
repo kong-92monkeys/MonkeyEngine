@@ -15,7 +15,7 @@ namespace Engine
 	{
 	public:
 		[[nodiscard]]
-		constexpr const std::unordered_map<const Texture *, uint32_t> &getTextures() const noexcept;
+		constexpr const std::unordered_map<uint32_t, const Texture *> &getTextures() const noexcept;
 
 		[[nodiscard]]
 		virtual const std::byte *getData() const noexcept = 0;
@@ -24,27 +24,23 @@ namespace Engine
 		virtual size_t getSize() const noexcept = 0;
 
 		[[nodiscard]]
+		virtual uint32_t getTextureSlotCount() const noexcept;
+
+		[[nodiscard]]
 		constexpr Lib::EventView<const Material *> &getUpdateEvent() const noexcept;
 
 		[[nodiscard]]
-		constexpr Lib::EventView<const Material *, const Texture *> &getTextureRegisterEvent() const noexcept;
-
-		[[nodiscard]]
-		constexpr Lib::EventView<const Material *, const Texture *> &getTextureUnregisterEvent() const noexcept;
+		constexpr Lib::EventView<const Material *, uint32_t, const Texture *, const Texture *> &getTextureChangeEvent() const noexcept;
 
 	protected:
-		void _registerTexture(const Texture *const pTexture, const uint32_t slotIndex) noexcept;
-		void _unregisterTexture(const Texture *const pTexture) noexcept;
-
+		void _setTexture(const uint32_t slotIndex, const Texture *const pTexture) noexcept;
 		void _invokeUpdateEvent() const noexcept;
 
 	private:
-		std::unordered_map<const Texture *, size_t> __texture2RefCount;
-		std::unordered_map<const Texture *, uint32_t> __textures;
+		std::unordered_map<uint32_t, const Texture *> __textures;
 
 		mutable Lib::Event<const Material *> __updateEvent;
-		mutable Lib::Event<const Material *, const Texture *> __textureRegisterEvent;
-		mutable Lib::Event<const Material *, const Texture *> __textureUnregisterEvent;
+		mutable Lib::Event<const Material *, uint32_t, const Texture *, const Texture *> __textureChangeEvent;
 	};
 
 	export template <typename $Data>
@@ -101,7 +97,7 @@ namespace Engine
 		mutable Lib::Event<const MaterialPack *, std::type_index, const Material *, const Material *> __materialChangeEvent;
 	};
 
-	constexpr const std::unordered_map<const Texture *, uint32_t> &Material::getTextures() const noexcept
+	constexpr const std::unordered_map<uint32_t, const Texture *> &Material::getTextures() const noexcept
 	{
 		return __textures;
 	}
@@ -109,6 +105,11 @@ namespace Engine
 	constexpr Lib::EventView<const Material *> &Material::getUpdateEvent() const noexcept
 	{
 		return __updateEvent;
+	}
+
+	constexpr Lib::EventView<const Material *, uint32_t, const Texture *, const Texture *> &Material::getTextureChangeEvent() const noexcept
+	{
+		return __textureChangeEvent;
 	}
 
 	template <typename $Data>
@@ -163,28 +164,21 @@ module: private;
 
 namespace Engine
 {
-	void Material::_registerTexture(const Texture *const pTexture, const uint32_t slotIndex) noexcept
+	uint32_t Material::getTextureSlotCount() const noexcept
 	{
-		auto &refCount{ __texture2RefCount[pTexture] };
-		if (!refCount)
-		{
-			__textures[pTexture] = slotIndex;
-			__textureRegisterEvent.invoke(this, pTexture);
-		}
-
-		++refCount;
+		return 0U;
 	}
 
-	void Material::_unregisterTexture(const Texture *const pTexture) noexcept
+	void Material::_setTexture(const uint32_t slotIndex, const Texture *const pTexture) noexcept
 	{
-		auto &refCount{ __texture2RefCount[pTexture] };
-		--refCount;
+		auto &pPlaceholder{ __textures[slotIndex] };
+		if (pPlaceholder == pTexture)
+			return;
 
-		if (!refCount)
-		{
-			__textures.erase(pTexture);
-			__textureUnregisterEvent.invoke(this, pTexture);
-		}
+		const auto pPrevTexture{ pPlaceholder };
+		pPlaceholder = pTexture;
+
+		__textureChangeEvent.invoke(this, slotIndex, pPrevTexture, pTexture);
 	}
 
 	void Material::_invokeUpdateEvent() const noexcept
