@@ -3,6 +3,7 @@ export module ntmonkeys.com.Engine.Material;
 import ntmonkeys.com.Lib.Unique;
 import ntmonkeys.com.Lib.Stateful;
 import ntmonkeys.com.Lib.Event;
+import ntmonkeys.com.Engine.Texture;
 import <memory>;
 import <unordered_set>;
 import <unordered_map>;
@@ -14,6 +15,9 @@ namespace Engine
 	{
 	public:
 		[[nodiscard]]
+		constexpr const std::unordered_map<const Texture *, uint32_t> &getTextures() const noexcept;
+
+		[[nodiscard]]
 		virtual const std::byte *getData() const noexcept = 0;
 
 		[[nodiscard]]
@@ -22,11 +26,25 @@ namespace Engine
 		[[nodiscard]]
 		constexpr Lib::EventView<const Material *> &getUpdateEvent() const noexcept;
 
+		[[nodiscard]]
+		constexpr Lib::EventView<const Material *, const Texture *> &getTextureRegisterEvent() const noexcept;
+
+		[[nodiscard]]
+		constexpr Lib::EventView<const Material *, const Texture *> &getTextureUnregisterEvent() const noexcept;
+
 	protected:
+		void _registerTexture(const Texture *const pTexture, const uint32_t slotIndex) noexcept;
+		void _unregisterTexture(const Texture *const pTexture) noexcept;
+
 		void _invokeUpdateEvent() const noexcept;
 
 	private:
+		std::unordered_map<const Texture *, size_t> __texture2RefCount;
+		std::unordered_map<const Texture *, uint32_t> __textures;
+
 		mutable Lib::Event<const Material *> __updateEvent;
+		mutable Lib::Event<const Material *, const Texture *> __textureRegisterEvent;
+		mutable Lib::Event<const Material *, const Texture *> __textureUnregisterEvent;
 	};
 
 	export template <typename $Data>
@@ -82,6 +100,11 @@ namespace Engine
 
 		mutable Lib::Event<const MaterialPack *, std::type_index, const Material *, const Material *> __materialChangeEvent;
 	};
+
+	constexpr const std::unordered_map<const Texture *, uint32_t> &Material::getTextures() const noexcept
+	{
+		return __textures;
+	}
 
 	constexpr Lib::EventView<const Material *> &Material::getUpdateEvent() const noexcept
 	{
@@ -140,6 +163,30 @@ module: private;
 
 namespace Engine
 {
+	void Material::_registerTexture(const Texture *const pTexture, const uint32_t slotIndex) noexcept
+	{
+		auto &refCount{ __texture2RefCount[pTexture] };
+		if (!refCount)
+		{
+			__textures[pTexture] = slotIndex;
+			__textureRegisterEvent.invoke(this, pTexture);
+		}
+
+		++refCount;
+	}
+
+	void Material::_unregisterTexture(const Texture *const pTexture) noexcept
+	{
+		auto &refCount{ __texture2RefCount[pTexture] };
+		--refCount;
+
+		if (!refCount)
+		{
+			__textures.erase(pTexture);
+			__textureUnregisterEvent.invoke(this, pTexture);
+		}
+	}
+
 	void Material::_invokeUpdateEvent() const noexcept
 	{
 		__updateEvent.invoke(this);

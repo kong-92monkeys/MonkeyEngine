@@ -94,6 +94,7 @@ int CApp::ExitInstance()
 {
 	//TODO: handle additional resources you may have added
 	__pRenderObject = nullptr;
+	__pTexture = nullptr;
 	__pLayer = nullptr;
 
 	__pRenderingEngine = nullptr;
@@ -120,44 +121,11 @@ void CApp::__onInitBeforeMainFrame()
 
 	__createGraphicsCore();
 	__createRenderingEngine();
+	__createTexture();
 	__createRenderObject();
 
 	__pLayer = std::shared_ptr<Engine::Layer>{ __pRenderingEngine->createLayer() };
 	__pLayer->addRenderObject(__pRenderObject);
-
-	const auto imageData{ __pAssetManager->readBinary("Images/wall.jpg") };
-	const Lib::Bitmap bitmap{ imageData.data(), imageData.size(), 4ULL };
-
-	const VkExtent3D vkExtent
-	{
-		.width		{ static_cast<uint32_t>(bitmap.getWidth()) },
-		.height		{ static_cast<uint32_t>(bitmap.getHeight()) },
-		.depth		{ 1U },
-	};
-
-	const std::unique_ptr<Engine::Texture> pTexture
-	{
-		__pRenderingEngine->createTexture(
-			VkImageType::VK_IMAGE_TYPE_2D,
-			VkFormat::VK_FORMAT_R8G8B8A8_SRGB,
-			vkExtent, false)
-	};
-
-	const Engine::Texture::RegionInfo updateRegion
-	{
-		.bufferRowLength		{ static_cast<uint32_t>(bitmap.getWidth() * bitmap.getStride()) },
-		.bufferImageHeight		{ static_cast<uint32_t>(bitmap.getHeight()) },
-		.imageSubresource		{ 
-			.aspectMask			{ VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT },
-			.mipLevel			{ 0U },
-			.baseArrayLayer		{ 0U },
-			.layerCount			{ 1U }
-		},
-		.imageOffset			{ 0, 0, 0 },
-		.imageExtent			{ vkExtent }
-	};
-
-	pTexture->update(bitmap.getData(), updateRegion, VK_PIPELINE_STAGE_2_NONE, VK_ACCESS_2_NONE);
 }
 
 void CApp::__createGraphicsCore()
@@ -205,6 +173,43 @@ void CApp::__createRenderingEngine()
 	Lib::Logger::log(Lib::Logger::Severity::INFO, "Graphics engine created.");
 }
 
+void CApp::__createTexture()
+{
+	const auto imageData		{ __pAssetManager->readBinary("Images/wall.jpg") };
+	const Lib::Bitmap bitmap	{ imageData.data(), imageData.size(), 4ULL };
+
+	const VkExtent3D vkExtent
+	{
+		.width{ static_cast<uint32_t>(bitmap.getWidth()) },
+		.height{ static_cast<uint32_t>(bitmap.getHeight()) },
+		.depth{ 1U },
+	};
+
+	__pTexture = std::shared_ptr<Engine::Texture>
+	{
+		__pRenderingEngine->createTexture(
+			VkImageType::VK_IMAGE_TYPE_2D,
+			VkFormat::VK_FORMAT_R8G8B8A8_SRGB,
+			vkExtent, false)
+	};
+
+	const Engine::Texture::RegionInfo updateRegion
+	{
+		.bufferRowLength		{ static_cast<uint32_t>(bitmap.getWidth() * bitmap.getStride()) },
+		.bufferImageHeight		{ static_cast<uint32_t>(bitmap.getHeight()) },
+		.imageSubresource		{
+			.aspectMask			{ VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT },
+			.mipLevel			{ 0U },
+			.baseArrayLayer		{ 0U },
+			.layerCount			{ 1U }
+		},
+		.imageOffset			{ 0, 0, 0 },
+		.imageExtent			{ vkExtent }
+	};
+
+	__pTexture->update(bitmap.getData(), updateRegion, VK_PIPELINE_STAGE_2_NONE, VK_ACCESS_2_NONE);
+}
+
 void CApp::__createRenderObject()
 {
 	const auto pRenderer{ std::shared_ptr<Frameworks::SimpleRenderer>{ __pRenderingEngine->createRenderer<Frameworks::SimpleRenderer>() } };
@@ -233,6 +238,7 @@ void CApp::__createRenderObject()
 
 	const auto pMaterial{ std::make_shared<Frameworks::SimpleMaterial>() };
 	pMaterial->setColor({ 1.0f, 0.0f, 1.0f, 1.0f });
+	pMaterial->setTexture(__pTexture);
 
 	__pRenderObject = std::shared_ptr<Engine::RenderObject>{ __pRenderingEngine->createRenderObject() };
 

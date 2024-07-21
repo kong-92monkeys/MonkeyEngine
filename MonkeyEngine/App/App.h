@@ -17,6 +17,7 @@ import ntmonkeys.com.Engine.RenderingEngine;
 import ntmonkeys.com.Engine.RenderTarget;
 import ntmonkeys.com.Engine.Layer;
 import ntmonkeys.com.Engine.RenderObject;
+import ntmonkeys.com.Engine.Texture;
 import <memory>;
 
 // CApp:
@@ -57,6 +58,7 @@ private:
 	std::unique_ptr<Engine::RenderingEngine> __pRenderingEngine;
 
 	std::shared_ptr<Engine::Layer> __pLayer;
+	std::shared_ptr<Engine::Texture> __pTexture;
 	std::shared_ptr<Engine::RenderObject> __pRenderObject;
 
 	mutable Lib::Event<> __idleEvent;
@@ -64,6 +66,7 @@ private:
 	void __onInitBeforeMainFrame();
 	void __createGraphicsCore();
 	void __createRenderingEngine();
+	void __createTexture();
 	void __createRenderObject();
 
 public:

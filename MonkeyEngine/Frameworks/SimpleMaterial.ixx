@@ -5,6 +5,8 @@ module;
 export module ntmonkeys.com.Frameworks.SimpleMaterial;
 
 import ntmonkeys.com.Engine.Material;
+import ntmonkeys.com.Engine.Texture;
+import <memory>;
 
 namespace Frameworks
 {
@@ -18,6 +20,12 @@ namespace Frameworks
 	{
 	public:
 		void setColor(const glm::vec4 &color);
+		void setTexture(const std::shared_ptr<Engine::Texture> &pTexture);
+
+	private:
+		static constexpr uint32_t __TEXTURE_SLOT_INDEX{ 0U };
+
+		std::shared_ptr<Engine::Texture> __pTexture;
 	};
 }
 
@@ -29,5 +37,19 @@ namespace Frameworks
 	{
 		_getTypedData().color = color;
 		_invokeUpdateEvent();
+	}
+
+	void SimpleMaterial::setTexture(const std::shared_ptr<Engine::Texture> &pTexture)
+	{
+		if (__pTexture == pTexture)
+			return;
+
+		if (__pTexture)
+			_unregisterTexture(__pTexture.get());
+
+		__pTexture = pTexture;
+
+		if (pTexture)
+			_registerTexture(pTexture.get(), __TEXTURE_SLOT_INDEX);
 	}
 }
