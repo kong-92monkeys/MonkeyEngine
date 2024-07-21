@@ -601,6 +601,8 @@ namespace Graphics
 		// Image
 		LOAD_DEVICE_PROC(vkCreateImage);
 		LOAD_DEVICE_PROC(vkDestroyImage);
+		LOAD_DEVICE_PROC(vkGetImageMemoryRequirements2);
+		LOAD_DEVICE_PROC(vkBindImageMemory2);
 
 		// Image view
 		LOAD_DEVICE_PROC(vkCreateImageView);

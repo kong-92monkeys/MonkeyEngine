@@ -205,7 +205,7 @@ namespace Graphics
 					VkImageUsageFlagBits::VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT)
 			};
 
-			__imageViews.emplace_back(std::move(pImageView));
+			__imageViews.emplace_back(pImageView);
 		}
 	}
 }

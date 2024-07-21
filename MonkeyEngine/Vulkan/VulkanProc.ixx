@@ -109,6 +109,8 @@ namespace VK
 		// Image
 		DECLARE_PROC(vkCreateImage);
 		DECLARE_PROC(vkDestroyImage);
+		DECLARE_PROC(vkGetImageMemoryRequirements2);
+		DECLARE_PROC(vkBindImageMemory2);
 
 		// ImageView
 		DECLARE_PROC(vkCreateImageView);

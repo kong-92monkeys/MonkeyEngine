@@ -125,7 +125,6 @@ void CApp::__onInitBeforeMainFrame()
 	__pLayer = std::shared_ptr<Engine::Layer>{ __pRenderingEngine->createLayer() };
 	__pLayer->addRenderObject(__pRenderObject);
 
-
 	const auto imageData{ __pAssetManager->readBinary("Images/wall.jpg") };
 	const Lib::Bitmap bitmap{ imageData.data(), imageData.size(), 4ULL };
 

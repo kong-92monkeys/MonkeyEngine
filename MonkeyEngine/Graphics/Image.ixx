@@ -8,7 +8,6 @@ import ntmonkeys.com.Lib.Unique;
 import ntmonkeys.com.VK.VulkanProc;
 import ntmonkeys.com.Graphics.ImageView;
 import <stdexcept>;
-import <memory>;
 
 namespace Graphics
 {
@@ -46,7 +45,15 @@ namespace Graphics
 		virtual ~Image() noexcept override;
 
 		[[nodiscard]]
-		std::unique_ptr<ImageView> createImageView(
+		constexpr bool needDedicatedAllocation() const noexcept;
+
+		[[nodiscard]]
+		constexpr const VkMemoryRequirements &getMemoryRequirements() const noexcept;
+
+		VkResult bindMemory(const VkDeviceMemory hMemory, const VkDeviceSize offset) noexcept;
+
+		[[nodiscard]]
+		ImageView *createImageView(
 			const VkImageViewType viewType,
 			const VkComponentMapping &components,
 			const VkImageSubresourceRange &subresourceRange,
@@ -60,11 +67,25 @@ namespace Graphics
 		const VkDevice __hDevice;
 		const VkFormat __format;
 
+		VkMemoryDedicatedRequirements __memDedicatedReq{ };
+		VkMemoryRequirements2 __memReq2{ };
+
 		VkImage __handle{ };
 		bool __ownHandle{ };
 
 		void __create(const CreateInfo &createInfo);
+		void __resolveMemoryRequirements() noexcept;
 	};
+
+	constexpr bool Image::needDedicatedAllocation() const noexcept
+	{
+		return (__memDedicatedReq.prefersDedicatedAllocation || __memDedicatedReq.requiresDedicatedAllocation);
+	}
+
+	constexpr const VkMemoryRequirements &Image::getMemoryRequirements() const noexcept
+	{
+		return __memReq2.memoryRequirements;
+	}
 
 	constexpr const VkImage &Image::getHandle() const noexcept
 	{
@@ -83,6 +104,7 @@ namespace Graphics
 		__format		{ createInfo.format }
 	{
 		__create(createInfo);
+		__resolveMemoryRequirements();
 	}
 
 	Image::Image(const PlaceholderInfo &placeholderInfo) noexcept :
@@ -101,7 +123,20 @@ namespace Graphics
 		__deviceProc.vkDestroyImage(__hDevice, __handle, nullptr);
 	}
 
-	std::unique_ptr<ImageView> Image::createImageView(
+	VkResult Image::bindMemory(const VkDeviceMemory hMemory, const VkDeviceSize offset) noexcept
+	{
+		const VkBindImageMemoryInfo bindInfo
+		{
+			.sType			{ VkStructureType::VK_STRUCTURE_TYPE_BIND_IMAGE_MEMORY_INFO },
+			.image			{ __handle },
+			.memory			{ hMemory },
+			.memoryOffset	{ offset }
+		};
+
+		return __deviceProc.vkBindImageMemory2(__hDevice, 1U, &bindInfo);
+	}
+
+	ImageView *Image::createImageView(
 		const VkImageViewType viewType,
 		const VkComponentMapping &components,
 		const VkImageSubresourceRange &subresourceRange,
@@ -119,7 +154,7 @@ namespace Graphics
 			.usage				{ usage }
 		};
 
-		return std::make_unique<ImageView>(createInfo);
+		return new ImageView{ createInfo };
 	}
 
 	void Image::__create(const CreateInfo &createInfo)
@@ -143,5 +178,21 @@ namespace Graphics
 		__deviceProc.vkCreateImage(__hDevice, &vkCreateInfo, nullptr, &__handle);
 		if (!__handle)
 			throw std::runtime_error{ "Cannot create a Image." };
+	}
+
+	void Image::__resolveMemoryRequirements() noexcept
+	{
+		__memDedicatedReq.sType = VkStructureType::VK_STRUCTURE_TYPE_MEMORY_DEDICATED_REQUIREMENTS;
+
+		__memReq2.sType = VkStructureType::VK_STRUCTURE_TYPE_MEMORY_REQUIREMENTS_2;
+		__memReq2.pNext = &__memDedicatedReq;
+
+		const VkImageMemoryRequirementsInfo2 resolveInfo
+		{
+			.sType	{ VkStructureType::VK_STRUCTURE_TYPE_IMAGE_MEMORY_REQUIREMENTS_INFO_2 },
+			.image	{ __handle }
+		};
+		
+		__deviceProc.vkGetImageMemoryRequirements2(__hDevice, &resolveInfo, &__memReq2);
 	}
 }
