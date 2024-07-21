@@ -20,6 +20,7 @@ import ntmonkeys.com.Engine.EngineContext;
 import ntmonkeys.com.Engine.Mesh;
 import ntmonkeys.com.Engine.DrawParam;
 import ntmonkeys.com.Engine.Material;
+import ntmonkeys.com.Engine.Texture;
 import ntmonkeys.com.Engine.Renderer;
 import ntmonkeys.com.Engine.RenderObject;
 import ntmonkeys.com.Engine.MemoryAllocator;
@@ -54,13 +55,16 @@ namespace Engine
 	private:
 		LayerResourcePool &__resourcePool;
 
-		Lib::IdAllocator<uint32_t> __idAllocator;
-		std::unordered_map<const Material *, std::pair<size_t, uint32_t>> __refIdMap;
+		Lib::IdAllocator<uint32_t> __materialIdAllocator;
+		std::unordered_map<const Material *, std::pair<size_t, uint32_t>> __materialRefIdMap;
 
 		Lib::GenericBuffer __hostBuffer;
 		std::shared_ptr<BufferChunk> __pBuffer;
 
 		Lib::EventListenerPtr<const Material *> __pMaterialUpdateListener;
+
+		void __registerTexture(const Texture *const pTexture, const uint32_t slotIndex) noexcept;
+		void __unregisterTexture(const Texture *const pTexture, const uint32_t slotIndex) noexcept;
 
 		void __validateHostBuffer(const Material *const pMaterial) noexcept;
 		void __validateBuffer();
@@ -170,11 +174,14 @@ namespace Engine
 	{
 		pMaterial->getUpdateEvent() += __pMaterialUpdateListener;
 		
-		auto &[ref, id]{ __refIdMap[pMaterial] };
+		auto &[ref, id]{ __materialRefIdMap[pMaterial] };
 		if (!ref)
 		{
-			id = __idAllocator.allocate();
+			id = __materialIdAllocator.allocate();
 			__validateHostBuffer(pMaterial);
+
+			for (const auto &[pTexture, slotIndex] : pMaterial->getTextures())
+				__registerTexture(pTexture, slotIndex);
 
 			_invalidate();
 		}
@@ -186,19 +193,22 @@ namespace Engine
 	{
 		pMaterial->getUpdateEvent() -= __pMaterialUpdateListener;
 
-		auto &[ref, id] { __refIdMap[pMaterial] };
+		auto &[ref, id] { __materialRefIdMap[pMaterial] };
 		--ref;
 
 		if (!ref)
 		{
-			__idAllocator.free(id);
-			__refIdMap.erase(pMaterial);
+			__materialIdAllocator.free(id);
+			__materialRefIdMap.erase(pMaterial);
+
+			for (const auto &[pTexture, slotIndex] : pMaterial->getTextures())
+				__unregisterTexture(pTexture, slotIndex);
 		}
 	}
 
 	uint32_t MaterialBufferBuilder::getIdOf(const Material *const pMaterial) const noexcept
 	{
-		return __refIdMap.at(pMaterial).second;
+		return __materialRefIdMap.at(pMaterial).second;
 	}
 
 	const BufferChunk &MaterialBufferBuilder::getBuffer() const noexcept
@@ -211,9 +221,19 @@ namespace Engine
 		__validateBuffer();
 	}
 
+	void MaterialBufferBuilder::__registerTexture(const Texture *const pTexture, const uint32_t slotIndex) noexcept
+	{
+
+	}
+
+	void MaterialBufferBuilder::__unregisterTexture(const Texture *const pTexture, const uint32_t slotIndex) noexcept
+	{
+
+	}
+
 	void MaterialBufferBuilder::__validateHostBuffer(const Material *const pMaterial) noexcept
 	{
-		const uint32_t materialId	{ __refIdMap.at(pMaterial).second };
+		const uint32_t materialId	{ __materialRefIdMap.at(pMaterial).second };
 
 		const size_t materialSize	{ pMaterial->getSize() };
 		const size_t memOffset		{ materialId * materialSize };
