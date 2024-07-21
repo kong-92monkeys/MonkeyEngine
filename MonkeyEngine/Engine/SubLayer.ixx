@@ -47,7 +47,10 @@ namespace Engine
 		uint32_t getIdOf(const Material *const pMaterial) const noexcept;
 
 		[[nodiscard]]
-		const BufferChunk &getBuffer() const noexcept;
+		const BufferChunk &getMaterialBuffer() const noexcept;
+
+		[[nodiscard]]
+		const BufferChunk *getTextureLUTBuffer() const noexcept;
 
 	protected:
 		virtual void _onValidate() override;
@@ -63,8 +66,11 @@ namespace Engine
 
 		Lib::GenericBuffer __materialHostBuffer;
 		std::shared_ptr<BufferChunk> __pMaterialBuffer;
+		bool __materialBufferInvalidated{ };
 
 		std::vector<int> __textureLUTHostBuffer;
+		std::shared_ptr<BufferChunk> __pTextureLUTBuffer;
+		bool __textureLUTBufferInvalidated{ };
 
 		Lib::EventListenerPtr<const Material *> __pMaterialUpdateListener;
 		Lib::EventListenerPtr<const Material *, uint32_t, const Texture *, const Texture *> __pMaterialTextureChangeListener;
@@ -77,6 +83,7 @@ namespace Engine
 
 		void __validateTextureLUTHostBuffer(const Material *const pMaterial) noexcept;
 		void __validateTextureLUTHostBuffer(const Material *const pMaterial, const uint32_t slotIndex, const Texture *const pTexture) noexcept;
+		void __validateTextureLUTBuffer();
 
 		void __onMaterialUpdated(const Material *const pMaterial) noexcept;
 		void __onMaterialTextureChanged(
@@ -202,8 +209,12 @@ namespace Engine
 			}
 
 			id = __materialIdAllocator.allocate();
+
 			__validateMaterialHostBuffer(pMaterial);
+			__materialBufferInvalidated = true;
+
 			__validateTextureLUTHostBuffer(pMaterial);
+			__textureLUTBufferInvalidated = true;
 
 			_invalidate();
 		}
@@ -237,17 +248,73 @@ namespace Engine
 		return __materialRefIdMap.at(pMaterial).second;
 	}
 
-	const BufferChunk &MaterialBufferBuilder::getBuffer() const noexcept
+	const BufferChunk &MaterialBufferBuilder::getMaterialBuffer() const noexcept
 	{
 		return *__pMaterialBuffer;
+	}
+
+	const BufferChunk *MaterialBufferBuilder::getTextureLUTBuffer() const noexcept
+	{
+		return __pTextureLUTBuffer.get();
 	}
 
 	void MaterialBufferBuilder::_onValidate()
 	{
 		__validateMaterialBuffer();
+		__validateTextureLUTBuffer();
 	}
 
-	void MaterialBufferBuilder::__validateTextureLUTHostBuffer(const Material *const pMaterial) noexcept
+	void MaterialBufferBuilder::__registerTexture(const Texture *const pTexture) noexcept
+	{
+		auto &[ref, id]{ __textureRefIdMap[pTexture] };
+		if (!ref)
+			id = __textureIdAllocator.allocate();
+
+		++ref;
+	}
+
+	void MaterialBufferBuilder::__unregisterTexture(const Texture *const pTexture) noexcept
+	{
+		auto &[ref, id] { __textureRefIdMap[pTexture] };
+		--ref;
+
+		if (!ref)
+		{
+			__textureIdAllocator.free(id);
+			__textureRefIdMap.erase(pTexture);
+		}
+	}
+
+	void MaterialBufferBuilder::__validateMaterialHostBuffer(const Material *const pMaterial) noexcept
+	{
+		const uint32_t materialId	{ __materialRefIdMap.at(pMaterial).second };
+
+		const size_t materialSize	{ pMaterial->getSize() };
+		const size_t memOffset		{ materialId * materialSize };
+
+		if (memOffset >= __materialHostBuffer.getSize())
+			__materialHostBuffer.resize(memOffset + materialSize);
+
+		__materialHostBuffer.set(memOffset, pMaterial->getData(), materialSize);
+	}
+
+	void MaterialBufferBuilder::__validateMaterialBuffer()
+	{
+		if (!__materialBufferInvalidated)
+			return;
+
+		const size_t bufferSize{ __materialHostBuffer.getSize() };
+
+		if (__pMaterialBuffer)
+			__resourcePool.recycleStorageBuffer(std::move(__pMaterialBuffer));
+
+		__pMaterialBuffer = __resourcePool.getStorageBuffer(bufferSize);
+		std::memcpy(__pMaterialBuffer->getMappedMemory(), __materialHostBuffer.getData(), bufferSize);
+
+		__materialBufferInvalidated = false;
+	}
+
+		void MaterialBufferBuilder::__validateTextureLUTHostBuffer(const Material *const pMaterial) noexcept
 	{
 		const uint32_t slotCount{ pMaterial->getTextureSlotCount() };
 		if (!slotCount)
@@ -293,54 +360,26 @@ namespace Engine
 		textureId = (pTexture ? static_cast<int>(__textureRefIdMap.at(pTexture).second) : -1);
 	}
 
-	void MaterialBufferBuilder::__registerTexture(const Texture *const pTexture) noexcept
+	void MaterialBufferBuilder::__validateTextureLUTBuffer()
 	{
-		auto &[ref, id]{ __textureRefIdMap[pTexture] };
-		if (!ref)
-			id = __textureIdAllocator.allocate();
+		if (!__textureLUTBufferInvalidated)
+			return;
 
-		++ref;
-	}
+		const size_t bufferSize{ __textureLUTHostBuffer.size() * sizeof(int) };
 
-	void MaterialBufferBuilder::__unregisterTexture(const Texture *const pTexture) noexcept
-	{
-		auto &[ref, id] { __textureRefIdMap[pTexture] };
-		--ref;
+		if (__pTextureLUTBuffer)
+			__resourcePool.recycleStorageBuffer(std::move(__pTextureLUTBuffer));
 
-		if (!ref)
-		{
-			__textureIdAllocator.free(id);
-			__textureRefIdMap.erase(pTexture);
-		}
-	}
+		__pTextureLUTBuffer = __resourcePool.getStorageBuffer(bufferSize);
+		std::memcpy(__pTextureLUTBuffer->getMappedMemory(), __textureLUTHostBuffer.data(), bufferSize);
 
-	void MaterialBufferBuilder::__validateMaterialHostBuffer(const Material *const pMaterial) noexcept
-	{
-		const uint32_t materialId	{ __materialRefIdMap.at(pMaterial).second };
-
-		const size_t materialSize	{ pMaterial->getSize() };
-		const size_t memOffset		{ materialId * materialSize };
-
-		if (memOffset >= __materialHostBuffer.getSize())
-			__materialHostBuffer.resize(memOffset + materialSize);
-
-		__materialHostBuffer.set(memOffset, pMaterial->getData(), materialSize);
-	}
-
-	void MaterialBufferBuilder::__validateMaterialBuffer()
-	{
-		const size_t bufferSize{ __materialHostBuffer.getSize() };
-
-		if (__pMaterialBuffer)
-			__resourcePool.recycleStorageBuffer(std::move(__pMaterialBuffer));
-
-		__pMaterialBuffer = __resourcePool.getStorageBuffer(bufferSize);
-		std::memcpy(__pMaterialBuffer->getMappedMemory(), __materialHostBuffer.getData(), bufferSize);
+		__textureLUTBufferInvalidated = false;
 	}
 
 	void MaterialBufferBuilder::__onMaterialUpdated(const Material *const pMaterial) noexcept
 	{
 		__validateMaterialHostBuffer(pMaterial);
+		__materialBufferInvalidated = true;
 		_invalidate();
 	}
 
@@ -355,6 +394,8 @@ namespace Engine
 			__registerTexture(pCur);
 
 		__validateTextureLUTHostBuffer(pMaterial, slotIndex, pCur);
+		__textureLUTBufferInvalidated = true;
+		_invalidate();
 	}
 
 	SubLayer::SubLayer(const EngineContext &context, const Renderer *const pRenderer) noexcept :
@@ -662,7 +703,7 @@ namespace Engine
 
 		for (const auto &[type, pBuilder] : __materialDataBufferBuilders)
 		{
-			const auto &materialBuffer		{ pBuilder->getBuffer() };
+			const auto &materialBuffer		{ pBuilder->getMaterialBuffer() };
 			const auto descLocation			{ __pRenderer->getDescriptorLocationOf(type) };
 
 			auto &pMaterialBufferInfo		{ bufferInfos.emplace_back(std::make_unique<VkDescriptorBufferInfo>()) };
