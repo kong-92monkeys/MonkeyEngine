@@ -26,7 +26,7 @@ namespace Engine
 	private:
 		const EngineContext &__context;
 
-		std::unique_ptr<Graphics::Image> __pImage;
+		std::shared_ptr<ImageChunk> __pImage;
 
 		void __createImage(
 			const VkImageType imageType, const VkFormat format,
@@ -48,7 +48,8 @@ namespace Engine
 
 	Texture::~Texture() noexcept
 	{
-
+		const auto pLazyDeleter{ __context.pLazyDeleter };
+		pLazyDeleter->reserve(std::move(__pImage));
 	}
 
 	void Texture::__createImage(
@@ -73,6 +74,10 @@ namespace Engine
 			}
 		};
 
-		__pImage = std::unique_ptr<Graphics::Image>{ __context.pLogicalDevice->createImage(createInfo) };
+		__pImage = std::shared_ptr<ImageChunk>
+		{
+			__context.pMemoryAllocator->allocateImage(
+				VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, createInfo)
+		};
 	}
 }
