@@ -173,7 +173,10 @@
     <ClCompile Include="Layer.ixx" />
     <ClCompile Include="LayerResourcePool.ixx" />
     <ClCompile Include="Material.ixx" />
+    <ClCompile Include="MemoryAllocator_Image.ixx" />
+    <ClCompile Include="MemoryAllocator_Buffer.ixx" />
     <ClCompile Include="MemoryAllocator.ixx" />
+    <ClCompile Include="MemoryAllocator_Memory.ixx" />
     <ClCompile Include="Mesh.ixx" />
     <ClCompile Include="Renderer.ixx" />
     <ClCompile Include="RenderingEngine.ixx" />

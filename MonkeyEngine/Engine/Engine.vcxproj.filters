@@ -22,7 +22,6 @@
     <ClCompile Include="Constants.ixx" />
     <ClCompile Include="RenderObject.ixx" />
     <ClCompile Include="Mesh.ixx" />
-    <ClCompile Include="MemoryAllocator.ixx" />
     <ClCompile Include="CommandExecutor.ixx" />
     <ClCompile Include="EngineContext.ixx" />
     <ClCompile Include="DrawParam.ixx" />
@@ -41,6 +40,18 @@
       <Filter>Circulator</Filter>
     </ClCompile>
     <ClCompile Include="Texture.ixx" />
+    <ClCompile Include="MemoryAllocator.ixx">
+      <Filter>MemoryAllocator</Filter>
+    </ClCompile>
+    <ClCompile Include="MemoryAllocator_Memory.ixx">
+      <Filter>MemoryAllocator</Filter>
+    </ClCompile>
+    <ClCompile Include="MemoryAllocator_Buffer.ixx">
+      <Filter>MemoryAllocator</Filter>
+    </ClCompile>
+    <ClCompile Include="MemoryAllocator_Image.ixx">
+      <Filter>MemoryAllocator</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Util">
@@ -51,6 +62,9 @@
     </Filter>
     <Filter Include="Layer">
       <UniqueIdentifier>{90aa7994-9bb5-4c39-9bda-e1acf5a74dc3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="MemoryAllocator">
+      <UniqueIdentifier>{efb9423a-290b-491e-a441-784c6edf809d}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>
