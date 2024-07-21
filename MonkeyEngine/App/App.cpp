@@ -142,6 +142,22 @@ void CApp::__onInitBeforeMainFrame()
 			VkFormat::VK_FORMAT_R8G8B8A8_SRGB,
 			vkExtent, false)
 	};
+
+	const Engine::Texture::RegionInfo updateRegion
+	{
+		.bufferRowLength		{ static_cast<uint32_t>(bitmap.getWidth() * bitmap.getStride()) },
+		.bufferImageHeight		{ static_cast<uint32_t>(bitmap.getHeight()) },
+		.imageSubresource		{ 
+			.aspectMask			{ VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT },
+			.mipLevel			{ 0U },
+			.baseArrayLayer		{ 0U },
+			.layerCount			{ 1U }
+		},
+		.imageOffset			{ 0, 0, 0 },
+		.imageExtent			{ vkExtent }
+	};
+
+	pTexture->update(bitmap.getData(), updateRegion, VK_PIPELINE_STAGE_2_NONE, VK_ACCESS_2_NONE);
 }
 
 void CApp::__createGraphicsCore()

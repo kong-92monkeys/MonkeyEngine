@@ -9,6 +9,7 @@
 
 #include "resource.h"       // main symbols
 #include "../Library/GLM.h"
+#include "../Vulkan/Vulkan.h"
 import ntmonkeys.com.Lib.Event;
 import ntmonkeys.com.Lib.AssetManager;
 import ntmonkeys.com.Engine.Core;
