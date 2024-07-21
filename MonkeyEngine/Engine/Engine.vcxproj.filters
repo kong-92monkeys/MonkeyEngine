@@ -52,6 +52,12 @@
     <ClCompile Include="MemoryAllocator_Image.ixx">
       <Filter>MemoryAllocator</Filter>
     </ClCompile>
+    <ClCompile Include="MaterialBufferBuilder.ixx">
+      <Filter>Layer</Filter>
+    </ClCompile>
+    <ClCompile Include="TextureReferenceManager.ixx">
+      <Filter>Layer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Util">

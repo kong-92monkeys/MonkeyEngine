@@ -173,6 +173,7 @@
     <ClCompile Include="Layer.ixx" />
     <ClCompile Include="LayerResourcePool.ixx" />
     <ClCompile Include="Material.ixx" />
+    <ClCompile Include="TextureReferenceManager.ixx" />
     <ClCompile Include="MemoryAllocator_Image.ixx" />
     <ClCompile Include="MemoryAllocator_Buffer.ixx" />
     <ClCompile Include="MemoryAllocator.ixx" />
@@ -186,6 +187,7 @@
     <ClCompile Include="SemaphoreCirculator.ixx" />
     <ClCompile Include="ShaderDataStructures.ixx" />
     <ClCompile Include="ShaderIncluder.ixx" />
+    <ClCompile Include="MaterialBufferBuilder.ixx" />
     <ClCompile Include="SubLayer.ixx" />
     <ClCompile Include="Texture.ixx" />
   </ItemGroup>
