@@ -41,7 +41,9 @@ namespace Graphics
 			const uint32_t indexCount, const uint32_t instanceCount,
 			const uint32_t firstIndex, const int32_t vertexOffset, const uint32_t firstInstance) noexcept;
 
-		void copyBuffer(const VkCopyBufferInfo2 &copyBufferInfo) noexcept;
+		void copyBuffer(const VkCopyBufferInfo2 &copyInfo) noexcept;
+		void copyBufferToImage(const VkCopyBufferToImageInfo2 &copyInfo) noexcept;
+
 		void pipelineBarrier(const VkDependencyInfo &dependencyInfo) noexcept;
 		
 		void bindVertexBuffers(
@@ -129,9 +131,14 @@ namespace Graphics
 		__deviceProc.vkCmdDrawIndexed(__handle, indexCount, instanceCount, firstIndex, vertexOffset, firstInstance);
 	}
 
-	void CommandBuffer::copyBuffer(const VkCopyBufferInfo2 &copyBufferInfo) noexcept
+	void CommandBuffer::copyBuffer(const VkCopyBufferInfo2 &copyInfo) noexcept
 	{
-		__deviceProc.vkCmdCopyBuffer2(__handle, &copyBufferInfo);
+		__deviceProc.vkCmdCopyBuffer2(__handle, &copyInfo);
+	}
+
+	void CommandBuffer::copyBufferToImage(const VkCopyBufferToImageInfo2 &copyInfo) noexcept
+	{
+		__deviceProc.vkCmdCopyBufferToImage2(__handle, &copyInfo);
 	}
 
 	void CommandBuffer::pipelineBarrier(const VkDependencyInfo &dependencyInfo) noexcept

@@ -45,7 +45,7 @@ namespace Engine
 
 		void __updateData(
 			BufferChunk &dst, const void *const pData, const size_t size, const size_t offset,
-			const VkPipelineStageFlags2 stageMask, const VkAccessFlags2 accessMask) noexcept;
+			const VkPipelineStageFlags2 srcStageMask, const VkAccessFlags2 srcAccessMask) noexcept;
 
 		void __validateCmdParams() const noexcept;
 	};
@@ -190,7 +190,7 @@ namespace Engine
 
 	void Mesh::__updateData(
 		BufferChunk &dst, const void *const pData, const size_t size, const size_t offset,
-		const VkPipelineStageFlags2 stageMask, const VkAccessFlags2 accessMask) noexcept
+		const VkPipelineStageFlags2 srcStageMask, const VkAccessFlags2 srcAccessMask) noexcept
 	{
 		const auto pLazyDeleter			{ __context.pLazyDeleter };
 		const auto pMemoryAllocator		{ __context.pMemoryAllocator };
@@ -213,7 +213,7 @@ namespace Engine
 			const VkMemoryBarrier2 beforeMemoryBarrier
 			{
 				.sType				{ VkStructureType::VK_STRUCTURE_TYPE_MEMORY_BARRIER_2 },
-				.srcStageMask		{ stageMask },
+				.srcStageMask		{ srcStageMask },
 				.srcAccessMask		{ 0U },
 				.dstStageMask		{ VK_PIPELINE_STAGE_2_COPY_BIT },
 				.dstAccessMask		{ VK_ACCESS_2_TRANSFER_WRITE_BIT }
@@ -252,8 +252,8 @@ namespace Engine
 				.sType				{ VkStructureType::VK_STRUCTURE_TYPE_MEMORY_BARRIER_2 },
 				.srcStageMask		{ VK_PIPELINE_STAGE_2_COPY_BIT },
 				.srcAccessMask		{ VK_ACCESS_2_TRANSFER_WRITE_BIT },
-				.dstStageMask		{ stageMask },
-				.dstAccessMask		{ accessMask }
+				.dstStageMask		{ srcStageMask },
+				.dstAccessMask		{ srcAccessMask }
 			};
 
 			const VkDependencyInfo afterBarrier
