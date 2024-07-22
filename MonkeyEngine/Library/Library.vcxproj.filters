@@ -16,6 +16,7 @@
     <ClCompile Include="GenericBuffer.ixx" />
     <ClCompile Include="Stateful.ixx" />
     <ClCompile Include="Bitmap.ixx" />
+    <ClCompile Include="ThreadPool.ixx" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GLM.h" />
