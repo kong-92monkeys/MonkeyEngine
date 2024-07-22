@@ -217,19 +217,12 @@ namespace Engine
 		std::vector<VkCommandBuffer> secondaryCBHandles;
 		std::vector<std::future<void>> secondaryCBRecodeFutures;
 
-		if (__pSubLayerDescSet)
-		{
-			commandBuffer.bindDescriptorSets(
-				VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS,
-				__pRenderer->getPipelineLayout().getHandle(),
-				Constants::SUB_LAYER_DESC_SET_LOCATION, 1U, &(__pSubLayerDescSet->getHandle()), 0U, nullptr);
-		}
-
 		const Renderer::RenderPassBeginInfo renderPassBeginInfo
 		{
 			.pColorAttachment		{ drawInfo.pColorAttachment },
 			.pRenderArea			{ &(drawInfo.renderArea) },
-			.pFramebufferFactory	{ drawInfo.pFramebufferFactory }
+			.pFramebufferFactory	{ drawInfo.pFramebufferFactory },
+			.subpassContents		{ VkSubpassContents::VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS }
 		};
 
 		const auto renderPassBeginResult{ __pRenderer->beginRenderPass(commandBuffer, renderPassBeginInfo) };
@@ -327,6 +320,14 @@ namespace Engine
 
 		__pRenderer->bindPipeline(secondaryCB);
 
+		if (__pSubLayerDescSet)
+		{
+			secondaryCB.bindDescriptorSets(
+				VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS,
+				__pRenderer->getPipelineLayout().getHandle(),
+				Constants::SUB_LAYER_DESC_SET_LOCATION, 1U, &(__pSubLayerDescSet->getHandle()), 0U, nullptr);
+		}
+
 		const Mesh *pBoundMesh{ };
 		for (size_t seqIter{ seqIdxFrom }; seqIter < seqIdxTo; ++seqIter)
 		{
@@ -342,6 +343,8 @@ namespace Engine
 
 			pObject->draw(secondaryCB, baseId);
 		}
+
+		secondaryCB.end();
 	}
 
 	void SubLayer::__registerObject(const RenderObject *const pObject)

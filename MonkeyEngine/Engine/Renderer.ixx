@@ -53,6 +53,7 @@ namespace Engine
 			const Graphics::ImageView *pColorAttachment{ };
 			const VkRect2D *pRenderArea{ };
 			FramebufferFactory *pFramebufferFactory{ };
+			VkSubpassContents subpassContents{ };
 		};
 
 		struct RenderPassBeginResult

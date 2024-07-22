@@ -151,7 +151,7 @@ namespace Frameworks
 		const VkSubpassBeginInfo subpassBeginInfo
 		{
 			.sType		{ VkStructureType::VK_STRUCTURE_TYPE_SUBPASS_BEGIN_INFO },
-			.contents	{ VkSubpassContents::VK_SUBPASS_CONTENTS_INLINE }
+			.contents	{ beginInfo.subpassContents }
 		};
 
 		commandBuffer.beginRenderPass(renderPassBeginInfo, subpassBeginInfo);
