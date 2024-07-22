@@ -124,7 +124,7 @@ namespace Engine
 			if (pSubLayer->isEmpty())
 				continue;
 
-			pRenderer->begin(commandBuffer, rendererBeginInfo);
+			const auto [hRenderPass, hFramebuffer]{ pRenderer->begin(commandBuffer, rendererBeginInfo) };
 			pSubLayer->draw(commandBuffer);
 			pRenderer->end(commandBuffer);
 		}

@@ -55,6 +55,13 @@ namespace Engine
 			FramebufferFactory *pFramebufferFactory{ };
 		};
 
+		struct BeginResult
+		{
+		public:
+			VkRenderPass hRenderPass{ };
+			VkFramebuffer hFrameBuffer{ };
+		};
+
 		Renderer() = default;
 		virtual ~Renderer() noexcept override = default;
 
@@ -78,7 +85,7 @@ namespace Engine
 		[[nodiscard]]
 		virtual const Graphics::PipelineLayout &getPipelineLayout() const noexcept = 0;
 
-		virtual void begin(Graphics::CommandBuffer &commandBuffer, const BeginInfo &beginInfo) const noexcept = 0;
+		virtual BeginResult begin(Graphics::CommandBuffer &commandBuffer, const BeginInfo &beginInfo) const noexcept = 0;
 		virtual void end(Graphics::CommandBuffer &commandBuffer) const noexcept;
 
 	protected:

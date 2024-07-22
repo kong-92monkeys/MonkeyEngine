@@ -45,7 +45,7 @@ namespace Frameworks
 		[[nodiscard]]
 		virtual const Graphics::PipelineLayout &getPipelineLayout() const noexcept override;
 
-		virtual void begin(Graphics::CommandBuffer &commandBuffer, const BeginInfo &beginInfo) const noexcept override;
+		virtual BeginResult begin(Graphics::CommandBuffer &commandBuffer, const BeginInfo &beginInfo) const noexcept override;
 
 	protected:
 		virtual void _onInit() override;
@@ -123,7 +123,7 @@ namespace Frameworks
 		return *__pPipelineLayout;
 	}
 
-	void SimpleRenderer::begin(Graphics::CommandBuffer &commandBuffer, const BeginInfo &beginInfo) const noexcept
+	Engine::Renderer::BeginResult SimpleRenderer::begin(Graphics::CommandBuffer &commandBuffer, const BeginInfo &beginInfo) const noexcept
 	{
 		const auto &renderPass		{ _getRenderPass(Engine::RenderPassType::COLOR) };
 		const auto &framebuffer		{ beginInfo.pFramebufferFactory->getInstance(Engine::RenderPassType::COLOR) };
@@ -152,6 +152,8 @@ namespace Frameworks
 
 		commandBuffer.beginRenderPass(renderPassBeginInfo, subpassBeginInfo);
 		commandBuffer.bindPipeline(VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, __pPipeline->getHandle());
+
+		return { renderPass.getHandle(), framebuffer.getHandle() };
 	}
 
 	void SimpleRenderer::_onInit()
