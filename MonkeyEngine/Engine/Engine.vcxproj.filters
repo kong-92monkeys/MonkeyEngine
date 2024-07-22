@@ -36,9 +36,6 @@
       <Filter>Layer</Filter>
     </ClCompile>
     <ClCompile Include="ShaderDataStructures.ixx" />
-    <ClCompile Include="DescriptorSetCirculator.ixx">
-      <Filter>Circulator</Filter>
-    </ClCompile>
     <ClCompile Include="Texture.ixx" />
     <ClCompile Include="MemoryAllocator.ixx">
       <Filter>MemoryAllocator</Filter>
@@ -58,6 +55,7 @@
     <ClCompile Include="TextureReferenceManager.ixx">
       <Filter>Layer</Filter>
     </ClCompile>
+    <ClCompile Include="DescriptorSetFactory.ixx" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Util">

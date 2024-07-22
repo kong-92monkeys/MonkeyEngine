@@ -27,5 +27,6 @@ export namespace Engine::Constants
 	constexpr uint32_t SUB_LAYER_MATERIAL_TEXTURE_LUT_DESC_LOCATION2	{ 7U };
 	constexpr uint32_t SUB_LAYER_MATERIAL_TEXTURE_LUT_DESC_LOCATION3	{ 8U };
 
-	constexpr uint32_t SUB_LAYER_TEXTURES_LOCATION						{ 9U };
+	constexpr uint32_t SUB_LAYER_SAMPLER_LOCATION						{ 9U };
+	constexpr uint32_t SUB_LAYER_TEXTURES_LOCATION						{ 10U };
 }

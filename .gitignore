@@ -402,3 +402,4 @@ FodyWeavers.xsd
 
 # App's custom environment variable setting
 !MonkeyEngine/App/App.vcxproj.user
+MonkeyEngine/App/TODO.txt

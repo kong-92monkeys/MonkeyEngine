@@ -1,4 +1,4 @@
-module;
+ï»¿module;
 
 #include "../Vulkan/Vulkan.h"
 
@@ -136,11 +136,11 @@ namespace Frameworks
 
 	void SimpleRenderer::__createSubLayerDescSetLayout()
 	{
-		const std::array bindingFlags
+		static constexpr std::array<VkDescriptorBindingFlags, 4ULL> bindingFlags
 		{
-			0U, 0U
-			/*VkDescriptorBindingFlagBits::VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT |
-			VkDescriptorBindingFlagBits::VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT*/
+			0U, 0U, 0U,
+			VkDescriptorBindingFlagBits::VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT |
+			VkDescriptorBindingFlagBits::VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT
 		};
 
 		std::vector<VkDescriptorSetLayoutBinding> bindings;
@@ -157,15 +157,20 @@ namespace Frameworks
 		materialBinding.descriptorCount			= 1U;
 		materialBinding.stageFlags				= VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT;
 
-		//auto &texturesBinding					{ bindings.emplace_back() };
-		//texturesBinding.binding					= Engine::Constants::SUB_LAYER_TEXTURES_LOCATION;
-		//texturesBinding.descriptorType			= VkDescriptorType::VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
-		//texturesBinding.descriptorCount			= 10U; // TODO: device Äõ¸® ÈÄ max°ª ÀÔ·Â
-		//texturesBinding.stageFlags				= VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT;
+		auto &samplerBinding					{ bindings.emplace_back() };
+		samplerBinding.binding					= Engine::Constants::SUB_LAYER_SAMPLER_LOCATION;
+		samplerBinding.descriptorType			= VkDescriptorType::VK_DESCRIPTOR_TYPE_SAMPLER;
+		samplerBinding.descriptorCount			= 1U;
+		samplerBinding.stageFlags				= VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT;
+
+		auto &texturesBinding					{ bindings.emplace_back() };
+		texturesBinding.binding					= Engine::Constants::SUB_LAYER_TEXTURES_LOCATION;
+		texturesBinding.descriptorType			= VkDescriptorType::VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+		texturesBinding.descriptorCount			= _getDeviceLimits().maxPerStageDescriptorSampledImages;
+		texturesBinding.stageFlags				= VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT;
 
 		__pSubLayerDescSetLayout = _createDescriptorSetLayout(
-			0U, static_cast<uint32_t>(bindings.size()),
-			bindingFlags.data(), bindings.data());
+			0U, static_cast<uint32_t>(bindings.size()), bindingFlags.data(), bindings.data());
 	}
 
 	void SimpleRenderer::__createPipelineLayout()

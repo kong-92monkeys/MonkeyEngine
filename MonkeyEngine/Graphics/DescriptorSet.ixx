@@ -14,6 +14,15 @@ namespace Graphics
 	export class DescriptorSet : public Lib::Unique
 	{
 	public:
+		class CreationException : public std::exception
+		{
+		public:
+			CreationException(const VkResult result) noexcept;
+
+		private:
+			const VkResult __result;
+		};
+
 		struct CreateInfo
 		{
 		public:
@@ -22,9 +31,10 @@ namespace Graphics
 			VkDescriptorPool hDescriptorPool{ };
 			bool needFree{ };
 			VkDescriptorSetLayout hLayout{ };
+			const uint32_t *pVariableDescriptorCount{ };
 		};
 
-		explicit DescriptorSet(const CreateInfo &createInfo) noexcept;
+		explicit DescriptorSet(const CreateInfo &createInfo);
 		virtual ~DescriptorSet() noexcept override;
 
 		[[nodiscard]]
@@ -51,7 +61,7 @@ module: private;
 
 namespace Graphics
 {
-	DescriptorSet::DescriptorSet(const CreateInfo &createInfo) noexcept :
+	DescriptorSet::DescriptorSet(const CreateInfo &createInfo) :
 		__deviceProc		{ *(createInfo.pDeviceProc) },
 		__hDevice			{ createInfo.hDevice },
 		__hDescriptorPool	{ createInfo.hDescriptorPool },
@@ -70,16 +80,30 @@ namespace Graphics
 
 	void DescriptorSet::__create(const CreateInfo &createInfo)
 	{
+		const auto pVariableDescCount{ createInfo.pVariableDescriptorCount };
+
+		const VkDescriptorSetVariableDescriptorCountAllocateInfo descCountAllocInfo
+		{
+			.sType				{ VkStructureType::VK_STRUCTURE_TYPE_DESCRIPTOR_SET_VARIABLE_DESCRIPTOR_COUNT_ALLOCATE_INFO },
+			.descriptorSetCount	{ 1U },
+			.pDescriptorCounts	{ pVariableDescCount }
+		};
+
 		const VkDescriptorSetAllocateInfo vkCreateInfo
 		{
 			.sType				{ VkStructureType::VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO },
+			.pNext				{ pVariableDescCount ? &descCountAllocInfo : nullptr },
 			.descriptorPool		{ createInfo.hDescriptorPool },
 			.descriptorSetCount	{ 1U },
 			.pSetLayouts		{ &(createInfo.hLayout) }
 		};
 
-		__deviceProc.vkAllocateDescriptorSets(__hDevice, &vkCreateInfo, &__handle);
-		if (!__handle)
-			throw std::runtime_error{ "Cannot create a DescriptorSet." };
+		const VkResult result{ __deviceProc.vkAllocateDescriptorSets(__hDevice, &vkCreateInfo, &__handle) };
+		if (result != VkResult::VK_SUCCESS)
+			throw CreationException{ result };
 	}
+
+	DescriptorSet::CreationException::CreationException(const VkResult result) noexcept :
+		__result{ result }
+	{}
 }

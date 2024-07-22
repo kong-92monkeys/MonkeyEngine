@@ -188,9 +188,8 @@ void CApp::__createTexture()
 	__pTexture = std::shared_ptr<Engine::Texture>
 	{
 		__pRenderingEngine->createTexture(
-			VkImageType::VK_IMAGE_TYPE_2D,
-			VkFormat::VK_FORMAT_R8G8B8A8_SRGB,
-			vkExtent, false)
+			VkImageType::VK_IMAGE_TYPE_2D, VkImageViewType::VK_IMAGE_VIEW_TYPE_2D,
+			VkFormat::VK_FORMAT_R8G8B8A8_SRGB, vkExtent, false)
 	};
 
 	const Engine::Texture::RegionInfo updateRegion

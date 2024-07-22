@@ -29,6 +29,7 @@ import ntmonkeys.com.Engine.RenderObject;
 import ntmonkeys.com.Engine.Texture;
 import ntmonkeys.com.Engine.RenderPassFactory;
 import ntmonkeys.com.Engine.CommandBufferCirculator;
+import ntmonkeys.com.Engine.DescriptorSetFactory;
 import ntmonkeys.com.Engine.FenceCirculator;
 import ntmonkeys.com.Engine.SemaphoreCirculator;
 import ntmonkeys.com.Engine.Constants;
@@ -37,6 +38,7 @@ import <memory>;
 import <unordered_set>;
 import <concepts>;
 import <format>;
+import <vector>;
 
 namespace Engine
 {
@@ -71,8 +73,8 @@ namespace Engine
 
 		[[nodiscard]]
 		Texture *createTexture(
-			const VkImageType imageType, const VkFormat format,
-			const VkExtent3D &extent, const bool useMipmaps);
+			const VkImageType imageType, const VkImageViewType viewType,
+			const VkFormat format, const VkExtent3D &extent, const bool useMipmaps);
 
 		void setMaxInFlightFrameCount(const size_t count);
 
@@ -95,11 +97,13 @@ namespace Engine
 		std::unique_ptr<FenceCirculator> __pSubmitFenceCirculator;
 		std::unique_ptr<SemaphoreCirculator> __pSubmitSemaphoreCirculator;
 
+		std::unique_ptr<DescriptorSetFactory> __pDescriptorSetFactory;
 		std::unique_ptr<Graphics::DescriptorSetLayout> __pRenderTargetDescSetLayout;
 
 		size_t __maxInFlightFrameCount{ 3U };
 		std::unordered_set<Graphics::Fence *> __inFlightFences;
 
+		void __createDescriptorSetFactory();
 		void __createRenderTargetDescSetLayout();
 
 		[[nodiscard]]
@@ -111,6 +115,7 @@ namespace Engine
 	{
 		const Renderer::InitInfo initInfo
 		{
+			.pPhysicalDevice				{ &__physicalDevice },
 			.pDevice						{ __pLogicalDevice.get() },
 			.pAssetManager					{ &__assetManager },
 			.pRenderPassFactory				{ __pRenderPassFactory.get() },
@@ -150,6 +155,7 @@ namespace Engine
 		__pSubmitSemaphoreCirculator = std::make_unique<SemaphoreCirculator>(
 			*__pLogicalDevice, VkSemaphoreType::VK_SEMAPHORE_TYPE_BINARY, Constants::MAX_IN_FLIGHT_FRAME_COUNT_LIMIT);
 
+		__createDescriptorSetFactory();
 		__createRenderTargetDescSetLayout();
 
 		__context.pLazyDeleter				= &__lazyDeleter;
@@ -158,6 +164,7 @@ namespace Engine
 		__context.pMemoryAllocator			= __pMemoryAllocator.get();
 		__context.pLayerResourcePool		= __pLayerResourcePool.get();
 		__context.pRenderPassFactory		= __pRenderPassFactory.get();
+		__context.pDescriptorSetFactory		= __pDescriptorSetFactory.get();
 	}
 
 	RenderingEngine::~RenderingEngine() noexcept
@@ -165,7 +172,9 @@ namespace Engine
 		__lazyDeleter.flush();
 		__pLogicalDevice->waitIdle();
 
+		__pDescriptorSetFactory = nullptr;
 		__pRenderTargetDescSetLayout = nullptr;
+
 		__pSubmitSemaphoreCirculator = nullptr;
 		__pSubmitFenceCirculator = nullptr;
 		__pCBCirculator = nullptr;
@@ -204,10 +213,10 @@ namespace Engine
 	}
 
 	Texture *RenderingEngine::createTexture(
-		const VkImageType imageType, const VkFormat format,
-		const VkExtent3D &extent, const bool useMipmaps)
+		const VkImageType imageType, const VkImageViewType viewType,
+		const VkFormat format, const VkExtent3D &extent, const bool useMipmaps)
 	{
-		return new Texture{ __context, imageType, format, extent, useMipmaps };
+		return new Texture{ __context, imageType, viewType, format, extent, useMipmaps };
 	}
 
 	void RenderingEngine::setMaxInFlightFrameCount(const size_t count)
@@ -292,6 +301,16 @@ namespace Engine
 		};
 
 		queue.present(presentInfo);
+	}
+
+	void RenderingEngine::__createDescriptorSetFactory()
+	{
+		std::vector<VkDescriptorPoolSize> poolSizes;
+		poolSizes.emplace_back(VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 100U);
+		poolSizes.emplace_back(VkDescriptorType::VK_DESCRIPTOR_TYPE_SAMPLER, 60U);
+		poolSizes.emplace_back(VkDescriptorType::VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 1000U);
+
+		__pDescriptorSetFactory = std::make_unique<DescriptorSetFactory>(*__pLogicalDevice, poolSizes, 2U, 30U);
 	}
 
 	void RenderingEngine::__createRenderTargetDescSetLayout()

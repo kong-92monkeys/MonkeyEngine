@@ -25,7 +25,6 @@ import ntmonkeys.com.Engine.Renderer;
 import ntmonkeys.com.Engine.RenderObject;
 import ntmonkeys.com.Engine.MemoryAllocator;
 import ntmonkeys.com.Engine.LayerResourcePool;
-import ntmonkeys.com.Engine.DescriptorSetCirculator;
 import <cstdint>;
 import <unordered_map>;
 import <unordered_set>;
@@ -74,8 +73,7 @@ namespace Engine
 		std::unordered_map<std::type_index, std::unique_ptr<MaterialBufferBuilder>> __materialDataBufferBuilders;
 		std::unordered_set<MaterialBufferBuilder *> __invalidatedMaterialBufferBuilders;
 
-		std::shared_ptr<DescriptorSetCirculator> __pDescSetCirculator;
-		Graphics::DescriptorSet *__pDescSet{ };
+		std::unique_ptr<Graphics::DescriptorSet> __pSubLayerDescSet;
 
 		Lib::EventListenerPtr<const RenderObject *, const Mesh *, const Mesh *> __pObjectMeshChangeListener;
 		Lib::EventListenerPtr<const RenderObject *, uint32_t, std::type_index, const Material *, const Material *> __pObjectMaterialChangeListener;
@@ -142,25 +140,14 @@ namespace Engine
 
 		__pMaterialBufferBuilderInvalidateListener =
 			Lib::EventListener<MaterialBufferBuilder *>::bind(&SubLayer::__onMaterialBufferBuilderInvalidated, this, std::placeholders::_1);
-
-		const auto pDescSetLayout{ pRenderer->getSubLayerDescSetLayout() };
-		if (pDescSetLayout)
-		{
-			__pDescSetCirculator = std::make_shared<DescriptorSetCirculator>(
-				*(context.pLogicalDevice), *pDescSetLayout, 10U);
-		}
 	}
 
 	SubLayer::~SubLayer() noexcept
 	{
 		const auto pLayerResourcePool	{ __context.pLayerResourcePool };
-		const auto pLazyDeleter			{ __context.pLazyDeleter };
 
 		if (__pInstanceInfoBuffer)
 			pLayerResourcePool->recycleStorageBuffer(std::move(__pInstanceInfoBuffer));
-
-		if (__pDescSetCirculator)
-			pLazyDeleter->reserve(std::move(__pDescSetCirculator));
 	}
 
 	constexpr const Renderer *SubLayer::getRenderer() const noexcept
@@ -197,12 +184,12 @@ namespace Engine
 		if (isEmpty())
 			return;
 
-		if (__pDescSet)
+		if (__pSubLayerDescSet)
 		{
 			commandBuffer.bindDescriptorSets(
 				VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS,
 				__pRenderer->getPipelineLayout().getHandle(),
-				Constants::SUB_LAYER_DESC_SET_LOCATION, 1U, &(__pDescSet->getHandle()), 0U, nullptr);
+				Constants::SUB_LAYER_DESC_SET_LOCATION, 1U, &(__pSubLayerDescSet->getHandle()), 0U, nullptr);
 		}
 
 		const Mesh *pBoundMesh{ };
@@ -399,15 +386,34 @@ namespace Engine
 
 	void SubLayer::__validateDescriptorSet()
 	{
-		if (!__pDescSetCirculator)
+		const auto pSubLayerDescSetLayout{ __pRenderer->getSubLayerDescSetLayout() };
+		if (!pSubLayerDescSetLayout)
 			return;
 
-		const auto pDevice{ __context.pLogicalDevice };
-
-		__pDescSet = &(__pDescSetCirculator->getNext());
+		const auto pDevice					{ __context.pLogicalDevice };
+		const auto pDescriptorSetFactory	{ __context.pDescriptorSetFactory };
 
 		std::vector<VkWriteDescriptorSet> descWrites;
 		std::vector<std::unique_ptr<VkDescriptorBufferInfo>> bufferInfos;
+		std::vector<VkDescriptorImageInfo> imageInfos;
+
+		for (const auto &[pTexture, id] : __textureReferenceManager.getTextures())
+		{
+			if (id >= static_cast<uint32_t>(imageInfos.size()))
+				imageInfos.resize(id + 1U);
+
+			auto &imageInfo{ imageInfos[id] };
+			imageInfo.imageView = pTexture->getImageView().getHandle();
+			imageInfo.imageLayout = VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+		}
+
+		const uint32_t textureSlotCount{ static_cast<uint32_t>(imageInfos.size()) };
+
+		__pSubLayerDescSet = std::unique_ptr<Graphics::DescriptorSet>
+		{
+			pDescriptorSetFactory->createInstance(
+				pSubLayerDescSetLayout->getHandle(), &textureSlotCount)
+		};
 
 		auto &pInstanceInfoBufferInfo		{ bufferInfos.emplace_back(std::make_unique<VkDescriptorBufferInfo>()) };
 		pInstanceInfoBufferInfo->buffer		= __pInstanceInfoBuffer->getBuffer().getHandle();
@@ -416,7 +422,7 @@ namespace Engine
 
 		auto &instanceInfoWrites			{ descWrites.emplace_back() };
 		instanceInfoWrites.sType			= VkStructureType::VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-		instanceInfoWrites.dstSet			= __pDescSet->getHandle();
+		instanceInfoWrites.dstSet			= __pSubLayerDescSet->getHandle();
 		instanceInfoWrites.dstBinding		= Constants::SUB_LAYER_INSTANCE_INFO_LOCATION;
 		instanceInfoWrites.dstArrayElement	= 0U;
 		instanceInfoWrites.descriptorCount	= 1U;
@@ -435,12 +441,24 @@ namespace Engine
 
 			auto &materialWrites			{ descWrites.emplace_back() };
 			materialWrites.sType			= VkStructureType::VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-			materialWrites.dstSet			= __pDescSet->getHandle();
+			materialWrites.dstSet			= __pSubLayerDescSet->getHandle();
 			materialWrites.dstBinding		= descLocation.value();
 			materialWrites.dstArrayElement	= 0U;
 			materialWrites.descriptorCount	= 1U;
 			materialWrites.descriptorType	= VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
 			materialWrites.pBufferInfo		= pMaterialBufferInfo.get();
+		}
+
+		if (!(imageInfos.empty()))
+		{
+			auto &texturesWrites				{ descWrites.emplace_back() };
+			texturesWrites.sType				= VkStructureType::VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+			texturesWrites.dstSet				= __pSubLayerDescSet->getHandle();
+			texturesWrites.dstBinding			= Constants::SUB_LAYER_TEXTURES_LOCATION;
+			texturesWrites.dstArrayElement		= 0U;
+			texturesWrites.descriptorCount		= static_cast<uint32_t>(imageInfos.size());
+			texturesWrites.descriptorType		= VkDescriptorType::VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+			texturesWrites.pImageInfo			= imageInfos.data();
 		}
 
 		pDevice->updateDescriptorSets(static_cast<uint32_t>(descWrites.size()), descWrites.data(), 0U, nullptr);

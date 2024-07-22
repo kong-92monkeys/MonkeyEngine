@@ -7,6 +7,7 @@ export module ntmonkeys.com.Engine.Renderer;
 
 import ntmonkeys.com.Lib.Unique;
 import ntmonkeys.com.Lib.AssetManager;
+import ntmonkeys.com.Graphics.PhysicalDevice;
 import ntmonkeys.com.Graphics.LogicalDevice;
 import ntmonkeys.com.Graphics.RenderPass;
 import ntmonkeys.com.Graphics.CommandBuffer;
@@ -36,6 +37,7 @@ namespace Engine
 		struct InitInfo
 		{
 		public:
+			const Graphics::PhysicalDevice *pPhysicalDevice{ };
 			Graphics::LogicalDevice *pDevice{ };
 			const Lib::AssetManager *pAssetManager{ };
 			const RenderPassFactory *pRenderPassFactory{ };
@@ -89,6 +91,9 @@ namespace Engine
 			const Graphics::LogicalDevice::GraphicsPipelineCreateInfo &createInfo) const;
 
 		[[nodiscard]]
+		constexpr const VkPhysicalDeviceLimits &_getDeviceLimits() const noexcept;
+
+		[[nodiscard]]
 		const Graphics::RenderPass &_getRenderPass(const RenderPassType type) const noexcept;
 
 		[[nodiscard]]
@@ -97,6 +102,7 @@ namespace Engine
 		virtual void _onInit() = 0;
 
 	private:
+		const Graphics::PhysicalDevice *__pPhysicalDevice{ };
 		Graphics::LogicalDevice *__pDevice{ };
 		const Lib::AssetManager *__pAssetManager{ };
 		const RenderPassFactory *__pRenderPassFactory{ };
@@ -108,6 +114,11 @@ namespace Engine
 		[[nodiscard]]
 		shaderc::CompileOptions __makeCopileOptions() const noexcept;
 	};
+
+	constexpr const VkPhysicalDeviceLimits &Renderer::_getDeviceLimits() const noexcept
+	{
+		return __pPhysicalDevice->get10Props().limits;
+	}
 
 	constexpr const Graphics::DescriptorSetLayout &Renderer::_getRenderTargetDescSetLayout() const noexcept
 	{
@@ -121,6 +132,7 @@ namespace Engine
 {
 	void Renderer::init(const InitInfo &info)
 	{
+		__pPhysicalDevice				= info.pPhysicalDevice;
 		__pDevice						= info.pDevice;
 		__pAssetManager					= info.pAssetManager;
 		__pRenderPassFactory			= info.pRenderPassFactory;
@@ -226,7 +238,7 @@ namespace Engine
 
 		retVal.SetTargetSpirv(shaderc_spirv_version::shaderc_spirv_version_1_6);
 		retVal.SetOptimizationLevel(shaderc_optimization_level::shaderc_optimization_level_performance);
-		
+
 		retVal.SetTargetEnvironment(
 			shaderc_target_env::shaderc_target_env_vulkan,
 			shaderc_env_version::shaderc_env_version_vulkan_1_3);

@@ -30,7 +30,7 @@ namespace Graphics
 		virtual ~DescriptorPool() noexcept override;
 
 		[[nodiscard]]
-		DescriptorSet *allocateDescriptorSet(const VkDescriptorSetLayout hLayout);
+		DescriptorSet *allocateDescriptorSet(const VkDescriptorSetLayout hLayout, const uint32_t *const pVariableDescriptorCount);
 		VkResult reset() noexcept;
 
 	private:
@@ -61,15 +61,16 @@ namespace Graphics
 		__deviceProc.vkDestroyDescriptorPool(__hDevice, __handle, nullptr);
 	}
 
-	DescriptorSet *DescriptorPool::allocateDescriptorSet(const VkDescriptorSetLayout hLayout)
+	DescriptorSet *DescriptorPool::allocateDescriptorSet(const VkDescriptorSetLayout hLayout, const uint32_t *const pVariableDescriptorCount)
 	{
 		const DescriptorSet::CreateInfo createInfo
 		{
-			.pDeviceProc		{ &__deviceProc },
-			.hDevice			{ __hDevice },
-			.hDescriptorPool	{ __handle },
-			.needFree			{ static_cast<bool>(__flags & VkDescriptorPoolCreateFlagBits::VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT) },
-			.hLayout			{ hLayout }
+			.pDeviceProc				{ &__deviceProc },
+			.hDevice					{ __hDevice },
+			.hDescriptorPool			{ __handle },
+			.needFree					{ static_cast<bool>(__flags & VkDescriptorPoolCreateFlagBits::VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT) },
+			.hLayout					{ hLayout },
+			.pVariableDescriptorCount	{ pVariableDescriptorCount }
 		};
 
 		return new DescriptorSet{ createInfo };
