@@ -31,7 +31,10 @@ namespace Frameworks
 		virtual bool isValidMaterialPack(const Engine::MaterialPack &materialPack) const noexcept override;
 
 		[[nodiscard]]
-		virtual std::optional<uint32_t> getDescriptorLocationOf(const std::type_index &materialType) const noexcept override;
+		virtual std::optional<uint32_t> getMaterialDescLocationOf(const std::type_index &materialType) const noexcept override;
+
+		[[nodiscard]]
+		virtual std::optional<uint32_t> getTextureLUTDescLocationOf(const std::type_index &materialType) const noexcept override;
 
 		[[nodiscard]]
 		virtual void loadSubLayerDescInfos(Engine::DescriptorUpdater &updater, const VkDescriptorSet hDescSet) const noexcept override;
@@ -48,7 +51,8 @@ namespace Frameworks
 		virtual void _onInit() override;
 
 	private:
-		static constexpr uint32_t __SIMPLE_MATERIAL_DESC_LOCATION{ Engine::Constants::SUB_LAYER_MATERIAL_DESC_LOCATION0 };
+		static constexpr uint32_t __SIMPLE_MATERIAL_DESC_LOCATION			{ Engine::Constants::SUB_LAYER_MATERIAL_DESC_LOCATION0 };
+		static constexpr uint32_t __SIMPLE_MATERIAL_TEX_LUT_DESC_LOCATION	{ Engine::Constants::SUB_LAYER_MATERIAL_TEXTURE_LUT_DESC_LOCATION0 };
 
 		std::shared_ptr<Graphics::DescriptorSetLayout> __pSubLayerDescSetLayout;
 		std::shared_ptr<Graphics::PipelineLayout> __pPipelineLayout;
@@ -84,10 +88,18 @@ namespace Frameworks
 		return materialPack.hasMaterialOf<SimpleMaterial>();
 	}
 
-	std::optional<uint32_t> SimpleRenderer::getDescriptorLocationOf(const std::type_index &materialType) const noexcept
+	std::optional<uint32_t> SimpleRenderer::getMaterialDescLocationOf(const std::type_index &materialType) const noexcept
 	{
 		if (materialType == typeid(SimpleMaterial))
 			return __SIMPLE_MATERIAL_DESC_LOCATION;
+
+		return std::nullopt;
+	}
+
+	std::optional<uint32_t> SimpleRenderer::getTextureLUTDescLocationOf(const std::type_index &materialType) const noexcept
+	{
+		if (materialType == typeid(SimpleMaterial))
+			return __SIMPLE_MATERIAL_TEX_LUT_DESC_LOCATION;
 
 		return std::nullopt;
 	}
@@ -153,13 +165,7 @@ namespace Frameworks
 
 	void SimpleRenderer::__createSubLayerDescSetLayout()
 	{
-		static constexpr std::array<VkDescriptorBindingFlags, 4ULL> bindingFlags
-		{
-			0U, 0U, 0U,
-			VkDescriptorBindingFlagBits::VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT |
-			VkDescriptorBindingFlagBits::VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT
-		};
-
+		std::vector<VkDescriptorBindingFlags> bindingFlags;
 		std::vector<VkDescriptorSetLayoutBinding> bindings;
 
 		auto &instanceInfoBinding				{ bindings.emplace_back() };
@@ -167,24 +173,38 @@ namespace Frameworks
 		instanceInfoBinding.descriptorType		= VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
 		instanceInfoBinding.descriptorCount		= 1U;
 		instanceInfoBinding.stageFlags			= VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT;
+		bindingFlags.emplace_back(0U);
 
 		auto &materialBinding					{ bindings.emplace_back() };
 		materialBinding.binding					= __SIMPLE_MATERIAL_DESC_LOCATION;
 		materialBinding.descriptorType			= VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
 		materialBinding.descriptorCount			= 1U;
 		materialBinding.stageFlags				= VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT;
+		bindingFlags.emplace_back(0U);
+
+		auto &textureLUTBinding					{ bindings.emplace_back() };
+		textureLUTBinding.binding				= __SIMPLE_MATERIAL_TEX_LUT_DESC_LOCATION;
+		textureLUTBinding.descriptorType		= VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+		textureLUTBinding.descriptorCount		= 1U;
+		textureLUTBinding.stageFlags			= VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT;
+		bindingFlags.emplace_back(0U);
 
 		auto &samplerBinding					{ bindings.emplace_back() };
 		samplerBinding.binding					= Engine::Constants::SUB_LAYER_SAMPLER_LOCATION;
 		samplerBinding.descriptorType			= VkDescriptorType::VK_DESCRIPTOR_TYPE_SAMPLER;
 		samplerBinding.descriptorCount			= 1U;
 		samplerBinding.stageFlags				= VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT;
+		bindingFlags.emplace_back(0U);
 
 		auto &texturesBinding					{ bindings.emplace_back() };
 		texturesBinding.binding					= Engine::Constants::SUB_LAYER_TEXTURES_LOCATION;
 		texturesBinding.descriptorType			= VkDescriptorType::VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
 		texturesBinding.descriptorCount			= _getDeviceLimits().maxPerStageDescriptorSampledImages;
 		texturesBinding.stageFlags				= VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT;
+
+		bindingFlags.emplace_back(
+			VkDescriptorBindingFlagBits::VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT |
+			VkDescriptorBindingFlagBits::VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT);
 
 		__pSubLayerDescSetLayout = _createDescriptorSetLayout(
 			0U, static_cast<uint32_t>(bindings.size()), bindingFlags.data(), bindings.data());

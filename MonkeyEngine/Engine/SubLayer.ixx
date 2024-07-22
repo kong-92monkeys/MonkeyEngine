@@ -319,7 +319,7 @@ namespace Engine
 			{
 				const std::type_index materialType{ typeid(*pMaterial) };
 
-				const auto descLocation{ __pRenderer->getDescriptorLocationOf(materialType) };
+				const auto descLocation{ __pRenderer->getMaterialDescLocationOf(materialType) };
 				if (descLocation.has_value())
 				{
 					const uint32_t slotIndex	{ descLocation.value() - Constants::SUB_LAYER_MATERIAL_DESC_LOCATION0 };
@@ -345,7 +345,7 @@ namespace Engine
 
 		auto &instanceInfo{ __instanceInfoHostBuffer[instanceId] };
 
-		const auto descLocation{ __pRenderer->getDescriptorLocationOf(materialType) };
+		const auto descLocation{ __pRenderer->getMaterialDescLocationOf(materialType) };
 		if (descLocation.has_value())
 		{
 			const uint32_t slotIndex{ descLocation.value() - Constants::SUB_LAYER_MATERIAL_DESC_LOCATION0 };
@@ -429,7 +429,7 @@ namespace Engine
 		for (const auto &[type, pBuilder] : __materialDataBufferBuilders)
 		{
 			const auto pMaterialBuffer		{ &(pBuilder->getMaterialBuffer()) };
-			const auto descLocation			{ __pRenderer->getDescriptorLocationOf(type) };
+			const auto descLocation			{ __pRenderer->getMaterialDescLocationOf(type) };
 
 			__descUpdater.addBufferInfo(
 				__pSubLayerDescSet->getHandle(), descLocation.value(),

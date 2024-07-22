@@ -65,7 +65,10 @@ namespace Engine
 		virtual bool isValidMaterialPack(const MaterialPack &materialPack) const noexcept;
 
 		[[nodiscard]]
-		virtual std::optional<uint32_t> getDescriptorLocationOf(const std::type_index &materialType) const noexcept;
+		virtual std::optional<uint32_t> getMaterialDescLocationOf(const std::type_index &materialType) const noexcept;
+
+		[[nodiscard]]
+		virtual std::optional<uint32_t> getTextureLUTDescLocationOf(const std::type_index &materialType) const noexcept;
 
 		[[nodiscard]]
 		virtual void loadSubLayerDescInfos(DescriptorUpdater &updater, const VkDescriptorSet hDescSet) const noexcept;
@@ -168,7 +171,12 @@ namespace Engine
 		return true;
 	}
 
-	std::optional<uint32_t> Renderer::getDescriptorLocationOf(const std::type_index &materialType) const noexcept
+	std::optional<uint32_t> Renderer::getMaterialDescLocationOf(const std::type_index &materialType) const noexcept
+	{
+		return std::nullopt;
+	}
+
+	std::optional<uint32_t> Renderer::getTextureLUTDescLocationOf(const std::type_index &materialType) const noexcept
 	{
 		return std::nullopt;
 	}
