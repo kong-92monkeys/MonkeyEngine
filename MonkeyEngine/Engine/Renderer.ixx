@@ -6,6 +6,7 @@ module;
 export module ntmonkeys.com.Engine.Renderer;
 
 import ntmonkeys.com.Lib.Unique;
+import ntmonkeys.com.Lib.LazyDeleter;
 import ntmonkeys.com.Lib.AssetManager;
 import ntmonkeys.com.Graphics.PhysicalDevice;
 import ntmonkeys.com.Graphics.LogicalDevice;
@@ -17,10 +18,12 @@ import ntmonkeys.com.Graphics.PipelineLayout;
 import ntmonkeys.com.Graphics.RenderPass;
 import ntmonkeys.com.Graphics.Pipeline;
 import ntmonkeys.com.Graphics.ImageView;
+import ntmonkeys.com.Graphics.Sampler;
 import ntmonkeys.com.Engine.Material;
 import ntmonkeys.com.Engine.ShaderIncluder;
 import ntmonkeys.com.Engine.RenderPassFactory;
 import ntmonkeys.com.Engine.FramebufferFactory;
+import ntmonkeys.com.Engine.DescriptorUpdater;
 import <vector>;
 import <string>;
 import <memory>;
@@ -39,6 +42,7 @@ namespace Engine
 		public:
 			const Graphics::PhysicalDevice *pPhysicalDevice{ };
 			Graphics::LogicalDevice *pDevice{ };
+			Lib::LazyDeleter *pLazyDeleter{ };
 			const Lib::AssetManager *pAssetManager{ };
 			const RenderPassFactory *pRenderPassFactory{ };
 			const Graphics::DescriptorSetLayout *pRenderTargetDescSetLayout{ };
@@ -64,6 +68,9 @@ namespace Engine
 		virtual std::optional<uint32_t> getDescriptorLocationOf(const std::type_index &materialType) const noexcept;
 
 		[[nodiscard]]
+		virtual void loadDescriptorInfos(DescriptorUpdater &updater) const noexcept;
+
+		[[nodiscard]]
 		virtual const Graphics::DescriptorSetLayout *getSubLayerDescSetLayout() const noexcept;
 
 		[[nodiscard]]
@@ -74,21 +81,25 @@ namespace Engine
 
 	protected:
 		[[nodiscard]]
-		std::unique_ptr<Graphics::DescriptorSetLayout> _createDescriptorSetLayout(
+		std::shared_ptr<Graphics::DescriptorSetLayout> _createDescriptorSetLayout(
 			const VkDescriptorSetLayoutCreateFlags flags, const uint32_t bindingCount,
 			const VkDescriptorBindingFlags *const pBindingFlags, const VkDescriptorSetLayoutBinding *const pBindings);
 
 		[[nodiscard]]
-		std::unique_ptr<Graphics::PipelineLayout> _createPipelineLayout(
+		std::shared_ptr<Graphics::PipelineLayout> _createPipelineLayout(
 			const uint32_t setLayoutCount, const VkDescriptorSetLayout *const pSetLayouts,
 			const uint32_t pushConstantRangeCount, const VkPushConstantRange *const pPushConstantRanges);
 
 		[[nodiscard]]
-		std::unique_ptr<Graphics::Shader> _createShader(const std::string &assetPath) const;
+		std::shared_ptr<Graphics::Shader> _createShader(const std::string &assetPath) const;
 
 		[[nodiscard]]
-		std::unique_ptr<Graphics::Pipeline> _createPipeline(
+		std::shared_ptr<Graphics::Pipeline> _createPipeline(
 			const Graphics::LogicalDevice::GraphicsPipelineCreateInfo &createInfo) const;
+
+		[[nodiscard]]
+		std::shared_ptr<Graphics::Sampler> _createSampler(
+			const Graphics::LogicalDevice::SamplerCreateInfo &createInfo) const;
 
 		[[nodiscard]]
 		constexpr const VkPhysicalDeviceLimits &_getDeviceLimits() const noexcept;
@@ -99,11 +110,15 @@ namespace Engine
 		[[nodiscard]]
 		constexpr const Graphics::DescriptorSetLayout &_getRenderTargetDescSetLayout() const noexcept;
 
+		template <typename $T>
+		void _lazyDelete($T &&garbage) noexcept;
+
 		virtual void _onInit() = 0;
 
 	private:
 		const Graphics::PhysicalDevice *__pPhysicalDevice{ };
 		Graphics::LogicalDevice *__pDevice{ };
+		Lib::LazyDeleter *__pLazyDeleter{ };
 		const Lib::AssetManager *__pAssetManager{ };
 		const RenderPassFactory *__pRenderPassFactory{ };
 		const Graphics::DescriptorSetLayout *__pRenderTargetDescSetLayout{ };
@@ -124,6 +139,12 @@ namespace Engine
 	{
 		return *__pRenderTargetDescSetLayout;
 	}
+
+	template <typename $T>
+	void Renderer::_lazyDelete($T &&garbage) noexcept
+	{
+		__pLazyDeleter->reserve(std::forward<$T>(garbage));
+	}
 }
 
 module: private;
@@ -134,6 +155,7 @@ namespace Engine
 	{
 		__pPhysicalDevice				= info.pPhysicalDevice;
 		__pDevice						= info.pDevice;
+		__pLazyDeleter					= info.pLazyDeleter;
 		__pAssetManager					= info.pAssetManager;
 		__pRenderPassFactory			= info.pRenderPassFactory;
 		__pRenderTargetDescSetLayout	= info.pRenderTargetDescSetLayout;
@@ -151,6 +173,9 @@ namespace Engine
 		return std::nullopt;
 	}
 
+	void Renderer::loadDescriptorInfos(DescriptorUpdater &updater) const noexcept
+	{}
+
 	const Graphics::DescriptorSetLayout *Renderer::getSubLayerDescSetLayout() const noexcept
 	{
 		return nullptr;
@@ -166,21 +191,21 @@ namespace Engine
 		commandBuffer.endRenderPass(subpassEndInfo);
 	}
 
-	std::unique_ptr<Graphics::DescriptorSetLayout> Renderer::_createDescriptorSetLayout(
+	std::shared_ptr<Graphics::DescriptorSetLayout> Renderer::_createDescriptorSetLayout(
 		const VkDescriptorSetLayoutCreateFlags flags, const uint32_t bindingCount,
 		const VkDescriptorBindingFlags *const pBindingFlags, const VkDescriptorSetLayoutBinding *const pBindings)
 	{
-		return std::unique_ptr<Graphics::DescriptorSetLayout>
+		return std::shared_ptr<Graphics::DescriptorSetLayout>
 		{
 			__pDevice->createDescriptorSetLayout(flags, bindingCount, pBindingFlags, pBindings)
 		};
 	}
 
-	std::unique_ptr<Graphics::PipelineLayout> Renderer::_createPipelineLayout(
+	std::shared_ptr<Graphics::PipelineLayout> Renderer::_createPipelineLayout(
 		const uint32_t setLayoutCount, const VkDescriptorSetLayout *const pSetLayouts,
 		const uint32_t pushConstantRangeCount, const VkPushConstantRange *const pPushConstantRanges)
 	{
-		return std::unique_ptr<Graphics::PipelineLayout>
+		return std::shared_ptr<Graphics::PipelineLayout>
 		{
 			__pDevice->createPipelineLayout(
 				setLayoutCount, pSetLayouts,
@@ -188,18 +213,24 @@ namespace Engine
 		};
 	}
 
-	std::unique_ptr<Graphics::Shader> Renderer::_createShader(const std::string &assetPath) const
+	std::shared_ptr<Graphics::Shader> Renderer::_createShader(const std::string &assetPath) const
 	{
 		const auto code{ __readShaderFile(assetPath) };
-		return std::unique_ptr<Graphics::Shader>
+		return std::shared_ptr<Graphics::Shader>
 		{
 			__pDevice->createShader(code.size() * sizeof(uint32_t), code.data())
 		};
 	}
 
-	std::unique_ptr<Graphics::Pipeline> Renderer::_createPipeline(const Graphics::LogicalDevice::GraphicsPipelineCreateInfo &createInfo) const
+	std::shared_ptr<Graphics::Pipeline> Renderer::_createPipeline(const Graphics::LogicalDevice::GraphicsPipelineCreateInfo &createInfo) const
 	{
-		return std::unique_ptr<Graphics::Pipeline>{ __pDevice->createPipeline(createInfo) };
+		return std::shared_ptr<Graphics::Pipeline>{ __pDevice->createPipeline(createInfo) };
+	}
+
+	std::shared_ptr<Graphics::Sampler> Renderer::_createSampler(
+		const Graphics::LogicalDevice::SamplerCreateInfo &createInfo) const
+	{
+		return std::shared_ptr<Graphics::Sampler>{ __pDevice->createSampler(createInfo) };
 	}
 
 	const Graphics::RenderPass &Renderer::_getRenderPass(const RenderPassType type) const noexcept

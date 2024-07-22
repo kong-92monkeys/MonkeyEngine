@@ -13,6 +13,7 @@ import ntmonkeys.com.Engine.Constants;
 import ntmonkeys.com.Engine.Renderer;
 import ntmonkeys.com.Engine.Material;
 import ntmonkeys.com.Engine.RenderPassFactory;
+import ntmonkeys.com.Engine.DescriptorUpdater;
 import ntmonkeys.com.Frameworks.Vertex;
 import ntmonkeys.com.Frameworks.SimpleMaterial;
 import <memory>;
@@ -33,6 +34,9 @@ namespace Frameworks
 		virtual std::optional<uint32_t> getDescriptorLocationOf(const std::type_index &materialType) const noexcept override;
 
 		[[nodiscard]]
+		virtual void loadDescriptorInfos(Engine::DescriptorUpdater &updater) const noexcept override;
+
+		[[nodiscard]]
 		virtual const Graphics::DescriptorSetLayout *getSubLayerDescSetLayout() const noexcept override;
 
 		[[nodiscard]]
@@ -46,14 +50,16 @@ namespace Frameworks
 	private:
 		static constexpr uint32_t __SIMPLE_MATERIAL_DESC_LOCATION{ Engine::Constants::SUB_LAYER_MATERIAL_DESC_LOCATION0 };
 
-		std::unique_ptr<Graphics::DescriptorSetLayout> __pSubLayerDescSetLayout;
-		std::unique_ptr<Graphics::PipelineLayout> __pPipelineLayout;
-		std::unique_ptr<Graphics::Shader> __pVertexShader;
-		std::unique_ptr<Graphics::Shader> __pFragmentShader;
-		std::unique_ptr<Graphics::Pipeline> __pPipeline;
+		std::shared_ptr<Graphics::DescriptorSetLayout> __pSubLayerDescSetLayout;
+		std::shared_ptr<Graphics::PipelineLayout> __pPipelineLayout;
+		std::shared_ptr<Graphics::Sampler> __pAlbedoTexSampler;
+		std::shared_ptr<Graphics::Shader> __pVertexShader;
+		std::shared_ptr<Graphics::Shader> __pFragmentShader;
+		std::shared_ptr<Graphics::Pipeline> __pPipeline;
 
 		void __createSubLayerDescSetLayout();
 		void __createPipelineLayout();
+		void __createAlbedoTexSampler();
 		void __createShaders();
 		void __createPipeline();
 	};
@@ -65,11 +71,12 @@ namespace Frameworks
 {
 	SimpleRenderer::~SimpleRenderer() noexcept
 	{
-		__pPipeline = nullptr;
-		__pFragmentShader = nullptr;
-		__pVertexShader = nullptr;
-		__pPipelineLayout = nullptr;
-		__pSubLayerDescSetLayout = nullptr;
+		_lazyDelete(std::move(__pPipeline));
+		_lazyDelete(std::move(__pFragmentShader));
+		_lazyDelete(std::move(__pVertexShader));
+		_lazyDelete(std::move(__pAlbedoTexSampler));
+		_lazyDelete(std::move(__pPipelineLayout));
+		_lazyDelete(std::move(__pSubLayerDescSetLayout));
 	}
 
 	bool SimpleRenderer::isValidMaterialPack(const Engine::MaterialPack &materialPack) const noexcept
@@ -83,6 +90,11 @@ namespace Frameworks
 			return __SIMPLE_MATERIAL_DESC_LOCATION;
 
 		return std::nullopt;
+	}
+
+	void SimpleRenderer::loadDescriptorInfos(Engine::DescriptorUpdater &updater) const noexcept
+	{
+
 	}
 
 	const Graphics::DescriptorSetLayout *SimpleRenderer::getSubLayerDescSetLayout() const noexcept
@@ -130,6 +142,7 @@ namespace Frameworks
 	{
 		__createSubLayerDescSetLayout();
 		__createPipelineLayout();
+		__createAlbedoTexSampler();
 		__createShaders();
 		__createPipeline();
 	}
@@ -190,6 +203,29 @@ namespace Frameworks
 		}
 
 		__pPipelineLayout = _createPipelineLayout(static_cast<uint32_t>(layouts.size()), layouts.data(), 0U, nullptr);
+	}
+
+	void SimpleRenderer::__createAlbedoTexSampler()
+	{
+		const Graphics::LogicalDevice::SamplerCreateInfo createInfo
+		{
+			.magFilter					{ VkFilter::VK_FILTER_LINEAR },
+			.minFilter					{ VkFilter::VK_FILTER_LINEAR },
+			.mipmapMode					{ VkSamplerMipmapMode::VK_SAMPLER_MIPMAP_MODE_NEAREST },
+			.addressModeU				{ VkSamplerAddressMode::VK_SAMPLER_ADDRESS_MODE_REPEAT },
+			.addressModeV				{ VkSamplerAddressMode::VK_SAMPLER_ADDRESS_MODE_REPEAT },
+			.addressModeW				{ VkSamplerAddressMode::VK_SAMPLER_ADDRESS_MODE_REPEAT },
+			.mipLodBias					{ 0.0f },
+			.anisotropyEnable			{ VK_FALSE },
+			.maxAnisotropy				{ 1.0f },
+			.compareEnable				{ VK_FALSE },
+			.minLod						{ 0.0f },
+			.maxLod						{ 0.0f },
+			.borderColor				{ VkBorderColor::VK_BORDER_COLOR_INT_OPAQUE_BLACK },
+			.unnormalizedCoordinates	{ VK_FALSE }
+		};
+
+		__pAlbedoTexSampler = _createSampler(createInfo);
 	}
 
 	void SimpleRenderer::__createShaders()

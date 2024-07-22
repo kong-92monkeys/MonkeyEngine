@@ -415,12 +415,17 @@ namespace Engine
 
 		__descUpdater.reset();
 
+		// Renderer infos
+		__pRenderer->loadDescriptorInfos(__descUpdater);
+
+		// Instance info
 		const auto pInstanceInfoBuffer{ __pInstanceInfoBuffer.get() };
 
 		__descUpdater.addBufferInfo(
 			__pSubLayerDescSet->getHandle(), Constants::SUB_LAYER_INSTANCE_INFO_LOCATION,
 			0U, 1U, VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, &pInstanceInfoBuffer);
 
+		// Material infos
 		for (const auto &[type, pBuilder] : __materialDataBufferBuilders)
 		{
 			const auto pMaterialBuffer		{ &(pBuilder->getMaterialBuffer()) };
@@ -431,6 +436,7 @@ namespace Engine
 				0U, 1U, VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, &pMaterialBuffer);
 		}
 
+		// Texture infos
 		if (!(textureSlots.empty()))
 		{
 			__descUpdater.addTextureInfo(

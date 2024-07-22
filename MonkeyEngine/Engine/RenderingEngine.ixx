@@ -117,6 +117,7 @@ namespace Engine
 		{
 			.pPhysicalDevice				{ &__physicalDevice },
 			.pDevice						{ __pLogicalDevice.get() },
+			.pLazyDeleter					{ &__lazyDeleter },
 			.pAssetManager					{ &__assetManager },
 			.pRenderPassFactory				{ __pRenderPassFactory.get() },
 			.pRenderTargetDescSetLayout		{ __pRenderTargetDescSetLayout.get() }

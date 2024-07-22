@@ -113,9 +113,6 @@
     <None Include="Assets\Shaders\Textures.glsl">
       <Filter>Assets\Shaders</Filter>
     </None>
-    <None Include="Assets\Shaders\Sampler.glsl">
-      <Filter>Assets\Shaders</Filter>
-    </None>
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\App.ico">
