@@ -5,17 +5,21 @@
 
 export module ntmonkeys.com.Engine.Layer;
 
+export import :LayerDrawInfo;
+import :SubLayer;
 import ntmonkeys.com.Lib.Unique;
 import ntmonkeys.com.Lib.Stateful;
 import ntmonkeys.com.Lib.Event;
+import ntmonkeys.com.Graphics.ImageView;
 import ntmonkeys.com.Graphics.CommandBuffer;
 import ntmonkeys.com.Engine.EngineContext;
 import ntmonkeys.com.Engine.RenderObject;
 import ntmonkeys.com.Engine.Renderer;
-import :SubLayer;
+import ntmonkeys.com.Engine.CommandBufferCirculator;
 import <unordered_set>;
 import <unordered_map>;
 import <memory>;
+import <vector>;
 
 namespace Engine
 {
@@ -31,7 +35,7 @@ namespace Engine
 		[[nodiscard]]
 		bool isEmpty() const noexcept;
 
-		void draw(Graphics::CommandBuffer &commandBuffer, const Renderer::RenderPassBeginInfo &renderPassBeginInfo) const;
+		void draw(Graphics::CommandBuffer &commandBuffer, const LayerDrawInfo &drawInfo) const;
 
 		[[nodiscard]]
 		constexpr Lib::Event<const Layer *> &getNeedRedrawEvent() const noexcept;
@@ -117,18 +121,14 @@ namespace Engine
 		return __renderObjects.empty();
 	}
 
-	void Layer::draw(Graphics::CommandBuffer &commandBuffer, const Renderer::RenderPassBeginInfo &renderPassBeginInfo) const
+	void Layer::draw(Graphics::CommandBuffer &commandBuffer, const LayerDrawInfo &drawInfo) const
 	{
-		for (const auto &[pRenderer, pSubLayer] : __subLayerMap)
+		for (const auto &[_, pSubLayer] : __subLayerMap)
 		{
 			if (pSubLayer->isEmpty())
 				continue;
 
-			const auto renderPassBeginResult{ pRenderer->beginRenderPass(commandBuffer, renderPassBeginInfo) };
-			pRenderer->bindPipeline(commandBuffer);
-
-			pSubLayer->draw(commandBuffer);
-			pRenderer->endRenderPass(commandBuffer);
+			pSubLayer->draw(commandBuffer, drawInfo);
 		}
 	}
 

@@ -172,6 +172,7 @@
     <ClCompile Include="FenceCirculator.ixx" />
     <ClCompile Include="FramebufferFactory.ixx" />
     <ClCompile Include="Layer.ixx" />
+    <ClCompile Include="LayerDrawInfo.ixx" />
     <ClCompile Include="LayerResourcePool.ixx" />
     <ClCompile Include="Material.ixx" />
     <ClCompile Include="TextureReferenceManager.ixx" />

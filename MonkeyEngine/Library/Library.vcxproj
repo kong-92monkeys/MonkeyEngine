@@ -33,6 +33,7 @@
     <ClCompile Include="RegionAllocator.ixx" />
     <ClCompile Include="Stateful.ixx" />
     <ClCompile Include="ThreadPool.ixx" />
+    <ClCompile Include="ThreadSlot.ixx" />
     <ClCompile Include="TimelineIdAllocator.ixx">
       <FileType>Document</FileType>
     </ClCompile>

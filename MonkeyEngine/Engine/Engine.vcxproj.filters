@@ -57,6 +57,9 @@
     </ClCompile>
     <ClCompile Include="DescriptorSetFactory.ixx" />
     <ClCompile Include="DescriptorUpdater.ixx" />
+    <ClCompile Include="LayerDrawInfo.ixx">
+      <Filter>Layer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Util">

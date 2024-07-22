@@ -57,6 +57,8 @@ namespace Graphics
 			const uint32_t firstSet, const uint32_t descriptorSetCount, const VkDescriptorSet *const pDescriptorSets,
 			const uint32_t dynamicOffsetCount, const uint32_t *const pDynamicOffsets) noexcept;
 
+		void executeCommands(const uint32_t commandBufferCount, const VkCommandBuffer *const pCommandBuffers) noexcept;
+
 		[[nodiscard]]
 		constexpr const VkCommandBuffer &getHandle() const noexcept;
 
@@ -168,5 +170,10 @@ namespace Graphics
 			__handle, pipelineBindPoint, layout,
 			firstSet, descriptorSetCount, pDescriptorSets,
 			dynamicOffsetCount, pDynamicOffsets);
+	}
+
+	void CommandBuffer::executeCommands(const uint32_t commandBufferCount, const VkCommandBuffer *const pCommandBuffers) noexcept
+	{
+		__deviceProc.vkCmdExecuteCommands(__handle, commandBufferCount, pCommandBuffers);
 	}
 }

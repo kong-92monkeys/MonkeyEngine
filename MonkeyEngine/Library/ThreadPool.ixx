@@ -13,15 +13,15 @@ namespace Lib
 	export class ThreadPool : public Unique
 	{
 	public:
-		using Job = std::function<void(uint32_t)>;
+		using Job = std::function<void()>;
 
-		ThreadPool(const uint32_t threadCount = std::thread::hardware_concurrency());
+		ThreadPool(const size_t poolSize = std::thread::hardware_concurrency());
 		virtual ~ThreadPool() noexcept override;
 
 		std::future<void> run(Job &&job);
 
 		[[nodiscard]]
-		constexpr uint32_t getThreadCount() const noexcept;
+		constexpr size_t getPoolSize() const noexcept;
 
 	private:
 		struct __JobInfo
@@ -40,12 +40,12 @@ namespace Lib
 
 		std::condition_variable __loopCV;
 
-		void __loop(const uint32_t threadIndex);
+		void __loop();
 	};
 
-	constexpr uint32_t ThreadPool::getThreadCount() const noexcept
+	constexpr size_t ThreadPool::getPoolSize() const noexcept
 	{
-		return static_cast<uint32_t>(__threads.size());
+		return __threads.size();
 	}
 }
 
@@ -53,10 +53,12 @@ module: private;
 
 namespace Lib
 {
-	ThreadPool::ThreadPool(const uint32_t threadCount)
+	ThreadPool::ThreadPool(const size_t poolSize)
 	{
-		for (uint32_t threadIt{ }; threadIt < threadCount; ++threadIt)
-			__threads.emplace_back(std::bind(&ThreadPool::__loop, this, threadIt));
+		__threads.reserve(poolSize);
+
+		for (uint32_t threadIt{ }; threadIt < poolSize; ++threadIt)
+			__threads.emplace_back(std::bind(&ThreadPool::__loop, this));
 	}
 
 	ThreadPool::~ThreadPool() noexcept
@@ -92,7 +94,7 @@ namespace Lib
 		return retVal;
 	}
 
-	void ThreadPool::__loop(const uint32_t threadIndex)
+	void ThreadPool::__loop()
 	{
 		std::unique_lock loopLock{ __loopMutex, std::defer_lock };
 
@@ -113,7 +115,7 @@ namespace Lib
 
 			loopLock.unlock();
 
-			jobInfo.job(threadIndex);
+			jobInfo.job();
 			jobInfo.promise.set_value();
 		}
 	}

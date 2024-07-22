@@ -221,34 +221,26 @@ namespace Engine
 
 		__clearImageColor(commandBuffer, swapchainImageView);
 
-		const VkRect2D renderArea
-		{
-			.offset	{ 0, 0 },
-			.extent	{ getWidth(), getHeight() }
-		};
+		LayerDrawInfo drawInfo;
 
-		const VkViewport viewport
-		{
-			.x			{ 0.0f },
-			.y			{ 0.0f },
-			.width		{ static_cast<float>(getWidth()) },
-			.height		{ static_cast<float>(getHeight()) },
-			.minDepth	{ 0.0f },
-			.maxDepth	{ 1.0f }
-		};
+		auto &renderArea					{ drawInfo.renderArea };
+		renderArea.offset					= { 0, 0 };
+		renderArea.extent					= { getWidth(), getHeight() };
 
-		commandBuffer.setViewport(0U, 1U, &viewport);
-		commandBuffer.setScissor(0U, 1U, &renderArea);
+		auto &viewport						{ drawInfo.viewport };
+		viewport.x							= 0.0f;
+		viewport.y							= 0.0f;
+		viewport.width						= static_cast<float>(getWidth());
+		viewport.height						= static_cast<float>(getHeight());
+		viewport.minDepth					= 0.0f;
+		viewport.maxDepth					= 1.0f;
 
-		const Renderer::RenderPassBeginInfo renderPassBeginInfo
-		{
-			.pSwapchainImageView	{ &swapchainImageView },
-			.pRenderArea			{ &renderArea },
-			.pFramebufferFactory	{ __pFramebufferFactory.get() }
-		};
+		drawInfo.pColorAttachment			= &swapchainImageView;
+		drawInfo.pFramebufferFactory		= __pFramebufferFactory.get();
+		drawInfo.pSecondaryCBCirculators	= &__secondaryCBCirculators;
 
 		for (const auto &layer : __layers)
-			layer.draw(commandBuffer, renderPassBeginInfo);
+			layer.draw(commandBuffer, drawInfo);
 
 		__transitImageToPresent(commandBuffer, swapchainImage);
 		return { &imgAcquireSemaphore, imageIdx };
@@ -259,8 +251,8 @@ namespace Engine
 		auto &env{ Sys::Environment::getInstance() };
 		auto &threadPool{ env.getThreadPool() };
 
-		const uint32_t threadCount{ threadPool.getThreadCount() };
-		for (uint32_t threadIt{ }; threadIt < threadCount; ++threadIt)
+		const size_t poolSize{ threadPool.getPoolSize() };
+		for (size_t threadIt{ }; threadIt < poolSize; ++threadIt)
 		{
 			__secondaryCBCirculators.emplace_back(
 				std::make_unique<CommandBufferCirculator>(

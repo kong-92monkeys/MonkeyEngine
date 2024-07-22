@@ -17,6 +17,7 @@
     <ClCompile Include="Stateful.ixx" />
     <ClCompile Include="Bitmap.ixx" />
     <ClCompile Include="ThreadPool.ixx" />
+    <ClCompile Include="ThreadSlot.ixx" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GLM.h" />

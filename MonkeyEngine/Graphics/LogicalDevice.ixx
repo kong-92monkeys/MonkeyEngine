@@ -706,6 +706,7 @@ namespace Graphics
 		LOAD_DEVICE_PROC(vkCmdBindVertexBuffers);
 		LOAD_DEVICE_PROC(vkCmdBindIndexBuffer);
 		LOAD_DEVICE_PROC(vkCmdBindDescriptorSets);
+		LOAD_DEVICE_PROC(vkCmdExecuteCommands);
 
 		// Memory
 		LOAD_DEVICE_PROC(vkAllocateMemory);

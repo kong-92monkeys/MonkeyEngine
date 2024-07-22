@@ -156,6 +156,7 @@ namespace VK
 		DECLARE_PROC(vkCmdBindVertexBuffers);
 		DECLARE_PROC(vkCmdBindIndexBuffer);
 		DECLARE_PROC(vkCmdBindDescriptorSets);
+		DECLARE_PROC(vkCmdExecuteCommands);
 
 		// Memory
 		DECLARE_PROC(vkAllocateMemory);

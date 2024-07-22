@@ -136,7 +136,7 @@ namespace Frameworks
 		{
 			.sType				{ VkStructureType::VK_STRUCTURE_TYPE_RENDER_PASS_ATTACHMENT_BEGIN_INFO },
 			.attachmentCount	{ 1U },
-			.pAttachments		{ &(beginInfo.pSwapchainImageView->getHandle()) }
+			.pAttachments		{ &(beginInfo.pColorAttachment->getHandle()) }
 		};
 
 		const VkRenderPassBeginInfo renderPassBeginInfo

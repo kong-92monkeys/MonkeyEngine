@@ -6,6 +6,7 @@ export module ntmonkeys.com.Engine.Layer:SubLayer;
 
 import :MaterialBufferBuilder;
 import :TextureReferenceManager;
+import :LayerDrawInfo;
 import ntmonkeys.com.Lib.Unique;
 import ntmonkeys.com.Lib.Stateful;
 import ntmonkeys.com.Lib.Event;
@@ -27,16 +28,18 @@ import ntmonkeys.com.Engine.RenderObject;
 import ntmonkeys.com.Engine.MemoryAllocator;
 import ntmonkeys.com.Engine.LayerResourcePool;
 import ntmonkeys.com.Engine.DescriptorUpdater;
+import ntmonkeys.com.Engine.CommandBufferCirculator;
 import <cstdint>;
 import <unordered_map>;
 import <unordered_set>;
 import <memory>;
 import <typeindex>;
 import <future>;
+import <vector>;
 
 namespace Engine
 {
-	export class SubLayer : public Lib::Unique, public Lib::Stateful<SubLayer>
+	class SubLayer : public Lib::Unique, public Lib::Stateful<SubLayer>
 	{
 	public:
 		SubLayer(const EngineContext &context, const Renderer *const pRenderer) noexcept;
@@ -51,7 +54,7 @@ namespace Engine
 		[[nodiscard]]
 		bool isEmpty() const noexcept;
 
-		void draw(Graphics::CommandBuffer &commandBuffer) const;
+		void draw(Graphics::CommandBuffer &commandBuffer, const LayerDrawInfo &drawInfo) const;
 
 		[[nodiscard]]
 		constexpr Lib::Event<const SubLayer *> &getNeedRedrawEvent() const noexcept;
@@ -94,6 +97,12 @@ namespace Engine
 		Lib::EventListenerPtr<const TextureReferenceManager *> __pTextureRefUpdateListener;
 
 		mutable Lib::Event<const SubLayer *> __needRedrawEvent;
+
+		void __drawRange(
+			Graphics::CommandBuffer &secondaryCB,
+			const Renderer::RenderPassBeginResult &renderPassBeginResult,
+			const VkViewport &viewport, const VkRect2D &scissor,
+			const size_t seqIdxFrom, const size_t seqIdxTo) const;
 
 		void __registerObject(const RenderObject *const pObject);
 		void __unregisterObject(const RenderObject *const pObject);
@@ -196,10 +205,17 @@ namespace Engine
 		return __object2Region.empty();
 	}
 
-	void SubLayer::draw(Graphics::CommandBuffer &commandBuffer) const
+	void SubLayer::draw(Graphics::CommandBuffer &commandBuffer, const LayerDrawInfo &drawInfo) const
 	{
 		if (isEmpty())
 			return;
+
+		auto &env{ Sys::Environment::getInstance() };
+		auto &threadSlot{ env.getThreadSlot() };
+
+		std::vector<Graphics::CommandBuffer> secondaryCBs;
+		std::vector<VkCommandBuffer> secondaryCBHandles;
+		std::vector<std::future<void>> secondaryCBRecodeFutures;
 
 		if (__pSubLayerDescSet)
 		{
@@ -209,19 +225,58 @@ namespace Engine
 				Constants::SUB_LAYER_DESC_SET_LOCATION, 1U, &(__pSubLayerDescSet->getHandle()), 0U, nullptr);
 		}
 
-		const Mesh *pBoundMesh{ };
-		for (const auto &[pObject, baseId] : __drawSequence)
+		const Renderer::RenderPassBeginInfo renderPassBeginInfo
 		{
-			const auto pMesh{ pObject->getMesh() };
+			.pColorAttachment		{ drawInfo.pColorAttachment },
+			.pRenderArea			{ &(drawInfo.renderArea) },
+			.pFramebufferFactory	{ drawInfo.pFramebufferFactory }
+		};
 
-			if (pBoundMesh != pMesh)
+		const auto renderPassBeginResult{ __pRenderer->beginRenderPass(commandBuffer, renderPassBeginInfo) };
+
+		for (const auto &pCirculator : *(drawInfo.pSecondaryCBCirculators))
+		{
+			const auto commandBuffer{ pCirculator->getNext() };
+			secondaryCBs.emplace_back(commandBuffer);
+			secondaryCBHandles.emplace_back(commandBuffer.getHandle());
+		}
+
+		const size_t drawSeqLength			{ __drawSequence.size() };
+		const size_t slotCount				{ threadSlot.getSlotCount() };
+		const size_t drawSeqLengthPerSlot	{ drawSeqLength / slotCount };
+		size_t drawSeqRemainder				{ drawSeqLength % slotCount };
+
+		size_t seqIdxFrom{ };
+		size_t seqIdxTo{ };
+		for (size_t slotIter{ }; slotIter < slotCount; ++slotIter)
+		{
+			seqIdxFrom = seqIdxTo;
+			seqIdxTo += drawSeqLengthPerSlot;
+
+			if (drawSeqRemainder)
 			{
-				pBoundMesh = pMesh;
-				pMesh->bind(commandBuffer);
+				++seqIdxTo;
+				--drawSeqRemainder;
 			}
 
-			pObject->draw(commandBuffer, baseId);
+			auto secondaryCBRecodeFuture
+			{
+				threadSlot.run(
+					slotIter,
+					std::bind(
+						&SubLayer::__drawRange, this,
+						std::ref(secondaryCBs[slotIter]), std::cref(renderPassBeginResult),
+						std::cref(drawInfo.viewport), std::cref(drawInfo.renderArea), seqIdxFrom, seqIdxTo))
+			};
+
+			secondaryCBRecodeFutures.emplace_back(std::move(secondaryCBRecodeFuture));
 		}
+
+		for (auto &fut : secondaryCBRecodeFutures)
+			fut.wait();
+
+		commandBuffer.executeCommands(static_cast<uint32_t>(secondaryCBHandles.size()), secondaryCBHandles.data());
+		__pRenderer->endRenderPass(commandBuffer);
 	}
 
 	void SubLayer::_onValidate()
@@ -239,6 +294,54 @@ namespace Engine
 		__instanceInfoBufferInvalidated = false;
 		__invalidatedMaterialBufferBuilders.clear();
 		__textureRefInvalidated = false;
+	}
+
+	void SubLayer::__drawRange(
+		Graphics::CommandBuffer &secondaryCB,
+		const Renderer::RenderPassBeginResult &renderPassBeginResult,
+		const VkViewport &viewport, const VkRect2D &scissor,
+		const size_t seqIdxFrom, const size_t seqIdxTo) const
+	{
+		const VkCommandBufferInheritanceInfo inheritanceInfo
+		{
+			.sType			{ VkStructureType::VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO },
+			.renderPass		{ renderPassBeginResult.hRenderPass },
+			.subpass		{ 0U },
+			.framebuffer	{ renderPassBeginResult.hFramebuffer }
+		};
+
+		const VkCommandBufferBeginInfo cbBeginInfo
+		{
+			.sType				{ VkStructureType::VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO },
+			.flags				{
+				VkCommandBufferUsageFlagBits::VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT |
+				VkCommandBufferUsageFlagBits::VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT
+			},
+			.pInheritanceInfo	{ &inheritanceInfo }
+		};
+
+		secondaryCB.begin(cbBeginInfo);
+
+		secondaryCB.setViewport(0U, 1U, &viewport);
+		secondaryCB.setScissor(0U, 1U, &scissor);
+
+		__pRenderer->bindPipeline(secondaryCB);
+
+		const Mesh *pBoundMesh{ };
+		for (size_t seqIter{ seqIdxFrom }; seqIter < seqIdxTo; ++seqIter)
+		{
+			const auto [pObject, baseId] { __drawSequence[seqIter] };
+
+			const auto pMesh{ pObject->getMesh() };
+
+			if (pBoundMesh != pMesh)
+			{
+				pBoundMesh = pMesh;
+				pMesh->bind(secondaryCB);
+			}
+
+			pObject->draw(secondaryCB, baseId);
+		}
 	}
 
 	void SubLayer::__registerObject(const RenderObject *const pObject)
@@ -341,7 +444,7 @@ namespace Engine
 
 			auto updateFutures
 			{
-				threadPool.run([this, idxFrom, &objects] (auto)
+				threadPool.run([this, idxFrom, &objects]
 				{
 					size_t idx{ idxFrom };
 

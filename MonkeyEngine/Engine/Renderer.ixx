@@ -50,7 +50,7 @@ namespace Engine
 		struct RenderPassBeginInfo
 		{
 		public:
-			const Graphics::ImageView *pSwapchainImageView{ };
+			const Graphics::ImageView *pColorAttachment{ };
 			const VkRect2D *pRenderArea{ };
 			FramebufferFactory *pFramebufferFactory{ };
 		};
@@ -59,7 +59,7 @@ namespace Engine
 		{
 		public:
 			VkRenderPass hRenderPass{ };
-			VkFramebuffer hFrameBuffer{ };
+			VkFramebuffer hFramebuffer{ };
 		};
 
 		Renderer() = default;
