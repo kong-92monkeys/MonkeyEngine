@@ -281,10 +281,10 @@ namespace Frameworks
 		posBindingDesc.stride		= sizeof(Vertex_P);
 		posBindingDesc.inputRate	= VkVertexInputRate::VK_VERTEX_INPUT_RATE_VERTEX;
 
-		auto &colorBindingDesc		{ vertexBindingDescs.emplace_back() };
-		colorBindingDesc.binding	= VertexAttrib::COLOR_LOCATION;
-		colorBindingDesc.stride		= sizeof(Vertex_C);
-		colorBindingDesc.inputRate	= VkVertexInputRate::VK_VERTEX_INPUT_RATE_VERTEX;
+		auto &texCoordBindingDesc		{ vertexBindingDescs.emplace_back() };
+		texCoordBindingDesc.binding		= VertexAttrib::TEXCOORD_LOCATION;
+		texCoordBindingDesc.stride		= sizeof(Vertex_T);
+		texCoordBindingDesc.inputRate	= VkVertexInputRate::VK_VERTEX_INPUT_RATE_VERTEX;
 
 		std::vector<VkVertexInputAttributeDescription> vertexAttribDescs;
 
@@ -294,11 +294,11 @@ namespace Frameworks
 		posAttribDesc.format		= VkFormat::VK_FORMAT_R32G32B32_SFLOAT;
 		posAttribDesc.offset		= 0U;
 
-		auto &colorAttribDesc		{ vertexAttribDescs.emplace_back() };
-		colorAttribDesc.location	= VertexAttrib::COLOR_LOCATION;
-		colorAttribDesc.binding		= VertexAttrib::COLOR_LOCATION;
-		colorAttribDesc.format		= VkFormat::VK_FORMAT_R32G32B32A32_SFLOAT;
-		colorAttribDesc.offset		= 0U;
+		auto &texCoordAttribDesc		{ vertexAttribDescs.emplace_back() };
+		texCoordAttribDesc.location		= VertexAttrib::TEXCOORD_LOCATION;
+		texCoordAttribDesc.binding		= VertexAttrib::TEXCOORD_LOCATION;
+		texCoordAttribDesc.format		= VkFormat::VK_FORMAT_R32G32_SFLOAT;
+		texCoordAttribDesc.offset		= 0U;
 
 		const VkPipelineVertexInputStateCreateInfo vertexInputState
 		{

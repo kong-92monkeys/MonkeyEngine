@@ -428,12 +428,22 @@ namespace Engine
 		// Material infos
 		for (const auto &[type, pBuilder] : __materialDataBufferBuilders)
 		{
-			const auto pMaterialBuffer		{ &(pBuilder->getMaterialBuffer()) };
-			const auto descLocation			{ __pRenderer->getMaterialDescLocationOf(type) };
+			const auto pMaterialBuffer			{ &(pBuilder->getMaterialBuffer()) };
+			const auto materialDescLocation		{ __pRenderer->getMaterialDescLocationOf(type) };
 
 			__descUpdater.addBufferInfo(
-				__pSubLayerDescSet->getHandle(), descLocation.value(),
+				__pSubLayerDescSet->getHandle(), materialDescLocation.value(),
 				0U, 1U, VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, &pMaterialBuffer);
+
+			const auto pTexLUTBuffer{ pBuilder->getTextureLUTBuffer() };
+			if (pTexLUTBuffer)
+			{
+				const auto texLUTDescLocation{ __pRenderer->getTextureLUTDescLocationOf(type) };
+
+				__descUpdater.addBufferInfo(
+					__pSubLayerDescSet->getHandle(), texLUTDescLocation.value(),
+					0U, 1U, VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, &pTexLUTBuffer);
+			}
 		}
 
 		// Texture infos

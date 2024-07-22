@@ -114,8 +114,12 @@ namespace Engine
 			__validateMaterialHostBuffer(pMaterial);
 			__materialBufferInvalidated = true;
 
-			__validateTextureLUTHostBuffer(pMaterial);
-			__textureLUTBufferInvalidated = true;
+			const uint32_t slotCount{ pMaterial->getTextureSlotCount() };
+			if (slotCount)
+			{
+				__validateTextureLUTHostBuffer(pMaterial);
+				__textureLUTBufferInvalidated = true;
+			}
 
 			_invalidate();
 		}
@@ -168,7 +172,6 @@ namespace Engine
 	void MaterialBufferBuilder::__validateMaterialHostBuffer(const Material *const pMaterial) noexcept
 	{
 		const uint32_t materialId	{ __materialRefIdMap.at(pMaterial).second };
-
 		const size_t materialSize	{ pMaterial->getSize() };
 		const size_t memOffset		{ materialId * materialSize };
 
@@ -197,8 +200,6 @@ namespace Engine
 	void MaterialBufferBuilder::__validateTextureLUTHostBuffer(const Material *const pMaterial) noexcept
 	{
 		const uint32_t slotCount{ pMaterial->getTextureSlotCount() };
-		if (!slotCount)
-			return;
 
 		const uint32_t materialId		{ __materialRefIdMap.at(pMaterial).second };
 		const uint32_t slotBaseIndex	{ materialId * slotCount };
@@ -226,8 +227,6 @@ namespace Engine
 		const Material *const pMaterial, const uint32_t slotIndex, const Texture *const pTexture) noexcept
 	{
 		const uint32_t slotCount{ pMaterial->getTextureSlotCount() };
-		if (!slotCount)
-			return;
 
 		const uint32_t materialId		{ __materialRefIdMap.at(pMaterial).second };
 		const uint32_t slotBaseIndex	{ materialId * slotCount };

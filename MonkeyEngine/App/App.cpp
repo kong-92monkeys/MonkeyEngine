@@ -219,18 +219,18 @@ void CApp::__createRenderObject()
 	posBuffer.typedAdd<glm::vec3>({ 0.5f, 0.5f, 0.5f });
 	posBuffer.typedAdd<glm::vec3>({ 0.5f, -0.5f, 0.5f });
 
-	Lib::GenericBuffer colorBuffer;
-	colorBuffer.typedAdd<glm::vec4>({ 1.0f, 0.0f, 0.0f, 1.0f });
-	colorBuffer.typedAdd<glm::vec4>({ 0.0f, 1.0f, 0.0f, 1.0f });
-	colorBuffer.typedAdd<glm::vec4>({ 0.0f, 0.0f, 1.0f, 1.0f });
-	colorBuffer.typedAdd<glm::vec4>({ 1.0f, 0.0f, 1.0f, 1.0f });
+	Lib::GenericBuffer texCoordBuffer;
+	texCoordBuffer.typedAdd<glm::vec2>({ 0.0f, 0.0f });
+	texCoordBuffer.typedAdd<glm::vec2>({ 0.0f, 1.0f });
+	texCoordBuffer.typedAdd<glm::vec2>({ 1.0f, 1.0f });
+	texCoordBuffer.typedAdd<glm::vec2>({ 1.0f, 0.0f });
 
 	Lib::GenericBuffer indexBuffer;
 	indexBuffer.typedAdd<uint16_t>({ 0U, 1U, 2U, 0U, 2U, 3U });
 
 	const auto pMesh{ std::shared_ptr<Engine::Mesh>{ __pRenderingEngine->createMesh() } };
 	pMesh->createVertexBuffer(Frameworks::VertexAttrib::POS_LOCATION, posBuffer.getData(), posBuffer.getSize());
-	pMesh->createVertexBuffer(Frameworks::VertexAttrib::COLOR_LOCATION, colorBuffer.getData(), colorBuffer.getSize());
+	pMesh->createVertexBuffer(Frameworks::VertexAttrib::TEXCOORD_LOCATION, texCoordBuffer.getData(), texCoordBuffer.getSize());
 	pMesh->createIndexBuffer(VkIndexType::VK_INDEX_TYPE_UINT16, indexBuffer.getData(), indexBuffer.getSize());
 
 	const auto pDrawParam{ std::make_shared<Engine::DrawParamIndexed>(6U, 0U, 0) };

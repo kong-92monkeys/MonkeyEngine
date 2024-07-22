@@ -238,6 +238,7 @@
     <None Include="Assets\Shaders\Constants.glsl" />
     <None Include="Assets\Shaders\Simple.frag" />
     <None Include="Assets\Shaders\Simple.vert" />
+    <None Include="Assets\Shaders\SimpleCommon.glsl" />
     <None Include="Assets\Shaders\Textures.glsl" />
     <None Include="res\App.rc2" />
   </ItemGroup>

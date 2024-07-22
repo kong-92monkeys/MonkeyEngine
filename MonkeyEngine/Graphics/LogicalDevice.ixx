@@ -522,6 +522,7 @@ namespace Graphics
 			createInfo.p12Features->imagelessFramebuffer &&
 			createInfo.p12Features->descriptorBindingVariableDescriptorCount &&
 			createInfo.p12Features->descriptorBindingPartiallyBound &&
+			createInfo.p12Features->runtimeDescriptorArray &&
 			createInfo.p13Features->pipelineCreationCacheControl &&
 			createInfo.p13Features->synchronization2 &&
 			createInfo.pRobustness2Features->nullDescriptor
@@ -552,8 +553,9 @@ namespace Graphics
 		features12.imagelessFramebuffer = VK_TRUE;
 		features12.descriptorBindingVariableDescriptorCount = VK_TRUE;
 		features12.descriptorBindingPartiallyBound = VK_TRUE;
+		features12.runtimeDescriptorArray = VK_TRUE;
 		features12.pNext = &features13;
-
+		
 		features13.sType = VkStructureType::VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
 		features13.pipelineCreationCacheControl = VK_TRUE;
 		features13.synchronization2 = VK_TRUE;
