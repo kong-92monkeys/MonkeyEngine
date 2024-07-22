@@ -47,7 +47,7 @@ namespace Engine
 			const Graphics::DescriptorSetLayout *pRenderTargetDescSetLayout{ };
 		};
 
-		struct BeginInfo
+		struct RenderPassBeginInfo
 		{
 		public:
 			const Graphics::ImageView *pSwapchainImageView{ };
@@ -55,7 +55,7 @@ namespace Engine
 			FramebufferFactory *pFramebufferFactory{ };
 		};
 
-		struct BeginResult
+		struct RenderPassBeginResult
 		{
 		public:
 			VkRenderPass hRenderPass{ };
@@ -85,8 +85,11 @@ namespace Engine
 		[[nodiscard]]
 		virtual const Graphics::PipelineLayout &getPipelineLayout() const noexcept = 0;
 
-		virtual BeginResult begin(Graphics::CommandBuffer &commandBuffer, const BeginInfo &beginInfo) const noexcept = 0;
-		virtual void end(Graphics::CommandBuffer &commandBuffer) const noexcept;
+		virtual RenderPassBeginResult beginRenderPass(
+			Graphics::CommandBuffer &commandBuffer, const RenderPassBeginInfo &beginInfo) const noexcept = 0;
+
+		virtual void endRenderPass(Graphics::CommandBuffer &commandBuffer) const noexcept;
+		virtual void bindPipeline(Graphics::CommandBuffer &commandBuffer) const noexcept = 0;
 
 	protected:
 		[[nodiscard]]
@@ -193,7 +196,7 @@ namespace Engine
 		return nullptr;
 	}
 
-	void Renderer::end(Graphics::CommandBuffer &commandBuffer) const noexcept
+	void Renderer::endRenderPass(Graphics::CommandBuffer &commandBuffer) const noexcept
 	{
 		const VkSubpassEndInfo subpassEndInfo
 		{

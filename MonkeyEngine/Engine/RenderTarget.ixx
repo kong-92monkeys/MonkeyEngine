@@ -240,7 +240,7 @@ namespace Engine
 		commandBuffer.setViewport(0U, 1U, &viewport);
 		commandBuffer.setScissor(0U, 1U, &renderArea);
 
-		const Renderer::BeginInfo rendererBeginInfo
+		const Renderer::RenderPassBeginInfo renderPassBeginInfo
 		{
 			.pSwapchainImageView	{ &swapchainImageView },
 			.pRenderArea			{ &renderArea },
@@ -248,7 +248,7 @@ namespace Engine
 		};
 
 		for (const auto &layer : __layers)
-			layer.draw(commandBuffer, rendererBeginInfo);
+			layer.draw(commandBuffer, renderPassBeginInfo);
 
 		__transitImageToPresent(commandBuffer, swapchainImage);
 		return { &imgAcquireSemaphore, imageIdx };
