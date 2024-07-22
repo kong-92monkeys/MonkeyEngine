@@ -29,7 +29,7 @@ namespace Engine
 		void updateIndexBuffer(const void *const pData, const size_t size, const size_t offset) noexcept;
 		void clearIndexBuffer() noexcept;
 
-		void bind(Graphics::CommandBuffer &commandBuffer) const noexcept;
+		void bind(const Graphics::CommandBuffer &commandBuffer) const noexcept;
 
 	private:
 		const EngineContext &__context;
@@ -172,7 +172,7 @@ namespace Engine
 		pLazyDeleter->reserve(std::move(__pIndexBuffer));
 	}
 
-	void Mesh::bind(Graphics::CommandBuffer &commandBuffer) const noexcept
+	void Mesh::bind(const Graphics::CommandBuffer &commandBuffer) const noexcept
 	{
 		__validateCmdParams();
 

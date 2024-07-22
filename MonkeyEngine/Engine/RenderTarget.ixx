@@ -98,6 +98,7 @@ namespace Engine
 
 		std::vector<std::unique_ptr<CommandBufferCirculator>> __secondaryCBCirculators;
 
+		LayerDrawInfo __drawInfo;
 		Lib::WeakReferenceSet<Layer> __layers;
 
 		glm::vec4 __backgroundColor{ 0.01f, 0.01f, 0.01f, 1.0f };
@@ -109,7 +110,9 @@ namespace Engine
 		void __createSecondaryCBCirculators();
 
 		void __validateSwapchainDependencies();
+
 		void __clearImageColor(Graphics::CommandBuffer &commandBuffer, const Graphics::ImageView &imageView);
+		void __populateDrawInfo(const Graphics::ImageView &colorAttachment) noexcept;
 		void __transitImageToPresent(Graphics::CommandBuffer &commandBuffer, const Graphics::Image &image);
 
 		void __onLayerRedrawNeeded() const noexcept;
@@ -220,27 +223,10 @@ namespace Engine
 		const auto &swapchainImageView	{ __pSwapchain->getImageViewOf(imageIdx) };
 
 		__clearImageColor(commandBuffer, swapchainImageView);
-
-		LayerDrawInfo drawInfo;
-
-		auto &renderArea					{ drawInfo.renderArea };
-		renderArea.offset					= { 0, 0 };
-		renderArea.extent					= { getWidth(), getHeight() };
-
-		auto &viewport						{ drawInfo.viewport };
-		viewport.x							= 0.0f;
-		viewport.y							= 0.0f;
-		viewport.width						= static_cast<float>(getWidth());
-		viewport.height						= static_cast<float>(getHeight());
-		viewport.minDepth					= 0.0f;
-		viewport.maxDepth					= 1.0f;
-
-		drawInfo.pColorAttachment			= &swapchainImageView;
-		drawInfo.pFramebufferFactory		= __pFramebufferFactory.get();
-		drawInfo.pSecondaryCBCirculators	= &__secondaryCBCirculators;
+		__populateDrawInfo(swapchainImageView);
 
 		for (const auto &layer : __layers)
-			layer.draw(commandBuffer, drawInfo);
+			layer.draw(commandBuffer, __drawInfo);
 
 		__transitImageToPresent(commandBuffer, swapchainImage);
 		return { &imgAcquireSemaphore, imageIdx };
@@ -319,6 +305,25 @@ namespace Engine
 
 		commandBuffer.beginRenderPass(renderPassBeginInfo, subpassBeginInfo);
 		commandBuffer.endRenderPass(subpassEndInfo);
+	}
+
+	void RenderTarget::__populateDrawInfo(const Graphics::ImageView &colorAttachment) noexcept
+	{
+		auto &renderArea					{ __drawInfo.renderArea };
+		renderArea.offset					= { 0, 0 };
+		renderArea.extent					= { getWidth(), getHeight() };
+
+		auto &viewport						{ __drawInfo.viewport };
+		viewport.x							= 0.0f;
+		viewport.y							= 0.0f;
+		viewport.width						= static_cast<float>(getWidth());
+		viewport.height						= static_cast<float>(getHeight());
+		viewport.minDepth					= 0.0f;
+		viewport.maxDepth					= 1.0f;
+
+		__drawInfo.pColorAttachment			= &colorAttachment;
+		__drawInfo.pFramebufferFactory		= __pFramebufferFactory.get();
+		__drawInfo.pSecondaryCBCirculators	= &__secondaryCBCirculators;
 	}
 
 	void RenderTarget::__transitImageToPresent(Graphics::CommandBuffer &commandBuffer, const Graphics::Image &image)

@@ -87,10 +87,10 @@ namespace Engine
 		virtual const Graphics::PipelineLayout &getPipelineLayout() const noexcept = 0;
 
 		virtual RenderPassBeginResult beginRenderPass(
-			Graphics::CommandBuffer &commandBuffer, const RenderPassBeginInfo &beginInfo) const noexcept = 0;
+			const Graphics::CommandBuffer &commandBuffer, const RenderPassBeginInfo &beginInfo) const noexcept = 0;
 
-		virtual void endRenderPass(Graphics::CommandBuffer &commandBuffer) const noexcept;
-		virtual void bindPipeline(Graphics::CommandBuffer &commandBuffer) const noexcept = 0;
+		virtual void endRenderPass(const Graphics::CommandBuffer &commandBuffer) const noexcept;
+		virtual void bindPipeline(const Graphics::CommandBuffer &commandBuffer) const noexcept = 0;
 
 	protected:
 		[[nodiscard]]
@@ -197,7 +197,7 @@ namespace Engine
 		return nullptr;
 	}
 
-	void Renderer::endRenderPass(Graphics::CommandBuffer &commandBuffer) const noexcept
+	void Renderer::endRenderPass(const Graphics::CommandBuffer &commandBuffer) const noexcept
 	{
 		const VkSubpassEndInfo subpassEndInfo
 		{

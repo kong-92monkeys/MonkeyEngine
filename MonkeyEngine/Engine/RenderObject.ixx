@@ -49,7 +49,7 @@ namespace Engine
 		[[nodiscard]]
 		constexpr bool isDrawable() const noexcept;
 
-		void draw(Graphics::CommandBuffer &commandBuffer, const uint32_t baseId) const noexcept;
+		void draw(const Graphics::CommandBuffer &commandBuffer, const uint32_t baseId) const noexcept;
 
 		[[nodiscard]]
 		constexpr Lib::EventView<const RenderObject *, const Renderer *, const Renderer *> &getRendererChangeEvent() const noexcept;
@@ -270,7 +270,7 @@ namespace Engine
 		__validateDrawable();
 	}
 
-	void RenderObject::draw(Graphics::CommandBuffer &commandBuffer, const uint32_t baseId) const noexcept
+	void RenderObject::draw(const Graphics::CommandBuffer &commandBuffer, const uint32_t baseId) const noexcept
 	{
 		__pDrawParam->draw(commandBuffer, getInstanceCount(), baseId);
 	}

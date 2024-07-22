@@ -13,7 +13,7 @@ namespace Engine
 	{
 	public:
 		virtual void draw(
-			Graphics::CommandBuffer &commandBuffer,
+			const Graphics::CommandBuffer &commandBuffer,
 			const uint32_t instanceCount, const uint32_t firstInstance) const noexcept = 0;
 	};
 
@@ -23,7 +23,7 @@ namespace Engine
 		DrawParamIndexed(const uint32_t indexCount, const uint32_t firstIndex, const int32_t vertexOffset) noexcept;
 
 		virtual void draw(
-			Graphics::CommandBuffer &commandBuffer,
+			const Graphics::CommandBuffer &commandBuffer,
 			const uint32_t instanceCount, const uint32_t firstInstance) const noexcept override;
 
 	private:
@@ -43,7 +43,7 @@ namespace Engine
 	{}
 
 	void DrawParamIndexed::draw(
-		Graphics::CommandBuffer &commandBuffer,
+		const Graphics::CommandBuffer &commandBuffer,
 		const uint32_t instanceCount, const uint32_t firstInstance) const noexcept
 	{
 		commandBuffer.drawIndexed(__indexCount, instanceCount, __firstIndex, __vertexOffset, firstInstance);

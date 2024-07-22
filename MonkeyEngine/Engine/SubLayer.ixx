@@ -99,7 +99,7 @@ namespace Engine
 		mutable Lib::Event<const SubLayer *> __needRedrawEvent;
 
 		void __drawRange(
-			Graphics::CommandBuffer &secondaryCB,
+			const Graphics::CommandBuffer &secondaryCB,
 			const Renderer::RenderPassBeginResult &renderPassBeginResult,
 			const VkViewport &viewport, const VkRect2D &scissor,
 			const size_t seqIdxFrom, const size_t seqIdxTo) const;
@@ -213,7 +213,6 @@ namespace Engine
 		auto &env{ Sys::Environment::getInstance() };
 		auto &threadSlot{ env.getThreadSlot() };
 
-		std::vector<Graphics::CommandBuffer> secondaryCBs;
 		std::vector<VkCommandBuffer> secondaryCBHandles;
 		std::vector<std::future<void>> secondaryCBRecodeFutures;
 
@@ -226,13 +225,6 @@ namespace Engine
 		};
 
 		const auto renderPassBeginResult{ __pRenderer->beginRenderPass(commandBuffer, renderPassBeginInfo) };
-
-		for (const auto &pCirculator : *(drawInfo.pSecondaryCBCirculators))
-		{
-			const auto commandBuffer{ pCirculator->getNext() };
-			secondaryCBs.emplace_back(commandBuffer);
-			secondaryCBHandles.emplace_back(commandBuffer.getHandle());
-		}
 
 		const size_t drawSeqLength			{ __drawSequence.size() };
 		const size_t slotCount				{ threadSlot.getSlotCount() };
@@ -252,16 +244,29 @@ namespace Engine
 				--drawSeqRemainder;
 			}
 
+			if (seqIdxFrom == seqIdxTo)
+				break;
+
+			const auto &pSecondaryCBCirculator	{ drawInfo.pSecondaryCBCirculators->at(slotIter) };
+			const auto secondaryCB				{ pSecondaryCBCirculator->getNext() };
+
 			auto secondaryCBRecodeFuture
 			{
 				threadSlot.run(
 					slotIter,
-					std::bind(
-						&SubLayer::__drawRange, this,
-						std::ref(secondaryCBs[slotIter]), std::cref(renderPassBeginResult),
-						std::cref(drawInfo.viewport), std::cref(drawInfo.renderArea), seqIdxFrom, seqIdxTo))
+					[
+						this, secondaryCB, &renderPassBeginResult,
+						&viewport{ drawInfo.viewport }, &scissor{ drawInfo.renderArea },
+						seqIdxFrom, seqIdxTo]
+					{
+						__drawRange(
+							secondaryCB, renderPassBeginResult,
+							viewport, scissor, seqIdxFrom, seqIdxTo);
+					}
+				)
 			};
 
+			secondaryCBHandles.emplace_back(secondaryCB.getHandle());
 			secondaryCBRecodeFutures.emplace_back(std::move(secondaryCBRecodeFuture));
 		}
 
@@ -290,7 +295,7 @@ namespace Engine
 	}
 
 	void SubLayer::__drawRange(
-		Graphics::CommandBuffer &secondaryCB,
+		const Graphics::CommandBuffer &secondaryCB,
 		const Renderer::RenderPassBeginResult &renderPassBeginResult,
 		const VkViewport &viewport, const VkRect2D &scissor,
 		const size_t seqIdxFrom, const size_t seqIdxTo) const
