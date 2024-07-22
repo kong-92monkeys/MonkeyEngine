@@ -11,7 +11,6 @@
 #include "../Library/GLM.h"
 #include "../Vulkan/Vulkan.h"
 import ntmonkeys.com.Lib.Event;
-import ntmonkeys.com.Lib.AssetManager;
 import ntmonkeys.com.Engine.Core;
 import ntmonkeys.com.Engine.RenderingEngine;
 import ntmonkeys.com.Engine.RenderTarget;
@@ -52,8 +51,6 @@ public:
 	constexpr Lib::EventView<> &getIdleEvent() const noexcept;
 
 private:
-	std::unique_ptr<Lib::AssetManager> __pAssetManager;
-
 	std::unique_ptr<Engine::Core> __pCore;
 	std::unique_ptr<Engine::RenderingEngine> __pRenderingEngine;
 

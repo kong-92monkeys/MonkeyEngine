@@ -4,7 +4,7 @@ module;
 
 export module ntmonkeys.com.Engine.ShaderIncluder;
 
-import ntmonkeys.com.Lib.AssetManager;
+import ntmonkeys.com.Sys.Environment;
 import <fstream>;
 import <sstream>;
 import <string>;
@@ -16,7 +16,7 @@ namespace Engine
     export class ShaderIncluder : public shaderc::CompileOptions::IncluderInterface
     {
     public:
-        explicit ShaderIncluder(const Lib::AssetManager &assetManager) noexcept;
+        ShaderIncluder() = default;
 
         virtual shaderc_include_result *GetInclude(
             const char *const requested_source,
@@ -34,8 +34,6 @@ namespace Engine
             std::string content;
         };
 
-        const Lib::AssetManager &__assetManager;
-
         [[nodiscard]]
         static std::filesystem::path __resolveTargetAbsolutePath(
             const shaderc_include_type includeType,
@@ -48,16 +46,15 @@ module: private;
 
 namespace Engine
 {
-    ShaderIncluder::ShaderIncluder(const Lib::AssetManager &assetManager) noexcept :
-        __assetManager{ assetManager }
-    {}
-
     shaderc_include_result *ShaderIncluder::GetInclude(
         const char *const requested_source,
         const shaderc_include_type includeType,
         const char *const requesting_source,
         const size_t include_depth)
     {
+        auto &env{ Sys::Environment::getInstance() };
+        auto &assetManager{ env.getAssetManager() };
+
         auto *const pPlaceholder    { new IncludeResultPlaceholder };
         auto &sourceName            { pPlaceholder->sourceName };
         auto &content               { pPlaceholder->content };
@@ -67,7 +64,7 @@ namespace Engine
         try
         {
             sourceName  = absolutePath.string();
-            content     = __assetManager.readString(sourceName);
+            content     = assetManager.readString(sourceName);
         }
         catch (...)
         {

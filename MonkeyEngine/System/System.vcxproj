@@ -18,11 +18,19 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Library\Library.vcxproj">
+      <Project>{b07a68cb-1c8b-490b-8900-411b4c3a9deb}</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Environment.ixx" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{f1eea86e-325c-4670-93c7-42ebb5f904a3}</ProjectGuid>
-    <RootNamespace>Engine</RootNamespace>
+    <ProjectGuid>{c1d34d01-f9ef-4783-b839-20ea93618e11}</ProjectGuid>
+    <RootNamespace>System</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -116,7 +124,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_LIB;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>
@@ -130,9 +138,6 @@
       </SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
-    <Lib>
-      <AdditionalDependencies>shaderc_shared.lib</AdditionalDependencies>
-    </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -140,7 +145,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;_LIB;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>
@@ -156,56 +161,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
-    <Lib>
-      <AdditionalDependencies>shaderc_shared.lib</AdditionalDependencies>
-    </Lib>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ClCompile Include="CommandExecutor.ixx" />
-    <ClCompile Include="CommandBufferCirculator.ixx" />
-    <ClCompile Include="Constants.ixx" />
-    <ClCompile Include="Core.ixx" />
-    <ClCompile Include="DescriptorSetFactory.ixx" />
-    <ClCompile Include="DescriptorUpdater.ixx" />
-    <ClCompile Include="DrawParam.ixx" />
-    <ClCompile Include="EngineContext.ixx" />
-    <ClCompile Include="FenceCirculator.ixx" />
-    <ClCompile Include="FramebufferFactory.ixx" />
-    <ClCompile Include="Layer.ixx" />
-    <ClCompile Include="LayerResourcePool.ixx" />
-    <ClCompile Include="Material.ixx" />
-    <ClCompile Include="TextureReferenceManager.ixx" />
-    <ClCompile Include="MemoryAllocator_Image.ixx" />
-    <ClCompile Include="MemoryAllocator_Buffer.ixx" />
-    <ClCompile Include="MemoryAllocator.ixx" />
-    <ClCompile Include="MemoryAllocator_Memory.ixx" />
-    <ClCompile Include="Mesh.ixx" />
-    <ClCompile Include="Renderer.ixx" />
-    <ClCompile Include="RenderingEngine.ixx" />
-    <ClCompile Include="RenderObject.ixx" />
-    <ClCompile Include="RenderPassFactory.ixx" />
-    <ClCompile Include="RenderTarget.ixx" />
-    <ClCompile Include="SemaphoreCirculator.ixx" />
-    <ClCompile Include="ShaderDataStructures.ixx" />
-    <ClCompile Include="ShaderIncluder.ixx" />
-    <ClCompile Include="MaterialBufferBuilder.ixx" />
-    <ClCompile Include="SubLayer.ixx" />
-    <ClCompile Include="Texture.ixx" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Graphics\Graphics.vcxproj">
-      <Project>{e70909a6-9dd0-44bf-bf5e-fc842554e0f4}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\Library\Library.vcxproj">
-      <Project>{b07a68cb-1c8b-490b-8900-411b4c3a9deb}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\System\System.vcxproj">
-      <Project>{c1d34d01-f9ef-4783-b839-20ea93618e11}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\Vulkan\Vulkan.vcxproj">
-      <Project>{44d48842-8f63-46c0-8d5e-b5d74b7b5a28}</Project>
-    </ProjectReference>
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

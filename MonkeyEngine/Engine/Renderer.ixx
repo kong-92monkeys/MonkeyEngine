@@ -7,7 +7,7 @@ export module ntmonkeys.com.Engine.Renderer;
 
 import ntmonkeys.com.Lib.Unique;
 import ntmonkeys.com.Lib.LazyDeleter;
-import ntmonkeys.com.Lib.AssetManager;
+import ntmonkeys.com.Sys.Environment;
 import ntmonkeys.com.Graphics.PhysicalDevice;
 import ntmonkeys.com.Graphics.LogicalDevice;
 import ntmonkeys.com.Graphics.RenderPass;
@@ -43,7 +43,6 @@ namespace Engine
 			const Graphics::PhysicalDevice *pPhysicalDevice{ };
 			Graphics::LogicalDevice *pDevice{ };
 			Lib::LazyDeleter *pLazyDeleter{ };
-			const Lib::AssetManager *pAssetManager{ };
 			const RenderPassFactory *pRenderPassFactory{ };
 			const Graphics::DescriptorSetLayout *pRenderTargetDescSetLayout{ };
 		};
@@ -122,7 +121,6 @@ namespace Engine
 		const Graphics::PhysicalDevice *__pPhysicalDevice{ };
 		Graphics::LogicalDevice *__pDevice{ };
 		Lib::LazyDeleter *__pLazyDeleter{ };
-		const Lib::AssetManager *__pAssetManager{ };
 		const RenderPassFactory *__pRenderPassFactory{ };
 		const Graphics::DescriptorSetLayout *__pRenderTargetDescSetLayout{ };
 
@@ -159,7 +157,6 @@ namespace Engine
 		__pPhysicalDevice				= info.pPhysicalDevice;
 		__pDevice						= info.pDevice;
 		__pLazyDeleter					= info.pLazyDeleter;
-		__pAssetManager					= info.pAssetManager;
 		__pRenderPassFactory			= info.pRenderPassFactory;
 		__pRenderTargetDescSetLayout	= info.pRenderTargetDescSetLayout;
 
@@ -248,7 +245,10 @@ namespace Engine
 
 	std::vector<uint32_t> Renderer::__readShaderFile(const std::string &assetPath) const
 	{
-		const auto source{ __pAssetManager->readString(assetPath) };
+		auto &env{ Sys::Environment::getInstance() };
+		auto &assetManager{ env.getAssetManager() };
+
+		const auto source{ assetManager.readString(assetPath) };
 		auto compileOptions{ __makeCopileOptions() };
 		
 		shaderc::Compiler compiler;
@@ -282,7 +282,7 @@ namespace Engine
 			shaderc_target_env::shaderc_target_env_vulkan,
 			shaderc_env_version::shaderc_env_version_vulkan_1_3);
 
-		retVal.SetIncluder(std::unique_ptr<shaderc::CompileOptions::IncluderInterface>{ new ShaderIncluder{ *__pAssetManager } });
+		retVal.SetIncluder(std::unique_ptr<shaderc::CompileOptions::IncluderInterface>{ new ShaderIncluder });
 
 		return retVal;
 	}

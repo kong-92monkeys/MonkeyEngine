@@ -22,6 +22,7 @@ END_MESSAGE_MAP()
 import ntmonkeys.com.Lib.Logger;
 import ntmonkeys.com.Lib.GenericBuffer;
 import ntmonkeys.com.Lib.Bitmap;
+import ntmonkeys.com.Sys.Environment;
 import ntmonkeys.com.Engine.Mesh;
 import ntmonkeys.com.Engine.DrawParam;
 import ntmonkeys.com.Engine.Material;
@@ -99,7 +100,6 @@ int CApp::ExitInstance()
 
 	__pRenderingEngine = nullptr;
 	__pCore = nullptr;
-	__pAssetManager = nullptr;
 
 	return CWinApp::ExitInstance();
 }
@@ -116,8 +116,9 @@ void CApp::removeRenderTarget(Engine::RenderTarget &renderTarget) noexcept
 
 void CApp::__onInitBeforeMainFrame()
 {
-	__pAssetManager = std::make_unique<Lib::AssetManager>();
-	__pAssetManager->setRootPath("Assets");
+	auto &env{ Sys::Environment::getInstance() };
+	auto &assetManager{ env.getAssetManager() };
+	assetManager.setRootPath("Assets");
 
 	__createGraphicsCore();
 	__createRenderingEngine();
@@ -159,7 +160,7 @@ void CApp::__createRenderingEngine()
 {
 	try
 	{
-		__pRenderingEngine = std::unique_ptr<Engine::RenderingEngine>{ __pCore->createEngine(*__pAssetManager) };
+		__pRenderingEngine = std::unique_ptr<Engine::RenderingEngine>{ __pCore->createEngine() };
 	}
 	catch (const std::runtime_error &e)
 	{
@@ -175,7 +176,10 @@ void CApp::__createRenderingEngine()
 
 void CApp::__createTexture()
 {
-	const auto imageData		{ __pAssetManager->readBinary("Images/smile.jpg") };
+	auto &env{ Sys::Environment::getInstance() };
+	auto &assetManager{ env.getAssetManager() };
+
+	const auto imageData		{ assetManager.readBinary("Images/smile.jpg") };
 	const Lib::Bitmap bitmap	{ imageData.data(), imageData.size(), 4ULL };
 
 	const VkExtent3D vkExtent

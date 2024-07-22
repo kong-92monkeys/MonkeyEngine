@@ -6,7 +6,6 @@ export module ntmonkeys.com.Engine.RenderingEngine;
 
 import ntmonkeys.com.Lib.Unique;
 import ntmonkeys.com.Lib.LazyDeleter;
-import ntmonkeys.com.Lib.AssetManager;
 import ntmonkeys.com.Graphics.PhysicalDevice;
 import ntmonkeys.com.Graphics.LogicalDevice;
 import ntmonkeys.com.Graphics.Shader;
@@ -49,7 +48,6 @@ namespace Engine
 		{
 		public:
 			const Graphics::PhysicalDevice *pPhysicalDevice{ };
-			const Lib::AssetManager *pAssetManager{ };
 		};
 
 		explicit RenderingEngine(const CreateInfo &createInfo);
@@ -82,7 +80,6 @@ namespace Engine
 
 	private:
 		const Graphics::PhysicalDevice &__physicalDevice;
-		const Lib::AssetManager &__assetManager;
 
 		EngineContext __context;
 		Lib::LazyDeleter __lazyDeleter{ 5ULL };
@@ -118,7 +115,6 @@ namespace Engine
 			.pPhysicalDevice				{ &__physicalDevice },
 			.pDevice						{ __pLogicalDevice.get() },
 			.pLazyDeleter					{ &__lazyDeleter },
-			.pAssetManager					{ &__assetManager },
 			.pRenderPassFactory				{ __pRenderPassFactory.get() },
 			.pRenderTargetDescSetLayout		{ __pRenderTargetDescSetLayout.get() }
 		};
@@ -134,8 +130,7 @@ module: private;
 namespace Engine
 {
 	RenderingEngine::RenderingEngine(const CreateInfo &createInfo) :
-		__physicalDevice	{ *(createInfo.pPhysicalDevice) },
-		__assetManager		{ *(createInfo.pAssetManager) }
+		__physicalDevice{ *(createInfo.pPhysicalDevice) }
 	{
 		const auto &deviceLimits{ __physicalDevice.get10Props().limits };
 
