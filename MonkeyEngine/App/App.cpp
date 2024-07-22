@@ -175,14 +175,14 @@ void CApp::__createRenderingEngine()
 
 void CApp::__createTexture()
 {
-	const auto imageData		{ __pAssetManager->readBinary("Images/wall.jpg") };
+	const auto imageData		{ __pAssetManager->readBinary("Images/smile.jpg") };
 	const Lib::Bitmap bitmap	{ imageData.data(), imageData.size(), 4ULL };
 
 	const VkExtent3D vkExtent
 	{
-		.width{ static_cast<uint32_t>(bitmap.getWidth()) },
-		.height{ static_cast<uint32_t>(bitmap.getHeight()) },
-		.depth{ 1U },
+		.width	{ static_cast<uint32_t>(bitmap.getWidth()) },
+		.height	{ static_cast<uint32_t>(bitmap.getHeight()) },
+		.depth	{ 1U },
 	};
 
 	__pTexture = std::shared_ptr<Engine::Texture>
@@ -194,7 +194,7 @@ void CApp::__createTexture()
 
 	const Engine::Texture::RegionInfo updateRegion
 	{
-		.bufferRowLength		{ static_cast<uint32_t>(bitmap.getWidth() * bitmap.getStride()) },
+		.bufferRowLength		{ static_cast<uint32_t>(bitmap.getWidth()) },
 		.bufferImageHeight		{ static_cast<uint32_t>(bitmap.getHeight()) },
 		.imageSubresource		{
 			.aspectMask			{ VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT },
@@ -206,7 +206,9 @@ void CApp::__createTexture()
 		.imageExtent			{ vkExtent }
 	};
 
-	__pTexture->update(bitmap.getData(), updateRegion, VK_PIPELINE_STAGE_2_NONE, VK_ACCESS_2_NONE);
+	__pTexture->update(
+		bitmap.getData(), bitmap.getDataSize(), updateRegion,
+		VK_PIPELINE_STAGE_2_NONE, VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT, VK_ACCESS_2_SHADER_SAMPLED_READ_BIT);
 }
 
 void CApp::__createRenderObject()
@@ -236,7 +238,7 @@ void CApp::__createRenderObject()
 	const auto pDrawParam{ std::make_shared<Engine::DrawParamIndexed>(6U, 0U, 0) };
 
 	const auto pMaterial{ std::make_shared<Frameworks::SimpleMaterial>() };
-	pMaterial->setColor({ 1.0f, 0.0f, 1.0f, 1.0f });
+	pMaterial->setColor({ 1.0f, 1.0f, 1.0f, 1.0f });
 	pMaterial->setAlbedoTexture(__pTexture);
 
 	__pRenderObject = std::shared_ptr<Engine::RenderObject>{ __pRenderingEngine->createRenderObject() };

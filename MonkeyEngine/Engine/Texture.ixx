@@ -35,8 +35,9 @@ namespace Engine
 		virtual ~Texture() noexcept override;
 
 		void update(
-			const void *const pData, const RegionInfo &regionInfo,
-			const VkPipelineStageFlags2 srcStageMask, const VkAccessFlags2 srcAccessMask) noexcept;
+			const void *const pData, const size_t size, const RegionInfo &regionInfo,
+			const VkPipelineStageFlags2 srcStageMask,
+			const VkPipelineStageFlags2 dstStageMask, const VkAccessFlags2 dstAccessMask) noexcept;
 
 		[[nodiscard]]
 		const Graphics::ImageView &getImageView() const noexcept;
@@ -76,25 +77,24 @@ namespace Engine
 	}
 
 	void Texture::update(
-		const void *const pData, const RegionInfo &regionInfo,
-		const VkPipelineStageFlags2 srcStageMask, const VkAccessFlags2 srcAccessMask) noexcept
+		const void *const pData, const size_t size, const RegionInfo &regionInfo,
+		const VkPipelineStageFlags2 srcStageMask,
+		const VkPipelineStageFlags2 dstStageMask, const VkAccessFlags2 dstAccessMask) noexcept
 	{
 		const auto pLazyDeleter			{ __context.pLazyDeleter };
 		const auto pMemoryAllocator		{ __context.pMemoryAllocator };
 		const auto pCommandExecutor		{ __context.pCommandExecutor };
-
-		const size_t bufferSize{ regionInfo.bufferRowLength * regionInfo.bufferImageHeight };
 
 		const auto pStagingBuffer
 		{
 			pMemoryAllocator->allocateBuffer(
 				VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
 				VkMemoryPropertyFlagBits::VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-				bufferSize,
+				size,
 				VkBufferUsageFlagBits::VK_BUFFER_USAGE_TRANSFER_SRC_BIT)
 		};
 
-		std::memcpy(pStagingBuffer->getMappedMemory(), pData, bufferSize);
+		std::memcpy(pStagingBuffer->getMappedMemory(), pData, size);
 
 		pCommandExecutor->reserve([=, pDst{ __pImage.get() }, pSrc{ pStagingBuffer }](auto &commandBuffer)
 		{
@@ -131,6 +131,8 @@ namespace Engine
 			{
 				.sType				{ VkStructureType::VK_STRUCTURE_TYPE_BUFFER_IMAGE_COPY_2 },
 				.bufferOffset		{ pSrc->getOffset() },
+
+				// Texel 개수 (메모리 사이즈 아님)
 				.bufferRowLength	{ regionInfo.bufferRowLength },
 				.bufferImageHeight	{ regionInfo.bufferImageHeight },
 				.imageSubresource	{ regionInfo.imageSubresource },
@@ -155,8 +157,8 @@ namespace Engine
 				.sType					{ VkStructureType::VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2 },
 				.srcStageMask			{ VK_PIPELINE_STAGE_2_COPY_BIT },
 				.srcAccessMask			{ VK_ACCESS_2_TRANSFER_WRITE_BIT },
-				.dstStageMask			{ srcStageMask },
-				.dstAccessMask			{ srcAccessMask },
+				.dstStageMask			{ dstStageMask },
+				.dstAccessMask			{ dstAccessMask },
 				.oldLayout				{ VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL },
 				.newLayout				{ VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL },
 				.image					{ pDst->getImage().getHandle() },
