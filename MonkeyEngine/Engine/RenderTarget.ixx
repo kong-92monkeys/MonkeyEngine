@@ -8,6 +8,7 @@ export module ntmonkeys.com.Engine.RenderTarget;
 import ntmonkeys.com.Lib.Unique;
 import ntmonkeys.com.Lib.Event;
 import ntmonkeys.com.Lib.WeakReferenceSet;
+import ntmonkeys.com.Sys.Environment;
 import ntmonkeys.com.Graphics.LogicalDevice;
 import ntmonkeys.com.Graphics.Surface;
 import ntmonkeys.com.Graphics.Swapchain;
@@ -17,6 +18,7 @@ import ntmonkeys.com.Graphics.Semaphore;
 import ntmonkeys.com.Graphics.CommandBuffer;
 import ntmonkeys.com.Engine.RenderPassFactory;
 import ntmonkeys.com.Engine.FramebufferFactory;
+import ntmonkeys.com.Engine.CommandBufferCirculator;
 import ntmonkeys.com.Engine.SemaphoreCirculator;
 import ntmonkeys.com.Engine.Layer;
 import ntmonkeys.com.Engine.Renderer;
@@ -94,6 +96,8 @@ namespace Engine
 		std::unique_ptr<FramebufferFactory> __pFramebufferFactory;
 		std::unique_ptr<SemaphoreCirculator> __pImgAcquireSemaphoreCirculator;
 
+		std::vector<std::unique_ptr<CommandBufferCirculator>> __secondaryCBCirculators;
+
 		Lib::WeakReferenceSet<Layer> __layers;
 
 		glm::vec4 __backgroundColor{ 0.01f, 0.01f, 0.01f, 1.0f };
@@ -101,6 +105,8 @@ namespace Engine
 		Lib::EventListenerPtr<const Layer *> __pLayerNeedRedrawListener;
 
 		mutable Lib::Event<const RenderTarget *> __needRedrawEvent;
+
+		void __createSecondaryCBCirculators();
 
 		void __validateSwapchainDependencies();
 		void __clearImageColor(Graphics::CommandBuffer &commandBuffer, const Graphics::ImageView &imageView);
@@ -157,6 +163,7 @@ namespace Engine
 		__pImgAcquireSemaphoreCirculator = std::make_unique<SemaphoreCirculator>(
 			__logicalDevice, VkSemaphoreType::VK_SEMAPHORE_TYPE_BINARY, Constants::MAX_IN_FLIGHT_FRAME_COUNT_LIMIT + 1ULL);
 
+		__createSecondaryCBCirculators();
 		__validateSwapchainDependencies();
 	}
 
@@ -165,6 +172,7 @@ namespace Engine
 		auto &queue{ __logicalDevice.getQueue() };
 		queue.waitIdle();
 
+		__secondaryCBCirculators.clear();
 		__pImgAcquireSemaphoreCirculator = nullptr;
 		__pFramebufferFactory = nullptr;
 		__pSwapchain = nullptr;
@@ -244,6 +252,20 @@ namespace Engine
 
 		__transitImageToPresent(commandBuffer, swapchainImage);
 		return { &imgAcquireSemaphore, imageIdx };
+	}
+
+	void RenderTarget::__createSecondaryCBCirculators()
+	{
+		auto &env{ Sys::Environment::getInstance() };
+		auto &threadPool{ env.getThreadPool() };
+
+		const uint32_t threadCount{ threadPool.getThreadCount() };
+		for (uint32_t threadIt{ }; threadIt < threadCount; ++threadIt)
+		{
+			__secondaryCBCirculators.emplace_back(
+				std::make_unique<CommandBufferCirculator>(
+					__logicalDevice, VkCommandBufferLevel::VK_COMMAND_BUFFER_LEVEL_SECONDARY, 2U, 30U));
+		}
 	}
 
 	void RenderTarget::__validateSwapchainDependencies()
