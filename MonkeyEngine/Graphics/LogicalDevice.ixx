@@ -23,6 +23,7 @@ import ntmonkeys.com.Graphics.Semaphore;
 import ntmonkeys.com.Graphics.Fence;
 import ntmonkeys.com.Graphics.CommandPool;
 import ntmonkeys.com.Graphics.Image;
+import ntmonkeys.com.Graphics.Sampler;
 import <vector>;
 import <memory>;
 import <stdexcept>;
@@ -91,6 +92,27 @@ namespace Graphics
 			VkImageUsageFlags usage{ };
 		};
 
+		struct SamplerCreateInfo
+		{
+		public:
+			VkSamplerCreateFlags flags{ };
+			VkFilter magFilter{ };
+			VkFilter minFilter{ };
+			VkSamplerMipmapMode mipmapMode{ };
+			VkSamplerAddressMode addressModeU{ };
+			VkSamplerAddressMode addressModeV{ };
+			VkSamplerAddressMode addressModeW{ };
+			float mipLodBias{ };
+			VkBool32 anisotropyEnable{ };
+			float maxAnisotropy{ };
+			VkBool32 compareEnable{ };
+			VkCompareOp compareOp{ };
+			float minLod{ };
+			float maxLod{ };
+			VkBorderColor borderColor{ };
+			VkBool32 unnormalizedCoordinates{ };
+		};
+
 		explicit LogicalDevice(const CreateInfo &createInfo) noexcept;
 		virtual ~LogicalDevice() noexcept override;
 		
@@ -153,6 +175,9 @@ namespace Graphics
 
 		[[nodiscard]]
 		Image *createImage(const ImageCreateInfo &createInfo);
+
+		[[nodiscard]]
+		Sampler *createSampler(const SamplerCreateInfo &createInfo);
 
 		void updateDescriptorSets(
 			const uint32_t descriptorWriteCount, const VkWriteDescriptorSet *const pDescriptorWrites,
@@ -448,6 +473,33 @@ namespace Graphics
 		return new Image{ innerCreateInfo };
 	}
 
+	Sampler *LogicalDevice::createSampler(const SamplerCreateInfo &createInfo)
+	{
+		const Sampler::CreateInfo innerCreateInfo
+		{
+			.pDeviceProc				{ &__deviceProc },
+			.hDevice					{ __handle },
+			.flags						{ createInfo.flags },
+			.magFilter					{ createInfo.magFilter },
+			.minFilter					{ createInfo.minFilter },
+			.mipmapMode					{ createInfo.mipmapMode },
+			.addressModeU				{ createInfo.addressModeU },
+			.addressModeV				{ createInfo.addressModeV },
+			.addressModeW				{ createInfo.addressModeW },
+			.mipLodBias					{ createInfo.mipLodBias },
+			.anisotropyEnable			{ createInfo.anisotropyEnable },
+			.maxAnisotropy				{ createInfo.maxAnisotropy },
+			.compareEnable				{ createInfo.compareEnable },
+			.compareOp					{ createInfo.compareOp },
+			.minLod						{ createInfo.minLod },
+			.maxLod						{ createInfo.maxLod },
+			.borderColor				{ createInfo.borderColor },
+			.unnormalizedCoordinates	{ createInfo.unnormalizedCoordinates }
+		};
+
+		return new Sampler{ innerCreateInfo };
+	}
+
 	void LogicalDevice::updateDescriptorSets(
 		const uint32_t descriptorWriteCount, const VkWriteDescriptorSet *const pDescriptorWrites,
 		const uint32_t descriptorCopyCount, const VkCopyDescriptorSet *const pDescriptorCopies)
@@ -611,6 +663,10 @@ namespace Graphics
 		// Image view
 		LOAD_DEVICE_PROC(vkCreateImageView);
 		LOAD_DEVICE_PROC(vkDestroyImageView);
+
+		// Sampler
+		LOAD_DEVICE_PROC(vkCreateSampler);
+		LOAD_DEVICE_PROC(vkDestroySampler);
 
 		// Framebuffer
 		LOAD_DEVICE_PROC(vkCreateFramebuffer);

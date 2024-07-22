@@ -116,6 +116,10 @@ namespace VK
 		DECLARE_PROC(vkCreateImageView);
 		DECLARE_PROC(vkDestroyImageView);
 
+		// Sampler
+		DECLARE_PROC(vkCreateSampler);
+		DECLARE_PROC(vkDestroySampler);
+
 		// Framebuffer
 		DECLARE_PROC(vkCreateFramebuffer);
 		DECLARE_PROC(vkDestroyFramebuffer);

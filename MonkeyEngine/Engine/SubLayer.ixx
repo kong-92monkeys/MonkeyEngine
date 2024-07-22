@@ -25,6 +25,7 @@ import ntmonkeys.com.Engine.Renderer;
 import ntmonkeys.com.Engine.RenderObject;
 import ntmonkeys.com.Engine.MemoryAllocator;
 import ntmonkeys.com.Engine.LayerResourcePool;
+import ntmonkeys.com.Engine.DescriptorUpdater;
 import <cstdint>;
 import <unordered_map>;
 import <unordered_set>;
@@ -73,6 +74,7 @@ namespace Engine
 		std::unordered_map<std::type_index, std::unique_ptr<MaterialBufferBuilder>> __materialDataBufferBuilders;
 		std::unordered_set<MaterialBufferBuilder *> __invalidatedMaterialBufferBuilders;
 
+		DescriptorUpdater __descUpdater;
 		std::unique_ptr<Graphics::DescriptorSet> __pSubLayerDescSet;
 
 		Lib::EventListenerPtr<const RenderObject *, const Mesh *, const Mesh *> __pObjectMeshChangeListener;
@@ -119,7 +121,7 @@ namespace Engine
 	};
 
 	SubLayer::SubLayer(const EngineContext &context, const Renderer *const pRenderer) noexcept :
-		__context{ context }, __pRenderer{ pRenderer }
+		__context{ context }, __pRenderer{ pRenderer }, __descUpdater{ *(context.pLogicalDevice) }
 	{
 		__pObjectMeshChangeListener =
 			Lib::EventListener<const RenderObject *, const Mesh *, const Mesh *>::bind(
@@ -393,21 +395,17 @@ namespace Engine
 		const auto pDevice					{ __context.pLogicalDevice };
 		const auto pDescriptorSetFactory	{ __context.pDescriptorSetFactory };
 
-		std::vector<VkWriteDescriptorSet> descWrites;
-		std::vector<std::unique_ptr<VkDescriptorBufferInfo>> bufferInfos;
-		std::vector<VkDescriptorImageInfo> imageInfos;
+		std::vector<const Texture *> textureSlots;
 
 		for (const auto &[pTexture, id] : __textureReferenceManager.getTextures())
 		{
-			if (id >= static_cast<uint32_t>(imageInfos.size()))
-				imageInfos.resize(id + 1U);
+			if (id >= static_cast<uint32_t>(textureSlots.size()))
+				textureSlots.resize(id + 1U);
 
-			auto &imageInfo{ imageInfos[id] };
-			imageInfo.imageView = pTexture->getImageView().getHandle();
-			imageInfo.imageLayout = VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+			textureSlots[id] = pTexture;
 		}
 
-		const uint32_t textureSlotCount{ static_cast<uint32_t>(imageInfos.size()) };
+		const uint32_t textureSlotCount{ static_cast<uint32_t>(textureSlots.size()) };
 
 		__pSubLayerDescSet = std::unique_ptr<Graphics::DescriptorSet>
 		{
@@ -415,53 +413,32 @@ namespace Engine
 				pSubLayerDescSetLayout->getHandle(), &textureSlotCount)
 		};
 
-		auto &pInstanceInfoBufferInfo		{ bufferInfos.emplace_back(std::make_unique<VkDescriptorBufferInfo>()) };
-		pInstanceInfoBufferInfo->buffer		= __pInstanceInfoBuffer->getBuffer().getHandle();
-		pInstanceInfoBufferInfo->offset		= __pInstanceInfoBuffer->getOffset();
-		pInstanceInfoBufferInfo->range		= __pInstanceInfoBuffer->getSize();
+		__descUpdater.reset();
 
-		auto &instanceInfoWrites			{ descWrites.emplace_back() };
-		instanceInfoWrites.sType			= VkStructureType::VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-		instanceInfoWrites.dstSet			= __pSubLayerDescSet->getHandle();
-		instanceInfoWrites.dstBinding		= Constants::SUB_LAYER_INSTANCE_INFO_LOCATION;
-		instanceInfoWrites.dstArrayElement	= 0U;
-		instanceInfoWrites.descriptorCount	= 1U;
-		instanceInfoWrites.descriptorType	= VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-		instanceInfoWrites.pBufferInfo		= pInstanceInfoBufferInfo.get();
+		const auto pInstanceInfoBuffer{ __pInstanceInfoBuffer.get() };
+
+		__descUpdater.addBufferInfo(
+			__pSubLayerDescSet->getHandle(), Constants::SUB_LAYER_INSTANCE_INFO_LOCATION,
+			0U, 1U, VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, &pInstanceInfoBuffer);
 
 		for (const auto &[type, pBuilder] : __materialDataBufferBuilders)
 		{
-			const auto &materialBuffer		{ pBuilder->getMaterialBuffer() };
+			const auto pMaterialBuffer		{ &(pBuilder->getMaterialBuffer()) };
 			const auto descLocation			{ __pRenderer->getDescriptorLocationOf(type) };
 
-			auto &pMaterialBufferInfo		{ bufferInfos.emplace_back(std::make_unique<VkDescriptorBufferInfo>()) };
-			pMaterialBufferInfo->buffer		= materialBuffer.getBuffer().getHandle();
-			pMaterialBufferInfo->offset		= materialBuffer.getOffset();
-			pMaterialBufferInfo->range		= materialBuffer.getSize();
-
-			auto &materialWrites			{ descWrites.emplace_back() };
-			materialWrites.sType			= VkStructureType::VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-			materialWrites.dstSet			= __pSubLayerDescSet->getHandle();
-			materialWrites.dstBinding		= descLocation.value();
-			materialWrites.dstArrayElement	= 0U;
-			materialWrites.descriptorCount	= 1U;
-			materialWrites.descriptorType	= VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-			materialWrites.pBufferInfo		= pMaterialBufferInfo.get();
+			__descUpdater.addBufferInfo(
+				__pSubLayerDescSet->getHandle(), descLocation.value(),
+				0U, 1U, VkDescriptorType::VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, &pMaterialBuffer);
 		}
 
-		if (!(imageInfos.empty()))
+		if (!(textureSlots.empty()))
 		{
-			auto &texturesWrites				{ descWrites.emplace_back() };
-			texturesWrites.sType				= VkStructureType::VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-			texturesWrites.dstSet				= __pSubLayerDescSet->getHandle();
-			texturesWrites.dstBinding			= Constants::SUB_LAYER_TEXTURES_LOCATION;
-			texturesWrites.dstArrayElement		= 0U;
-			texturesWrites.descriptorCount		= static_cast<uint32_t>(imageInfos.size());
-			texturesWrites.descriptorType		= VkDescriptorType::VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
-			texturesWrites.pImageInfo			= imageInfos.data();
+			__descUpdater.addTextureInfo(
+				__pSubLayerDescSet->getHandle(), Constants::SUB_LAYER_TEXTURES_LOCATION,
+				0U, textureSlotCount, VkDescriptorType::VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, textureSlots.data());
 		}
 
-		pDevice->updateDescriptorSets(static_cast<uint32_t>(descWrites.size()), descWrites.data(), 0U, nullptr);
+		__descUpdater.update();
 	}
 
 	void SubLayer::__onObjectMeshChanged(const RenderObject *const pObject, const Mesh *const pPrev, const Mesh *const pCur) noexcept

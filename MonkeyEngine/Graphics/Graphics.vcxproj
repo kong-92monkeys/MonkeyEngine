@@ -39,6 +39,7 @@
     <ClCompile Include="Queue.ixx" />
     <ClCompile Include="RenderContext.ixx" />
     <ClCompile Include="RenderPass.ixx" />
+    <ClCompile Include="Sampler.ixx" />
     <ClCompile Include="Semaphore.ixx" />
     <ClCompile Include="Shader.ixx" />
     <ClCompile Include="Surface.ixx" />
