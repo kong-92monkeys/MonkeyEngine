@@ -12,6 +12,7 @@ import ntmonkeys.com.Lib.Event;
 import ntmonkeys.com.Lib.RegionAllocator;
 import ntmonkeys.com.Lib.LazyDeleter;
 import ntmonkeys.com.Lib.LazyRecycler;
+import ntmonkeys.com.Sys.Environment;
 import ntmonkeys.com.Graphics.CommandBuffer;
 import ntmonkeys.com.Graphics.DescriptorSet;
 import ntmonkeys.com.Engine.Constants;
@@ -31,6 +32,7 @@ import <unordered_map>;
 import <unordered_set>;
 import <memory>;
 import <typeindex>;
+import <future>;
 
 namespace Engine
 {
@@ -62,10 +64,16 @@ namespace Engine
 		const Renderer *const __pRenderer;
 
 		Lib::RegionAllocator __objectRegionAllocator{ UINT32_MAX };
+
+		bool __textureRefInvalidated{ };
 		TextureReferenceManager __textureReferenceManager;
 
 		std::unordered_map<const RenderObject *, std::unique_ptr<Lib::Region>> __object2Region;
 		std::unordered_map<const Mesh *, std::unordered_set<const RenderObject *>> __mesh2Objects;
+
+		bool __drawSequenceInvalidated{ };
+		std::vector<std::pair<const RenderObject *, uint32_t>> __drawSequence;
+		std::vector<std::future<void>> __drawSequenceUpdateFutures;
 
 		bool __instanceInfoBufferInvalidated{ };
 		std::vector<InstanceInfo> __instanceInfoHostBuffer;
@@ -83,6 +91,7 @@ namespace Engine
 		Lib::EventListenerPtr<const RenderObject *, bool> __pObjectDrawableChangeListener;
 
 		Lib::EventListenerPtr<MaterialBufferBuilder *> __pMaterialBufferBuilderInvalidateListener;
+		Lib::EventListenerPtr<const TextureReferenceManager *> __pTextureRefUpdateListener;
 
 		mutable Lib::Event<const SubLayer *> __needRedrawEvent;
 
@@ -100,9 +109,11 @@ namespace Engine
 			const RenderObject *const pObject, const uint32_t instanceIndex,
 			const std::type_index &materialType, const Material *const pMaterial);
 
+		void __validateDrawSequence();
 		void __validateInstanceInfoBuffer();
 		void __validateMaterialBufferBuilders();
 		void __validateDescriptorSet();
+		void __joinDrawSequenceUpdateFutures();
 
 		void __onObjectMeshChanged(
 			const RenderObject *const pObject,
@@ -118,6 +129,7 @@ namespace Engine
 		void __onObjectDrawableChanged(const RenderObject *const pObject, const bool cur) noexcept;
 
 		void __onMaterialBufferBuilderInvalidated(MaterialBufferBuilder *const pBuilder) noexcept;
+		void __onTexRefUpdated() noexcept;
 	};
 
 	SubLayer::SubLayer(const EngineContext &context, const Renderer *const pRenderer) noexcept :
@@ -142,6 +154,9 @@ namespace Engine
 
 		__pMaterialBufferBuilderInvalidateListener =
 			Lib::EventListener<MaterialBufferBuilder *>::bind(&SubLayer::__onMaterialBufferBuilderInvalidated, this, std::placeholders::_1);
+
+		__pTextureRefUpdateListener = Lib::EventListener<const TextureReferenceManager *>::bind(&SubLayer::__onTexRefUpdated, this);
+		__textureReferenceManager.getUpdateEvent() += __pTextureRefUpdateListener;
 	}
 
 	SubLayer::~SubLayer() noexcept
@@ -195,19 +210,17 @@ namespace Engine
 		}
 
 		const Mesh *pBoundMesh{ };
-		for (const auto &[pMesh, objects] : __mesh2Objects)
+		for (const auto &[pObject, baseId] : __drawSequence)
 		{
+			const auto pMesh{ pObject->getMesh() };
+
 			if (pBoundMesh != pMesh)
 			{
 				pBoundMesh = pMesh;
 				pMesh->bind(commandBuffer);
 			}
 
-			for (const auto pObject : objects)
-			{
-				const uint32_t baseId{ static_cast<uint32_t>(__object2Region.at(pObject)->getOffset()) };
-				pObject->draw(commandBuffer, baseId);
-			}
+			pObject->draw(commandBuffer, baseId);
 		}
 	}
 
@@ -216,9 +229,16 @@ namespace Engine
 		if (isEmpty())
 			return;
 
+		__validateDrawSequence();
 		__validateInstanceInfoBuffer();
 		__validateMaterialBufferBuilders();
 		__validateDescriptorSet();
+		__joinDrawSequenceUpdateFutures();
+
+		__drawSequenceInvalidated = false;
+		__instanceInfoBufferInvalidated = false;
+		__invalidatedMaterialBufferBuilders.clear();
+		__textureRefInvalidated = false;
 	}
 
 	void SubLayer::__registerObject(const RenderObject *const pObject)
@@ -239,7 +259,6 @@ namespace Engine
 		}
 
 		__validateInstanceInfoHostBuffer(pObject);
-		__instanceInfoBufferInvalidated = true;
 
 		_invalidate();
 		__needRedrawEvent.invoke(this);
@@ -270,6 +289,7 @@ namespace Engine
 	void SubLayer::__registerMesh(const RenderObject *const pObject, const Mesh *const pMesh)
 	{
 		__mesh2Objects[pMesh].emplace(pObject);
+		__drawSequenceInvalidated = true;
 	}
 
 	void SubLayer::__unregisterMesh(const RenderObject *const pObject, const Mesh *const pMesh)
@@ -279,6 +299,8 @@ namespace Engine
 
 		if (objects.empty())
 			__mesh2Objects.erase(pMesh);
+
+		__drawSequenceInvalidated = true;
 	}
 
 	void SubLayer::__registerMaterial(const Material *const pMaterial)
@@ -297,6 +319,45 @@ namespace Engine
 	{
 		const auto &pBufferBuilder{ __materialDataBufferBuilders[typeid(*pMaterial)] };
 		pBufferBuilder->unregisterMaterial(pMaterial);
+	}
+
+	void SubLayer::__validateDrawSequence()
+	{
+		if (!__drawSequenceInvalidated)
+			return;
+
+		auto &env{ Sys::Environment::getInstance() };
+		auto &threadPool{ env.getThreadPool() };
+
+		__drawSequence.resize(__object2Region.size());
+
+		size_t idxFrom{ };
+		size_t idxTo{ };
+
+		for (const auto &[pMesh, objects] : __mesh2Objects)
+		{
+			idxFrom = idxTo;
+			idxTo += objects.size();
+
+			auto updateFutures
+			{
+				threadPool.run([this, idxFrom, &objects] (auto)
+				{
+					size_t idx{ idxFrom };
+
+					for (const auto pObject : objects)
+					{
+						auto &entry{ __drawSequence[idx] };
+						entry.first = pObject;
+						entry.second = static_cast<uint32_t>(__object2Region.at(pObject)->getOffset());
+
+						++idx;
+					}
+				})
+			};
+
+			__drawSequenceUpdateFutures.emplace_back(std::move(updateFutures));
+		}
 	}
 
 	void SubLayer::__validateInstanceInfoHostBuffer(const RenderObject *const pObject)
@@ -329,6 +390,8 @@ namespace Engine
 				}
 			}
 		}
+
+		__instanceInfoBufferInvalidated = true;
 	}
 
 	void SubLayer::__validateInstanceInfoHostBuffer(
@@ -358,6 +421,8 @@ namespace Engine
 			else
 				instanceInfo.materialIds[slotIndex] = -1;
 		}
+
+		__instanceInfoBufferInvalidated = true;
 	}
 
 	void SubLayer::__validateInstanceInfoBuffer()
@@ -374,22 +439,21 @@ namespace Engine
 
 		__pInstanceInfoBuffer = pLayerResourcePool->getStorageBuffer(bufferSize);
 		std::memcpy(__pInstanceInfoBuffer->getMappedMemory(), __instanceInfoHostBuffer.data(), bufferSize);
-
-		__instanceInfoBufferInvalidated = false;
 	}
 
 	void SubLayer::__validateMaterialBufferBuilders()
 	{
 		for (const auto pBuilder : __invalidatedMaterialBufferBuilders)
 			pBuilder->validate();
-
-		__invalidatedMaterialBufferBuilders.clear();
 	}
 
 	void SubLayer::__validateDescriptorSet()
 	{
 		const auto pSubLayerDescSetLayout{ __pRenderer->getSubLayerDescSetLayout() };
 		if (!pSubLayerDescSetLayout)
+			return;
+
+		if (!__instanceInfoBufferInvalidated && __invalidatedMaterialBufferBuilders.empty() && !__textureRefInvalidated)
 			return;
 
 		const auto pDevice					{ __context.pLogicalDevice };
@@ -457,6 +521,14 @@ namespace Engine
 		__descUpdater.update();
 	}
 
+	void SubLayer::__joinDrawSequenceUpdateFutures()
+	{
+		for (auto &future : __drawSequenceUpdateFutures)
+			future.wait();
+
+		__drawSequenceUpdateFutures.clear();
+	}
+
 	void SubLayer::__onObjectMeshChanged(const RenderObject *const pObject, const Mesh *const pPrev, const Mesh *const pCur) noexcept
 	{
 		__unregisterMesh(pObject, pPrev);
@@ -466,6 +538,8 @@ namespace Engine
 			__registerMesh(pObject, pCur);
 			__needRedrawEvent.invoke(this);
 		}
+
+		__drawSequenceInvalidated = true;
 	}
 
 	void SubLayer::__onObjectMaterialChanged(
@@ -480,7 +554,6 @@ namespace Engine
 			__registerMaterial(pCur);
 			__validateInstanceInfoHostBuffer(pObject, instanceIndex, type, pCur);
 
-			__instanceInfoBufferInvalidated = true;
 			_invalidate();
 			__needRedrawEvent.invoke(this);
 		}
@@ -507,6 +580,13 @@ namespace Engine
 	void SubLayer::__onMaterialBufferBuilderInvalidated(MaterialBufferBuilder *const pBuilder) noexcept
 	{
 		__invalidatedMaterialBufferBuilders.emplace(pBuilder);
+		_invalidate();
+		__needRedrawEvent.invoke(this);
+	}
+
+	void SubLayer::__onTexRefUpdated() noexcept
+	{
+		__textureRefInvalidated = true;
 		_invalidate();
 		__needRedrawEvent.invoke(this);
 	}
