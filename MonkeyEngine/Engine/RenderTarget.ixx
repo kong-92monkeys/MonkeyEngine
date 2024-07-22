@@ -309,6 +309,15 @@ namespace Engine
 
 	void RenderTarget::__transitImageToPresent(Graphics::CommandBuffer &commandBuffer, const Graphics::Image &image)
 	{
+		/*
+			When transitioning the image to VK_IMAGE_LAYOUT_SHARED_PRESENT_KHR or VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
+			there is no need to delay subsequent processing, or perform any visibility operations
+			(as vkQueuePresentKHR performs automatic visibility operations).
+			
+			To achieve this, the dstAccessMask member of the VkImageMemoryBarrier should be set to 0,
+			and the dstStageMask parameter should be set to VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT.
+		*/
+
 		const VkImageMemoryBarrier2 imageBarrier
 		{
 			.sType					{ VkStructureType::VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2 },
