@@ -2,7 +2,6 @@ export module ntmonkeys.com.Sys.Environment;
 
 import ntmonkeys.com.Lib.Unique;
 import ntmonkeys.com.Lib.ThreadPool;
-import ntmonkeys.com.Lib.ThreadSlot;
 import ntmonkeys.com.Lib.AssetManager;
 
 namespace Sys
@@ -17,9 +16,6 @@ namespace Sys
 		constexpr Lib::ThreadPool &getThreadPool() noexcept;
 
 		[[nodiscard]]
-		constexpr Lib::ThreadSlot &getThreadSlot() noexcept;
-
-		[[nodiscard]]
 		static Environment &getInstance();
 
 	private:
@@ -27,7 +23,6 @@ namespace Sys
 
 		Lib::AssetManager __assetManager;
 		Lib::ThreadPool __threadPool;
-		Lib::ThreadSlot __threadSlot;
 	};
 
 	constexpr Lib::AssetManager &Environment::getAssetManager() noexcept
@@ -38,11 +33,6 @@ namespace Sys
 	constexpr Lib::ThreadPool &Environment::getThreadPool() noexcept
 	{
 		return __threadPool;
-	}
-
-	constexpr Lib::ThreadSlot &Environment::getThreadSlot() noexcept
-	{
-		return __threadSlot;
 	}
 }
 

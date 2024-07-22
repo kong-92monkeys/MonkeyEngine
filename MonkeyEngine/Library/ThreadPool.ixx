@@ -7,6 +7,7 @@ import <functional>;
 import <future>;
 import <mutex>;
 import <condition_variable>;
+import <random>;
 
 namespace Lib
 {
@@ -18,6 +19,7 @@ namespace Lib
 		ThreadPool(const size_t poolSize = std::thread::hardware_concurrency());
 		virtual ~ThreadPool() noexcept override;
 
+		std::future<void> run(const size_t slotIndex, Job &&job);
 		std::future<void> run(Job &&job);
 
 		[[nodiscard]]
@@ -31,21 +33,27 @@ namespace Lib
 			Job job;
 		};
 
-		std::vector<std::thread> __threads;
-		
-		std::mutex __loopMutex;
+		struct __SlotInfo
+		{
+		public:
+			std::thread thread;
+			std::mutex loopMutex;
+			std::queue<__JobInfo> jobInfos;
+			std::condition_variable loopCV;
+		};
 
-		std::queue<__JobInfo> __jobInfos;
+		std::vector<std::unique_ptr<__SlotInfo>> __slotInfos;
 		bool __running{ true };
 
-		std::condition_variable __loopCV;
+		std::default_random_engine __randEngine{ std::random_device{ }() };
+		std::uniform_int_distribution<size_t> __slotIndexDist;
 
-		void __loop();
+		void __loop(const size_t slotIndex);
 	};
 
 	constexpr size_t ThreadPool::getPoolSize() const noexcept
 	{
-		return __threads.size();
+		return __slotInfos.size();
 	}
 }
 
@@ -55,27 +63,39 @@ namespace Lib
 {
 	ThreadPool::ThreadPool(const size_t poolSize)
 	{
-		__threads.reserve(poolSize);
+		__slotInfos.resize(poolSize);
 
 		for (uint32_t threadIt{ }; threadIt < poolSize; ++threadIt)
-			__threads.emplace_back(std::bind(&ThreadPool::__loop, this));
+		{
+			auto &pSlotInfo{ __slotInfos[threadIt] };
+			pSlotInfo = std::make_unique<__SlotInfo>();
+			pSlotInfo->thread = std::thread{ std::bind(&ThreadPool::__loop, this, threadIt) };
+		}
+
+		__slotIndexDist = std::uniform_int_distribution<size_t>{ 0ULL, poolSize - 1ULL };
 	}
 
 	ThreadPool::~ThreadPool() noexcept
 	{
-		std::unique_lock loopLock{ __loopMutex };
-
 		__running = false;
-		__loopCV.notify_all();
 
-		loopLock.unlock();
+		for (const auto &pSlotInfo : __slotInfos)
+		{
+			std::lock_guard loopLock	{ pSlotInfo->loopMutex };
+			auto &loopCV				{ pSlotInfo->loopCV };
+			loopCV.notify_all();
+		}
 
-		for (auto &thread : __threads)
-			thread.join();
+		for (const auto &pSlotInfo : __slotInfos)
+			pSlotInfo->thread.join();
 	}
 
-	std::future<void> ThreadPool::run(Job &&job)
+	std::future<void> ThreadPool::run(const size_t slotIndex, Job &&job)
 	{
+		const auto &pSlotInfo	{ __slotInfos[slotIndex] };
+		auto &loopCV			{ pSlotInfo->loopCV };
+		auto &jobInfos			{ pSlotInfo->jobInfos };
+
 		std::promise<void> promise;
 		std::future<void> retVal{ promise.get_future() };
 
@@ -86,32 +106,41 @@ namespace Lib
 		};
 
 		{
-			std::lock_guard loopLock{ __loopMutex };
-			__jobInfos.emplace(std::move(jobInfo));
-			__loopCV.notify_one();
+			std::lock_guard loopLock{ pSlotInfo->loopMutex };
+			jobInfos.emplace(std::move(jobInfo));
+			loopCV.notify_all();
 		}
 
 		return retVal;
 	}
 
-	void ThreadPool::__loop()
+	std::future<void> ThreadPool::run(Job &&job)
 	{
-		std::unique_lock loopLock{ __loopMutex, std::defer_lock };
+		return run(__slotIndexDist(__randEngine), std::move(job));
+	}
+
+	void ThreadPool::__loop(const size_t slotIndex)
+	{
+		const auto &pSlotInfo		{ __slotInfos[slotIndex] };
+
+		std::unique_lock loopLock	{ pSlotInfo->loopMutex, std::defer_lock };
+		auto &loopCV				{ pSlotInfo->loopCV };
+		auto &jobInfos				{ pSlotInfo->jobInfos };
 
 		while (true)
 		{
 			loopLock.lock();
 
-			__loopCV.wait(loopLock, [this]
+			loopCV.wait(loopLock, [this, &jobInfos]
 			{
-				return (!__running || __jobInfos.size());
+				return (!__running || jobInfos.size());
 			});
 
 			if (!__running)
 				break;
 
-			__JobInfo jobInfo{ std::move(__jobInfos.front()) };
-			__jobInfos.pop();
+			__JobInfo jobInfo{ std::move(jobInfos.front()) };
+			jobInfos.pop();
 
 			loopLock.unlock();
 

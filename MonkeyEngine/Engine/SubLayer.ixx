@@ -98,6 +98,10 @@ namespace Engine
 
 		mutable Lib::Event<const SubLayer *> __needRedrawEvent;
 
+		[[nodiscard]]
+		Renderer::RenderPassBeginResult __beginRenderPass(
+			Graphics::CommandBuffer &commandBuffer, const LayerDrawInfo &drawInfo) const;
+
 		void __drawRange(
 			const Graphics::CommandBuffer &secondaryCB,
 			const Renderer::RenderPassBeginResult &renderPassBeginResult,
@@ -211,23 +215,15 @@ namespace Engine
 			return;
 
 		auto &env{ Sys::Environment::getInstance() };
-		auto &threadSlot{ env.getThreadSlot() };
+		auto &threadPool{ env.getThreadPool() };
 
 		std::vector<VkCommandBuffer> secondaryCBHandles;
 		std::vector<std::future<void>> secondaryCBRecodeFutures;
 
-		const Renderer::RenderPassBeginInfo renderPassBeginInfo
-		{
-			.pColorAttachment		{ drawInfo.pColorAttachment },
-			.pRenderArea			{ &(drawInfo.renderArea) },
-			.pFramebufferFactory	{ drawInfo.pFramebufferFactory },
-			.subpassContents		{ VkSubpassContents::VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS }
-		};
-
-		const auto renderPassBeginResult{ __pRenderer->beginRenderPass(commandBuffer, renderPassBeginInfo) };
+		const auto renderPassBeginResult{ __beginRenderPass(commandBuffer, drawInfo) };
 
 		const size_t drawSeqLength			{ __drawSequence.size() };
-		const size_t slotCount				{ threadSlot.getSlotCount() };
+		const size_t slotCount				{ threadPool.getPoolSize() };
 		const size_t drawSeqLengthPerSlot	{ drawSeqLength / slotCount };
 		size_t drawSeqRemainder				{ drawSeqLength % slotCount };
 
@@ -252,7 +248,7 @@ namespace Engine
 
 			auto secondaryCBRecodeFuture
 			{
-				threadSlot.run(
+				threadPool.run(
 					slotIter,
 					[
 						this, secondaryCB, &renderPassBeginResult,
@@ -292,6 +288,20 @@ namespace Engine
 		__instanceInfoBufferInvalidated = false;
 		__invalidatedMaterialBufferBuilders.clear();
 		__textureRefInvalidated = false;
+	}
+
+	Renderer::RenderPassBeginResult SubLayer::__beginRenderPass(
+		Graphics::CommandBuffer &commandBuffer, const LayerDrawInfo &drawInfo) const
+	{
+		const Renderer::RenderPassBeginInfo renderPassBeginInfo
+		{
+			.pColorAttachment		{ drawInfo.pColorAttachment },
+			.pRenderArea			{ &(drawInfo.renderArea) },
+			.pFramebufferFactory	{ drawInfo.pFramebufferFactory },
+			.subpassContents		{ VkSubpassContents::VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS }
+		};
+
+		return __pRenderer->beginRenderPass(commandBuffer, renderPassBeginInfo);
 	}
 
 	void SubLayer::__drawRange(
