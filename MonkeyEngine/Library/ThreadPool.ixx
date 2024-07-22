@@ -116,7 +116,8 @@ namespace Lib
 
 	std::future<void> ThreadPool::run(Job &&job)
 	{
-		return run(__slotIndexDist(__randEngine), std::move(job));
+		const size_t randomIndex{ __slotIndexDist(__randEngine) };
+		return run(randomIndex, std::move(job));
 	}
 
 	void ThreadPool::__loop(const size_t slotIndex)
