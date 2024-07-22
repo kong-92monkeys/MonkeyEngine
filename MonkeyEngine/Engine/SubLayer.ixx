@@ -416,7 +416,7 @@ namespace Engine
 		__descUpdater.reset();
 
 		// Renderer infos
-		__pRenderer->loadDescriptorInfos(__descUpdater);
+		__pRenderer->loadSubLayerDescInfos(__descUpdater, __pSubLayerDescSet->getHandle());
 
 		// Instance info
 		const auto pInstanceInfoBuffer{ __pInstanceInfoBuffer.get() };

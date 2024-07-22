@@ -68,7 +68,7 @@ namespace Engine
 		virtual std::optional<uint32_t> getDescriptorLocationOf(const std::type_index &materialType) const noexcept;
 
 		[[nodiscard]]
-		virtual void loadDescriptorInfos(DescriptorUpdater &updater) const noexcept;
+		virtual void loadSubLayerDescInfos(DescriptorUpdater &updater, const VkDescriptorSet hDescSet) const noexcept;
 
 		[[nodiscard]]
 		virtual const Graphics::DescriptorSetLayout *getSubLayerDescSetLayout() const noexcept;
@@ -173,7 +173,7 @@ namespace Engine
 		return std::nullopt;
 	}
 
-	void Renderer::loadDescriptorInfos(DescriptorUpdater &updater) const noexcept
+	void Renderer::loadSubLayerDescInfos(DescriptorUpdater &updater, const VkDescriptorSet hDescSet) const noexcept
 	{}
 
 	const Graphics::DescriptorSetLayout *Renderer::getSubLayerDescSetLayout() const noexcept

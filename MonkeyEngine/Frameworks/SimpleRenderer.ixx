@@ -34,7 +34,7 @@ namespace Frameworks
 		virtual std::optional<uint32_t> getDescriptorLocationOf(const std::type_index &materialType) const noexcept override;
 
 		[[nodiscard]]
-		virtual void loadDescriptorInfos(Engine::DescriptorUpdater &updater) const noexcept override;
+		virtual void loadSubLayerDescInfos(Engine::DescriptorUpdater &updater, const VkDescriptorSet hDescSet) const noexcept override;
 
 		[[nodiscard]]
 		virtual const Graphics::DescriptorSetLayout *getSubLayerDescSetLayout() const noexcept override;
@@ -92,9 +92,13 @@ namespace Frameworks
 		return std::nullopt;
 	}
 
-	void SimpleRenderer::loadDescriptorInfos(Engine::DescriptorUpdater &updater) const noexcept
+	void SimpleRenderer::loadSubLayerDescInfos(Engine::DescriptorUpdater &updater, const VkDescriptorSet hDescSet) const noexcept
 	{
+		const auto pAlbedoTexSampler{ __pAlbedoTexSampler.get() };
 
+		updater.addSamplerInfo(
+			hDescSet, Engine::Constants::SUB_LAYER_SAMPLER_LOCATION,
+			0U, 1U, VkDescriptorType::VK_DESCRIPTOR_TYPE_SAMPLER, &pAlbedoTexSampler);
 	}
 
 	const Graphics::DescriptorSetLayout *SimpleRenderer::getSubLayerDescSetLayout() const noexcept
