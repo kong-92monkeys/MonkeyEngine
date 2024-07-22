@@ -302,7 +302,7 @@ namespace Engine
 		__pRenderTargetDescSetLayout = std::unique_ptr<Graphics::DescriptorSetLayout>
 		{
 			__pLogicalDevice->createDescriptorSetLayout(
-				0U, static_cast<uint32_t>(bindings.size()), bindings.data())
+				0U, static_cast<uint32_t>(bindings.size()), nullptr, bindings.data())
 		};
 	}
 

@@ -24,5 +24,6 @@
     <ClCompile Include="Buffer.ixx" />
     <ClCompile Include="DescriptorPool.ixx" />
     <ClCompile Include="DescriptorSet.ixx" />
+    <ClCompile Include="PipelineCache.ixx" />
   </ItemGroup>
 </Project>

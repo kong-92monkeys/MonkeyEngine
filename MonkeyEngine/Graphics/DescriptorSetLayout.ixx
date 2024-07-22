@@ -22,6 +22,7 @@ namespace Graphics
 			VkDevice hDevice{ };
 			VkDescriptorSetLayoutCreateFlags flags{ };
 			uint32_t bindingCount{ };
+			const VkDescriptorBindingFlags *pBindingFlags{ };
 			const VkDescriptorSetLayoutBinding *pBindings{ };
 		};
 
@@ -79,9 +80,17 @@ namespace Graphics
 
 	void DescriptorSetLayout::__create(const CreateInfo &createInfo)
 	{
+		const VkDescriptorSetLayoutBindingFlagsCreateInfo flagInfo
+		{
+			.sType			{ VkStructureType::VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO },
+			.bindingCount	{ createInfo.bindingCount },
+			.pBindingFlags	{ createInfo.pBindingFlags }
+		};
+
 		const VkDescriptorSetLayoutCreateInfo vkCreateInfo
 		{
 			.sType			{ VkStructureType::VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO },
+			.pNext			{ &flagInfo },
 			.flags			{ createInfo.flags },
 			.bindingCount	{ createInfo.bindingCount },
 			.pBindings		{ createInfo.pBindings }

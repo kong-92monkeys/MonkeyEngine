@@ -136,6 +136,13 @@ namespace Frameworks
 
 	void SimpleRenderer::__createSubLayerDescSetLayout()
 	{
+		const std::array bindingFlags
+		{
+			0U, 0U
+			/*VkDescriptorBindingFlagBits::VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT |
+			VkDescriptorBindingFlagBits::VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT*/
+		};
+
 		std::vector<VkDescriptorSetLayoutBinding> bindings;
 
 		auto &instanceInfoBinding				{ bindings.emplace_back() };
@@ -150,7 +157,15 @@ namespace Frameworks
 		materialBinding.descriptorCount			= 1U;
 		materialBinding.stageFlags				= VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT;
 
-		__pSubLayerDescSetLayout = _createDescriptorSetLayout(0U, static_cast<uint32_t>(bindings.size()), bindings.data());
+		//auto &texturesBinding					{ bindings.emplace_back() };
+		//texturesBinding.binding					= Engine::Constants::SUB_LAYER_TEXTURES_LOCATION;
+		//texturesBinding.descriptorType			= VkDescriptorType::VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+		//texturesBinding.descriptorCount			= 10U; // TODO: device 쿼리 후 max값 입력
+		//texturesBinding.stageFlags				= VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT;
+
+		__pSubLayerDescSetLayout = _createDescriptorSetLayout(
+			0U, static_cast<uint32_t>(bindings.size()),
+			bindingFlags.data(), bindings.data());
 	}
 
 	void SimpleRenderer::__createPipelineLayout()

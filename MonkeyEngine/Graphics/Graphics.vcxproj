@@ -34,6 +34,7 @@
     <ClCompile Include="Memory.ixx" />
     <ClCompile Include="PhysicalDevice.ixx" />
     <ClCompile Include="Pipeline.ixx" />
+    <ClCompile Include="PipelineCache.ixx" />
     <ClCompile Include="PipelineLayout.ixx" />
     <ClCompile Include="Queue.ixx" />
     <ClCompile Include="RenderContext.ixx" />

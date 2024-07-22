@@ -73,8 +73,8 @@ namespace Engine
 	protected:
 		[[nodiscard]]
 		std::unique_ptr<Graphics::DescriptorSetLayout> _createDescriptorSetLayout(
-			const VkDescriptorSetLayoutCreateFlags flags,
-			const uint32_t bindingCount, const VkDescriptorSetLayoutBinding *const pBindings);
+			const VkDescriptorSetLayoutCreateFlags flags, const uint32_t bindingCount,
+			const VkDescriptorBindingFlags *const pBindingFlags, const VkDescriptorSetLayoutBinding *const pBindings);
 
 		[[nodiscard]]
 		std::unique_ptr<Graphics::PipelineLayout> _createPipelineLayout(
@@ -155,12 +155,12 @@ namespace Engine
 	}
 
 	std::unique_ptr<Graphics::DescriptorSetLayout> Renderer::_createDescriptorSetLayout(
-		const VkDescriptorSetLayoutCreateFlags flags,
-		const uint32_t bindingCount, const VkDescriptorSetLayoutBinding *const pBindings)
+		const VkDescriptorSetLayoutCreateFlags flags, const uint32_t bindingCount,
+		const VkDescriptorBindingFlags *const pBindingFlags, const VkDescriptorSetLayoutBinding *const pBindings)
 	{
 		return std::unique_ptr<Graphics::DescriptorSetLayout>
 		{
-			__pDevice->createDescriptorSetLayout(flags, bindingCount, pBindings)
+			__pDevice->createDescriptorSetLayout(flags, bindingCount, pBindingFlags, pBindings)
 		};
 	}
 

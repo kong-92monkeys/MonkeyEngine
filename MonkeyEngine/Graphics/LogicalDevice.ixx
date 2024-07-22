@@ -7,6 +7,7 @@ export module ntmonkeys.com.Graphics.LogicalDevice;
 import ntmonkeys.com.Lib.Unique;
 import ntmonkeys.com.VK.VulkanProc;
 import ntmonkeys.com.Graphics.ConversionUtil;
+import ntmonkeys.com.Graphics.PipelineCache;
 import ntmonkeys.com.Graphics.Queue;
 import ntmonkeys.com.Graphics.Memory;
 import ntmonkeys.com.Graphics.Buffer;
@@ -114,8 +115,8 @@ namespace Graphics
 
 		[[nodiscard]]
 		DescriptorSetLayout *createDescriptorSetLayout(
-			const VkDescriptorSetLayoutCreateFlags flags,
-			const uint32_t bindingCount, const VkDescriptorSetLayoutBinding *const pBindings);
+			const VkDescriptorSetLayoutCreateFlags flags, const uint32_t bindingCount,
+			const VkDescriptorBindingFlags *const pBindingFlags, const VkDescriptorSetLayoutBinding *const pBindings);
 
 		[[nodiscard]]
 		DescriptorPool *createDescriptorPool(
@@ -167,7 +168,7 @@ namespace Graphics
 		VK::DeviceProc __deviceProc;
 
 		std::unique_ptr<Queue> __pQueue;
-		VkPipelineCache __hPipelineCache{ };
+		std::unique_ptr<PipelineCache> __pPipelineCache;
 
 		void __createDevice(const CreateInfo &createInfo);
 		void __loadDeviceProc() noexcept;
@@ -202,7 +203,7 @@ namespace Graphics
 
 	LogicalDevice::~LogicalDevice() noexcept
 	{
-		__deviceProc.vkDestroyPipelineCache(__handle, __hPipelineCache, nullptr);
+		__pPipelineCache = nullptr;
 		__deviceProc.vkDestroyDevice(__handle, nullptr);
 	}
 
@@ -272,8 +273,8 @@ namespace Graphics
 	}
 
 	DescriptorSetLayout *LogicalDevice::createDescriptorSetLayout(
-		const VkDescriptorSetLayoutCreateFlags flags,
-		const uint32_t bindingCount, const VkDescriptorSetLayoutBinding *const pBindings)
+		const VkDescriptorSetLayoutCreateFlags flags, const uint32_t bindingCount,
+		const VkDescriptorBindingFlags *const pBindingFlags, const VkDescriptorSetLayoutBinding *const pBindings)
 	{
 		const DescriptorSetLayout::CreateInfo createInfo
 		{
@@ -281,6 +282,7 @@ namespace Graphics
 			.hDevice		{ __handle },
 			.flags			{ flags },
 			.bindingCount	{ bindingCount },
+			.pBindingFlags	{ pBindingFlags },
 			.pBindings		{ pBindings }
 		};
 
@@ -349,7 +351,7 @@ namespace Graphics
 		{
 			.pDeviceProc			{ &__deviceProc },
 			.hDevice				{ __handle },
-			.hPipelineCache			{ __hPipelineCache },
+			.hPipelineCache			{ __pPipelineCache->getHandle() },
 			.hPipelineLayout		{ createInfo.hPipelineLayout },
 			.hRenderPass			{ createInfo.hRenderPass },
 			.subpassIndex			{ createInfo.subpassIndex },
@@ -466,7 +468,8 @@ namespace Graphics
 			createInfo.p11Features->variablePointers &&
 			createInfo.p11Features->variablePointersStorageBuffer &&
 			createInfo.p12Features->imagelessFramebuffer &&
-			createInfo.p12Features->timelineSemaphore &&
+			createInfo.p12Features->descriptorBindingVariableDescriptorCount &&
+			createInfo.p12Features->descriptorBindingPartiallyBound &&
 			createInfo.p13Features->pipelineCreationCacheControl &&
 			createInfo.p13Features->synchronization2 &&
 			createInfo.pRobustness2Features->nullDescriptor
@@ -495,7 +498,8 @@ namespace Graphics
 
 		features12.sType = VkStructureType::VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
 		features12.imagelessFramebuffer = VK_TRUE;
-		features12.timelineSemaphore = VK_TRUE;
+		features12.descriptorBindingVariableDescriptorCount = VK_TRUE;
+		features12.descriptorBindingPartiallyBound = VK_TRUE;
 		features12.pNext = &features13;
 
 		features13.sType = VkStructureType::VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
@@ -673,14 +677,13 @@ namespace Graphics
 
 	void LogicalDevice::__createPipelineCache()
 	{
-		const VkPipelineCacheCreateInfo createInfo
+		const PipelineCache::CreateInfo createInfo
 		{
-			.sType{ VkStructureType::VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO },
-			.flags{ VkPipelineCacheCreateFlagBits::VK_PIPELINE_CACHE_CREATE_EXTERNALLY_SYNCHRONIZED_BIT }
+			.pDeviceProc	{ &__deviceProc },
+			.hDevice		{ __handle },	
+			.flags			{ VkPipelineCacheCreateFlagBits::VK_PIPELINE_CACHE_CREATE_EXTERNALLY_SYNCHRONIZED_BIT }
 		};
 
-		__deviceProc.vkCreatePipelineCache(__handle, &createInfo, nullptr, &__hPipelineCache);
-		if (!__hPipelineCache)
-			throw std::runtime_error{ "Cannot create a pipeline cache." };
+		__pPipelineCache = std::make_unique<PipelineCache>(createInfo);
 	}
 }
