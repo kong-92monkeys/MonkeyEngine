@@ -270,7 +270,7 @@ namespace Engine
 		{
 			.sType			{ VkStructureType::VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO },
 			.semaphore		{ submitSemaphore.getHandle() },
-			.stageMask		{ VK_PIPELINE_STAGE_2_ALL_GRAPHICS_BIT }
+			.stageMask		{ VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT }
 		};
 
 		const VkSubmitInfo2 submitInfo
