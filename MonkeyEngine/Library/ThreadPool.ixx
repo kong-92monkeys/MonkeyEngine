@@ -7,7 +7,6 @@ import <functional>;
 import <future>;
 import <mutex>;
 import <condition_variable>;
-import <random>;
 
 namespace Lib
 {
@@ -45,8 +44,7 @@ namespace Lib
 		std::vector<std::unique_ptr<__SlotInfo>> __slotInfos;
 		bool __running{ true };
 
-		std::default_random_engine __randEngine{ std::random_device{ }() };
-		std::uniform_int_distribution<size_t> __slotIndexDist;
+		size_t __randomSlotIndex{ };
 
 		void __loop(const size_t slotIndex);
 	};
@@ -71,8 +69,6 @@ namespace Lib
 			pSlotInfo = std::make_unique<__SlotInfo>();
 			pSlotInfo->thread = std::thread{ std::bind(&ThreadPool::__loop, this, threadIt) };
 		}
-
-		__slotIndexDist = std::uniform_int_distribution<size_t>{ 0ULL, poolSize - 1ULL };
 	}
 
 	ThreadPool::~ThreadPool() noexcept
@@ -116,8 +112,8 @@ namespace Lib
 
 	std::future<void> ThreadPool::run(Job &&job)
 	{
-		const size_t randomIndex{ __slotIndexDist(__randEngine) };
-		return run(randomIndex, std::move(job));
+		__randomSlotIndex = ((__randomSlotIndex + 1ULL) % getPoolSize());
+		return run(__randomSlotIndex, std::move(job));
 	}
 
 	void ThreadPool::__loop(const size_t slotIndex)

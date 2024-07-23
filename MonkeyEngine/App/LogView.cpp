@@ -29,11 +29,14 @@ void CLogView::DoDataExchange(CDataExchange* pDX)
 {
 	CFormView::DoDataExchange(pDX);
 	DDX_Control(pDX, IDC_LOGLIST, __logListBox);
+	DDX_Control(pDX, IDC_LOG_MSG_EDIT, __logMsgEdit);
 }
 
 BEGIN_MESSAGE_MAP(CLogView, CFormView)
 	ON_WM_CREATE()
 	ON_WM_DESTROY()
+	ON_BN_CLICKED(IDC_CLEAR_LOG_BUTTON, &CLogView::OnBnClickedClearLogButton)
+	ON_LBN_SELCHANGE(IDC_LOGLIST, &CLogView::OnLbnSelchangeLoglist)
 END_MESSAGE_MAP()
 
 
@@ -79,4 +82,18 @@ void CLogView::OnDestroy()
 
 	// TODO: Add your message handler code here
 	theApp.getIdleEvent() -= __pAppIdleListener;
+}
+
+
+void CLogView::OnBnClickedClearLogButton()
+{
+	__logListBox.ResetContent();
+	__logMsgEdit.SetWindowText(TEXT(""));
+}
+
+void CLogView::OnLbnSelchangeLoglist()
+{
+	CString text;
+	__logListBox.GetText(__logListBox.GetCurSel(), text);
+	__logMsgEdit.SetWindowText(text);
 }
