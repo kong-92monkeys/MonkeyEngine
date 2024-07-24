@@ -10,6 +10,15 @@
     <Filter Include="Material">
       <UniqueIdentifier>{a2c68016-71ee-413e-8ebc-3301adebfd2e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="RenderSystem">
+      <UniqueIdentifier>{160d8e20-25a4-4e14-8482-893f3d73ed75}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="RenderInterface">
+      <UniqueIdentifier>{2056d2f2-b667-4eb0-963e-931718998906}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SceneObject">
+      <UniqueIdentifier>{4af92074-4f90-451e-998a-2ee706e05c77}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="SimpleRenderer.ixx">
@@ -23,6 +32,21 @@
     </ClCompile>
     <ClCompile Include="SimpleMaterial.ixx">
       <Filter>Material</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderSystem.ixx">
+      <Filter>RenderSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderInterface.ixx">
+      <Filter>RenderInterface</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderSystem_Impl.ixx">
+      <Filter>RenderSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="SceneObject.ixx">
+      <Filter>SceneObject</Filter>
+    </ClCompile>
+    <ClCompile Include="SceneObject_Impl.ixx">
+      <Filter>SceneObject</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

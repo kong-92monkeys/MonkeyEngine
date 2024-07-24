@@ -68,7 +68,7 @@ BOOL CApp::InitInstance()
 	// Change the registry key under which our settings are stored
 	// TODO: You should modify this string to be something appropriate
 	// such as the name of your company or organization
-	SetRegistryKey(_T("MonkeyEngine"));
+	SetRegistryKey(_T("MonkeyEngine Sample App"));
 
 	// To create the main window, this code creates a new frame window
 	// object and then sets it as the application's main window object
@@ -136,7 +136,7 @@ void CApp::__createGraphicsCore()
 		const Engine::Core::CreateInfo createInfo
 		{
 			.vulkanLoaderLibName	{ "vulkan_loader_dedicated-1.dll" },
-			.appName				{ "MonkeyEngineDemo" },
+			.appName				{ "MonkeyEngine Sample App" },
 			.appVersion				{ 0U, 0U, 1U, 0U },
 			.engineName				{ "MonkeyEngine" },
 			.engineVersion			{ 0U, 0U, 1U, 0U }

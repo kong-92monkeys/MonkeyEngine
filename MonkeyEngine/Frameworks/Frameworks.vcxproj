@@ -19,6 +19,11 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="RenderInterface.ixx" />
+    <ClCompile Include="RenderSystem_Impl.ixx" />
+    <ClCompile Include="RenderSystem.ixx" />
+    <ClCompile Include="SceneObject_Impl.ixx" />
+    <ClCompile Include="SceneObject.ixx" />
     <ClCompile Include="SimpleMaterial.ixx" />
     <ClCompile Include="SimpleRenderer.ixx" />
     <ClCompile Include="Vertex.ixx" />
