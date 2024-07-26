@@ -4,6 +4,8 @@ import ntmonkeys.com.Lib.Unique;
 import ntmonkeys.com.Lib.Version;
 import ntmonkeys.com.Engine.Core;
 import ntmonkeys.com.Engine.RenderingEngine;
+import ntmonkeys.com.Frameworks.RenderSystemContext;
+import ntmonkeys.com.Frameworks.SceneObject;
 import <string>;
 import <memory>;
 
@@ -15,7 +17,11 @@ namespace Frameworks
 		RenderSystemImpl(const std::string &appName, const Lib::Version &appVersion);
 		virtual ~RenderSystemImpl() noexcept;
 
+		void createSceneObject(void *const pPlaceholder);
+
 	private:
+		RenderSystemContext __context;
+
 		std::unique_ptr<Engine::Core> __pCore;
 		std::unique_ptr<Engine::RenderingEngine> __pEngine;
 
@@ -27,12 +33,19 @@ namespace Frameworks
 	{
 		__createCore(appName, appVersion);
 		__createEngine();
+
+		__context.pEngine = __pEngine.get();
 	}
 
 	RenderSystemImpl::~RenderSystemImpl() noexcept
 	{
 		__pEngine = nullptr;
 		__pCore = nullptr;
+	}
+
+	void RenderSystemImpl::createSceneObject(void *const pPlaceholder)
+	{
+		new (pPlaceholder) SceneObjectImpl{ __context };
 	}
 
 	void RenderSystemImpl::__createCore(const std::string &appName, const Lib::Version &appVersion)

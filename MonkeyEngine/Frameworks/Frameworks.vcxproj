@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RenderInterface.ixx" />
+    <ClCompile Include="RenderSystemContext.ixx" />
     <ClCompile Include="RenderSystem_Impl.ixx" />
     <ClCompile Include="RenderSystem.ixx" />
     <ClCompile Include="SceneObject_Impl.ixx" />

@@ -6,6 +6,7 @@ import ntmonkeys.com.Lib.ThreadPool;
 import ntmonkeys.com.Lib.Version;
 import ntmonkeys.com.Frameworks.SceneObject;
 import <string>;
+import <functional>;
 
 namespace Frameworks
 {
@@ -53,14 +54,16 @@ namespace Frameworks
 
 	SceneObject *RenderSystem::createSceneObject()
 	{
-		const RenderInterfaceInitInfo initInfo
+		SceneObject::InitInfo initInfo;
+
+		initInfo.pRcmdExecutor = &__rcmdExecutor;
+		initInfo.implInstantiator = [this] (void *const pPlaceholder)
 		{
-			.pRcmdExecutor{ &__rcmdExecutor }
+			__pImpl->createSceneObject(pPlaceholder);
 		};
 
 		SceneObject *const pRetVal{ new SceneObject };
 		pRetVal->init(initInfo);
-
 		return pRetVal;
 	}
 }

@@ -48,5 +48,8 @@
     <ClCompile Include="SceneObject_Impl.ixx">
       <Filter>SceneObject</Filter>
     </ClCompile>
+    <ClCompile Include="RenderSystemContext.ixx">
+      <Filter>RenderSystem</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

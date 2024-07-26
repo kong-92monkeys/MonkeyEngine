@@ -2,7 +2,6 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClCompile Include="Core.ixx" />
-    <ClCompile Include="RenderingEngine.ixx" />
     <ClCompile Include="RenderTarget.ixx" />
     <ClCompile Include="RenderPassFactory.ixx" />
     <ClCompile Include="ShaderIncluder.ixx">
@@ -23,7 +22,6 @@
     <ClCompile Include="RenderObject.ixx" />
     <ClCompile Include="Mesh.ixx" />
     <ClCompile Include="CommandExecutor.ixx" />
-    <ClCompile Include="EngineContext.ixx" />
     <ClCompile Include="DrawParam.ixx" />
     <ClCompile Include="Material.ixx" />
     <ClCompile Include="Layer.ixx">
@@ -60,6 +58,12 @@
     <ClCompile Include="LayerDrawInfo.ixx">
       <Filter>Layer</Filter>
     </ClCompile>
+    <ClCompile Include="RenderingEngine.ixx">
+      <Filter>RenderingEngine</Filter>
+    </ClCompile>
+    <ClCompile Include="EngineContext.ixx">
+      <Filter>RenderingEngine</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Util">
@@ -73,6 +77,9 @@
     </Filter>
     <Filter Include="MemoryAllocator">
       <UniqueIdentifier>{efb9423a-290b-491e-a441-784c6edf809d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="RenderingEngine">
+      <UniqueIdentifier>{5c568fd8-77d2-4a97-aa78-21517ae8d92f}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

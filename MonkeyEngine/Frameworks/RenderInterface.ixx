@@ -7,19 +7,20 @@ import <cstdlib>;
 
 namespace Frameworks
 {
-	export struct RenderInterfaceInitInfo
-	{
-	public:
-		Lib::ThreadPool *pRcmdExecutor{ };
-	};
-
 	export template <typename $Impl>
 	class RenderInterface : public Lib::Unique
 	{
 	public:
+		struct InitInfo
+		{
+		public:
+			Lib::ThreadPool *pRcmdExecutor{ };
+			std::function<void(void *)> implInstantiator;
+		};
+
 		virtual ~RenderInterface() noexcept override;
 
-		void init(const RenderInterfaceInitInfo &initInfo);
+		void init(const InitInfo &initInfo);
 
 		[[nodiscard]]
 		constexpr $Impl &getImpl() noexcept;
@@ -28,50 +29,35 @@ namespace Frameworks
 		constexpr const $Impl &getImpl() const noexcept;
 
 	protected:
-		void _initImpl(std::function<void(void *)> &&logic);
-
 		void _withImpl(std::function<void($Impl &)> &&logic);
 		void _withImpl(std::function<void(const $Impl &)> &&logic) const;
 
-		virtual void _onInit() = 0;
-
 	private:
 		Lib::ThreadPool *__pRcmdExecutor{ };
-		void *const __pImplPlaceholder{ _aligned_malloc(sizeof($Impl), sizeof($Impl)) };
+		void *const __pImpl{ _aligned_malloc(sizeof($Impl), sizeof($Impl)) };
 	};
 
 	template <typename $Impl>
 	RenderInterface<$Impl>::~RenderInterface() noexcept
 	{
-		__pRcmdExecutor->silentRun([pImplPlaceholder{ __pImplPlaceholder }]
+		__pRcmdExecutor->silentRun([pImpl{ __pImpl }]
 		{
-			$Impl *const pImpl{ reinterpret_cast<$Impl *>(pImplPlaceholder) };
-			pImpl->~$Impl();
-			_aligned_free(pImplPlaceholder);
+			$Impl *const pCasted{ reinterpret_cast<$Impl *>(pImpl) };
+			pCasted->~$Impl();
+			_aligned_free(pImpl);
 		});
 	}
 
 	template <typename $Impl>
 	constexpr $Impl &RenderInterface<$Impl>::getImpl() noexcept
 	{
-		$Impl *const pImpl{ reinterpret_cast<$Impl *>(__pImplPlaceholder) };
-		return *pImpl;
+		return *(reinterpret_cast<$Impl *>(__pImpl));
 	}
 
 	template <typename $Impl>
 	constexpr const $Impl &RenderInterface<$Impl>::getImpl() const noexcept
 	{
-		$Impl *const pImpl{ reinterpret_cast<$Impl *>(__pImplPlaceholder) };
-		return *pImpl;
-	}
-
-	template <typename $Impl>
-	void RenderInterface<$Impl>::_initImpl(std::function<void(void *)> &&logic)
-	{
-		__pRcmdExecutor->silentRun([logic{ std::move(logic) }, pImplPlaceholder{ __pImplPlaceholder }]
-		{
-			logic(pImplPlaceholder);
-		});
+		return *(reinterpret_cast<$Impl *>(__pImpl));
 	}
 
 	template <typename $Impl>
@@ -93,9 +79,12 @@ namespace Frameworks
 	}
 
 	template <typename $Impl>
-	void RenderInterface<$Impl>::init(const RenderInterfaceInitInfo &initInfo)
+	void RenderInterface<$Impl>::init(const InitInfo &initInfo)
 	{
 		__pRcmdExecutor = initInfo.pRcmdExecutor;
-		_onInit();
+		__pRcmdExecutor->silentRun([implInstantiator{ std::move(initInfo.implInstantiator) }, pImpl{ __pImpl }]
+		{
+			implInstantiator(pImpl);
+		});
 	}
 }

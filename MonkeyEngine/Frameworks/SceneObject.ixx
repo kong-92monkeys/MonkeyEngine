@@ -10,7 +10,6 @@ namespace Frameworks
 	public:
 
 	protected:
-		virtual void _onInit() override;
 
 	private:
 
@@ -21,11 +20,5 @@ module: private;
 
 namespace Frameworks
 {
-	void SceneObject::_onInit()
-	{
-		_initImpl([] (void *const pImplPlaceholder)
-		{
-			SceneObjectImpl *const pImpl{ new (pImplPlaceholder) SceneObjectImpl };
-		});
-	}
+
 }
