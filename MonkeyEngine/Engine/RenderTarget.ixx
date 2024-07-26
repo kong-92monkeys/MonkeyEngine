@@ -6,8 +6,8 @@
 export module ntmonkeys.com.Engine.RenderTarget;
 
 import ntmonkeys.com.Lib.Unique;
+import ntmonkeys.com.Lib.Stateful;
 import ntmonkeys.com.Lib.Event;
-import ntmonkeys.com.Lib.WeakReferenceSet;
 import ntmonkeys.com.Sys.Environment;
 import ntmonkeys.com.Graphics.LogicalDevice;
 import ntmonkeys.com.Graphics.Surface;
@@ -24,12 +24,12 @@ import ntmonkeys.com.Engine.Layer;
 import ntmonkeys.com.Engine.Renderer;
 import ntmonkeys.com.Engine.Constants;
 import <memory>;
-import <unordered_map>;
-import <limits>;
+import <unordered_set>;
+import <algorithm>;
 
 namespace Engine
 {
-	export class RenderTarget : public Lib::Unique
+	export class RenderTarget : public Lib::Unique, public Lib::Stateful<RenderTarget>
 	{
 	public:
 		struct CreateInfo
@@ -78,13 +78,14 @@ namespace Engine
 
 		void sync();
 
-		void validate();
-
 		[[nodiscard]]
 		DrawResult draw(Graphics::CommandBuffer &commandBuffer);
 
 		[[nodiscard]]
 		constexpr Lib::Event<const RenderTarget *> &getNeedRedrawEvent() const noexcept;
+
+	protected:
+		virtual void _onValidate() override;
 
 	private:
 		Graphics::LogicalDevice &__logicalDevice;
@@ -98,11 +99,16 @@ namespace Engine
 
 		std::vector<std::unique_ptr<CommandBufferCirculator>> __secondaryCBCirculators;
 
-		LayerDrawInfo __drawInfo;
-		Lib::WeakReferenceSet<Layer> __layers;
+		std::unordered_set<std::shared_ptr<Layer>> __layers;
+		std::unordered_set<Layer *> __invalidatedLayers;
+
+		bool __layerSortionInvalidated{ };
+		std::vector<Layer *> __sortedLayers;
 
 		glm::vec4 __backgroundColor{ 0.01f, 0.01f, 0.01f, 1.0f };
 
+		Lib::EventListenerPtr<Layer *> __pLayerInvalidateListener;
+		Lib::EventListenerPtr<const Layer *, int, int> __pLayerPriorityChangeListener;
 		Lib::EventListenerPtr<const Layer *> __pLayerNeedRedrawListener;
 
 		mutable Lib::Event<const RenderTarget *> __needRedrawEvent;
@@ -110,11 +116,18 @@ namespace Engine
 		void __createSecondaryCBCirculators();
 
 		void __validateSwapchainDependencies();
+		void __validateLayerSortion() noexcept;
+		void __validateLayers();
 
 		void __clearImageColor(Graphics::CommandBuffer &commandBuffer, const Graphics::ImageView &imageView);
-		void __populateDrawInfo(const Graphics::ImageView &colorAttachment) noexcept;
+
+		[[nodiscard]]
+		LayerDrawInfo __populateDrawInfo(const Graphics::ImageView &colorAttachment) noexcept;
+
 		void __transitImageToPresent(Graphics::CommandBuffer &commandBuffer, const Graphics::Image &image);
 
+		void __onLayerPriorityChanged() noexcept;
+		void __onLayerInvalidated(Layer *const pLayer) noexcept;
 		void __onLayerRedrawNeeded() const noexcept;
 	};
 
@@ -157,6 +170,8 @@ namespace Engine
 		__logicalDevice		{ *(createInfo.pLogicalDevice) },
 		__renderPassFactory	{ *(createInfo.pRenderPassFactory) }
 	{
+		__pLayerInvalidateListener = Lib::EventListener<Layer *>::bind(&RenderTarget::__onLayerInvalidated, this, std::placeholders::_1);
+		__pLayerPriorityChangeListener = Lib::EventListener<const Layer *, int, int>::bind(&RenderTarget::__onLayerPriorityChanged, this);
 		__pLayerNeedRedrawListener = Lib::EventListener<const Layer *>::bind(&RenderTarget::__onLayerRedrawNeeded, this);
 
 		__pSurface = std::unique_ptr<Graphics::Surface>{ __logicalDevice.createSurface(createInfo.hinstance, createInfo.hwnd) };
@@ -185,13 +200,29 @@ namespace Engine
 	void RenderTarget::addLayer(const std::shared_ptr<Layer> &pLayer) noexcept
 	{
 		__layers.emplace(pLayer);
+
+		__invalidatedLayers.emplace(pLayer.get());
+		__layerSortionInvalidated = true;
+
+		pLayer->getInvalidateEvent() += __pLayerInvalidateListener;
+		pLayer->getPriorityChangeEvent() += __pLayerPriorityChangeListener;
 		pLayer->getNeedRedrawEvent() += __pLayerNeedRedrawListener;
+
+		_invalidate();
 	}
 
 	void RenderTarget::removeLayer(const std::shared_ptr<Layer> &pLayer) noexcept
 	{
 		__layers.erase(pLayer);
+
+		__invalidatedLayers.erase(pLayer.get());
+		__layerSortionInvalidated = true;
+
+		pLayer->getInvalidateEvent() -= __pLayerInvalidateListener;
+		pLayer->getPriorityChangeEvent() -= __pLayerPriorityChangeListener;
 		pLayer->getNeedRedrawEvent() -= __pLayerNeedRedrawListener;
+
+		_invalidate();
 	}
 
 	void RenderTarget::sync()
@@ -201,12 +232,6 @@ namespace Engine
 
 		__pSurface->sync();
 		__validateSwapchainDependencies();
-	}
-
-	void RenderTarget::validate()
-	{
-		for (auto &layer : __layers)
-			layer.validate();
 	}
 
 	RenderTarget::DrawResult RenderTarget::draw(Graphics::CommandBuffer &commandBuffer)
@@ -223,10 +248,10 @@ namespace Engine
 		const auto &swapchainImageView	{ __pSwapchain->getImageViewOf(imageIdx) };
 
 		__clearImageColor(commandBuffer, swapchainImageView);
-		__populateDrawInfo(swapchainImageView);
 
-		for (const auto &layer : __layers)
-			layer.draw(commandBuffer, __drawInfo);
+		const auto drawInfo{ __populateDrawInfo(swapchainImageView) };
+		for (const auto pLayer : __sortedLayers)
+			pLayer->draw(commandBuffer, drawInfo);
 
 		__transitImageToPresent(commandBuffer, swapchainImage);
 		return { &imgAcquireSemaphore, imageIdx };
@@ -246,6 +271,12 @@ namespace Engine
 		}
 	}
 
+	void RenderTarget::_onValidate()
+	{
+		__validateLayerSortion();
+		__validateLayers();
+	}
+
 	void RenderTarget::__validateSwapchainDependencies()
 	{
 		auto pOldSwapchain{ std::move(__pSwapchain) };
@@ -261,6 +292,32 @@ namespace Engine
 		};
 
 		__pFramebufferFactory->invalidate(getWidth(), getHeight());
+	}
+
+	void RenderTarget::__validateLayerSortion() noexcept
+	{
+		if (!__layerSortionInvalidated)
+			return;
+
+		__sortedLayers.clear();
+
+		for (const auto &pLayer : __layers)
+			__sortedLayers.emplace_back(pLayer.get());
+
+		std::sort(__sortedLayers.begin(), __sortedLayers.end(), [] (const Layer *lhs, const Layer *rhs)
+		{
+			return (lhs->getPriority() < rhs->getPriority());
+		});
+
+		__layerSortionInvalidated = false;
+	}
+
+	void RenderTarget::__validateLayers()
+	{
+		for (const auto pLayer : __invalidatedLayers)
+			pLayer->validate();
+
+		__invalidatedLayers.clear();
 	}
 
 	void RenderTarget::__clearImageColor(Graphics::CommandBuffer &commandBuffer, const Graphics::ImageView &imageView)
@@ -307,13 +364,15 @@ namespace Engine
 		commandBuffer.endRenderPass(subpassEndInfo);
 	}
 
-	void RenderTarget::__populateDrawInfo(const Graphics::ImageView &colorAttachment) noexcept
+	LayerDrawInfo RenderTarget::__populateDrawInfo(const Graphics::ImageView &colorAttachment) noexcept
 	{
-		auto &renderArea					{ __drawInfo.renderArea };
+		LayerDrawInfo retVal;
+
+		auto &renderArea					{ retVal.renderArea };
 		renderArea.offset					= { 0, 0 };
 		renderArea.extent					= { getWidth(), getHeight() };
 
-		auto &viewport						{ __drawInfo.viewport };
+		auto &viewport						{ retVal.viewport };
 		viewport.x							= 0.0f;
 		viewport.y							= 0.0f;
 		viewport.width						= static_cast<float>(getWidth());
@@ -321,9 +380,11 @@ namespace Engine
 		viewport.minDepth					= 0.0f;
 		viewport.maxDepth					= 1.0f;
 
-		__drawInfo.pColorAttachment			= &colorAttachment;
-		__drawInfo.pFramebufferFactory		= __pFramebufferFactory.get();
-		__drawInfo.pSecondaryCBCirculators	= &__secondaryCBCirculators;
+		retVal.pColorAttachment				= &colorAttachment;
+		retVal.pFramebufferFactory			= __pFramebufferFactory.get();
+		retVal.pSecondaryCBCirculators		= &__secondaryCBCirculators;
+
+		return retVal;
 	}
 
 	void RenderTarget::__transitImageToPresent(Graphics::CommandBuffer &commandBuffer, const Graphics::Image &image)
@@ -364,6 +425,18 @@ namespace Engine
 		};
 
 		commandBuffer.pipelineBarrier(dependencyInfo);
+	}
+
+	void RenderTarget::__onLayerPriorityChanged() noexcept
+	{
+		__layerSortionInvalidated = true;
+		 _invalidate();
+	}
+
+	void RenderTarget::__onLayerInvalidated(Layer *const pLayer) noexcept
+	{
+		__invalidatedLayers.emplace(pLayer);
+		_invalidate();
 	}
 
 	void RenderTarget::__onLayerRedrawNeeded() const noexcept
