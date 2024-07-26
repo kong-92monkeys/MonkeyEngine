@@ -29,6 +29,10 @@ namespace Engine
 		Layer(const EngineContext &context) noexcept;
 		virtual ~Layer() noexcept override = default;
 
+		[[nodiscard]]
+		constexpr int getPriority() const noexcept;
+		void setPriority(const int priority) noexcept;
+
 		void addRenderObject(const std::shared_ptr<const RenderObject> &pObject);
 		void removeRenderObject(const std::shared_ptr<const RenderObject> &pObject);
 
@@ -36,6 +40,9 @@ namespace Engine
 		bool isEmpty() const noexcept;
 
 		void draw(Graphics::CommandBuffer &commandBuffer, const LayerDrawInfo &drawInfo) const;
+
+		[[nodiscard]]
+		constexpr Lib::Event<const Layer *, int, int> &getPriorityChangeEvent() const noexcept;
 
 		[[nodiscard]]
 		constexpr Lib::Event<const Layer *> &getNeedRedrawEvent() const noexcept;
@@ -50,12 +57,15 @@ namespace Engine
 		std::unordered_map<const Renderer *, std::unique_ptr<SubLayer>> __subLayerMap;
 		std::unordered_map<const RenderObject *, SubLayer *> __object2SubLayerMap;
 
+		int __priority{ };
+
 		std::unordered_set<SubLayer *> __invalidatedSubLayers;
 
 		Lib::EventListenerPtr<const RenderObject *, const Renderer *, const Renderer *> __pObjectRendererChangeListener;
 		Lib::EventListenerPtr<SubLayer *> __pSubLayerInvalidatedListener;
 		Lib::EventListenerPtr<const SubLayer *> __pSubLayerNeedRedrawListener;
 
+		mutable Lib::Event<const Layer *, int, int> __priorityChangeEvent;
 		mutable Lib::Event<const Layer *> __needRedrawEvent;
 
 		void __registerObject(const RenderObject *const pObject) noexcept;
@@ -68,6 +78,16 @@ namespace Engine
 		void __onSubLayerInvalidated(SubLayer *const pSubLayer) noexcept;
 		void __onSubLayerRedrawNeeded() const noexcept;
 	};
+
+	constexpr int Layer::getPriority() const noexcept
+	{
+		return __priority;
+	}
+
+	constexpr Lib::Event<const Layer *, int, int> &Layer::getPriorityChangeEvent() const noexcept
+	{
+		return __priorityChangeEvent;
+	}
 
 	constexpr Lib::Event<const Layer *> &Layer::getNeedRedrawEvent() const noexcept
 	{
@@ -90,6 +110,18 @@ namespace Engine
 			Lib::EventListener<SubLayer *>::bind(&Layer::__onSubLayerInvalidated, this, std::placeholders::_1);
 
 		__pSubLayerNeedRedrawListener = Lib::EventListener<const SubLayer *>::bind(&Layer::__onSubLayerRedrawNeeded, this);
+	}
+
+	void Layer::setPriority(const int priority) noexcept
+	{
+		if (__priority == priority)
+			return;
+
+		const int prevPriority{ __priority };
+		__priority = priority;
+
+		__priorityChangeEvent.invoke(this, prevPriority, priority);
+		__needRedrawEvent.invoke(this);
 	}
 
 	void Layer::addRenderObject(const std::shared_ptr<const RenderObject> &pObject)
