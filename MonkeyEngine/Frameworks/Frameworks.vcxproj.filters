@@ -19,11 +19,17 @@
     <Filter Include="SceneObject">
       <UniqueIdentifier>{4af92074-4f90-451e-998a-2ee706e05c77}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Component">
+      <UniqueIdentifier>{b62b9db6-4b16-42f3-af00-cbe0101f439a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Component\Concrete">
+      <UniqueIdentifier>{1bda3d12-3157-4bba-a8e5-055321d17f64}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Renderer\Concrete">
+      <UniqueIdentifier>{623a99e4-6858-4545-8db4-a8b299cec71c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="SimpleRenderer.ixx">
-      <Filter>Renderer</Filter>
-    </ClCompile>
     <ClCompile Include="Vertex.ixx">
       <Filter>Vertex</Filter>
     </ClCompile>
@@ -50,6 +56,18 @@
     </ClCompile>
     <ClCompile Include="RenderSystemContext.ixx">
       <Filter>RenderSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="Component.ixx">
+      <Filter>Component</Filter>
+    </ClCompile>
+    <ClCompile Include="RendererComponent.ixx">
+      <Filter>Component\Concrete</Filter>
+    </ClCompile>
+    <ClCompile Include="RendererFactory.ixx">
+      <Filter>Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="SimpleRenderer.ixx">
+      <Filter>Renderer\Concrete</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

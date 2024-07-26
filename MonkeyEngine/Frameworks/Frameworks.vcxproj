@@ -19,6 +19,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Component.ixx" />
+    <ClCompile Include="RendererComponent.ixx" />
+    <ClCompile Include="RendererFactory.ixx" />
     <ClCompile Include="RenderInterface.ixx" />
     <ClCompile Include="RenderSystemContext.ixx" />
     <ClCompile Include="RenderSystem_Impl.ixx" />

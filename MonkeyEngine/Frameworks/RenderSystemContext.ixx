@@ -1,6 +1,7 @@
 export module ntmonkeys.com.Frameworks.RenderSystemContext;
 
 import ntmonkeys.com.Engine.RenderingEngine;
+import ntmonkeys.com.Frameworks.RendererFactory;
 
 namespace Frameworks
 {
@@ -8,5 +9,6 @@ namespace Frameworks
 	{
 	public:
 		Engine::RenderingEngine *pEngine{ };
+		RendererFactory *pRendererFactory{ };
 	};
 }

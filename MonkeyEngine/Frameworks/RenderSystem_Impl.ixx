@@ -6,6 +6,7 @@ import ntmonkeys.com.Engine.Core;
 import ntmonkeys.com.Engine.RenderingEngine;
 import ntmonkeys.com.Frameworks.RenderSystemContext;
 import ntmonkeys.com.Frameworks.SceneObject;
+import ntmonkeys.com.Frameworks.RendererFactory;
 import <string>;
 import <memory>;
 
@@ -25,6 +26,8 @@ namespace Frameworks
 		std::unique_ptr<Engine::Core> __pCore;
 		std::unique_ptr<Engine::RenderingEngine> __pEngine;
 
+		std::unique_ptr<RendererFactory> __pRendererFactory;
+
 		void __createCore(const std::string &appName, const Lib::Version &appVersion);
 		void __createEngine();
 	};
@@ -33,8 +36,10 @@ namespace Frameworks
 	{
 		__createCore(appName, appVersion);
 		__createEngine();
+		__pRendererFactory = std::make_unique<RendererFactory>(*__pEngine);
 
 		__context.pEngine = __pEngine.get();
+		__context.pRendererFactory = __pRendererFactory.get();
 	}
 
 	RenderSystemImpl::~RenderSystemImpl() noexcept
